@@ -83,3 +83,5 @@ public static JobStateCategory GetJobStateCategory(JobState state)
 5. MergeJobIndexWorker在后台会按照一定的规则将对应的Table中的索引文件合并、添加到AggregateJobIndexGrain下的RollingJobIndexGrain的State中。  
 6. 查询简单的使用了System.Linq.Dynamic.Core库。  
 
+# 部署方式
+由于使用了DirectClient方式，所以只需要将对应的存储账号+ServiceBus队列建好，然后替换对应的appsettings.{EnvName}.json中的链接配置。然后直接发布即可正常运行
