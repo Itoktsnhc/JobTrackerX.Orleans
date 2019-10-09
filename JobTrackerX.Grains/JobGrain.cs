@@ -61,10 +61,6 @@ namespace JobTrackerX.Grains
 
         public async Task UpdateJobStateAsync(UpdateJobStateDto dto, bool writeState = true)
         {
-            if (State.CurrentJobState == JobState.WaitingForActivation)
-            {
-                throw new Exception($"job Id not exist: {this.GetPrimaryKeyLong()}");
-            }
             var jobStateDto = new UpdateJobStateDtoInner(dto);
             if (Helper.FinishedOrWaitingForChildrenJobStates.Contains(jobStateDto.JobState))
             {

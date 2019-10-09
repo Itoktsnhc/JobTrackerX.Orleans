@@ -4,6 +4,7 @@ using JobTrackerX.Entities.GrainStates;
 using JobTrackerX.GrainInterfaces;
 using JobTrackerX.SharedLibs;
 using Orleans;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -67,8 +68,13 @@ namespace JobTrackerX.WebApi.Services.JobTracker
 
         public async Task<string> UpdateJobStatusAsync(long id, UpdateJobStateDto dto)
         {
-            await _client.GetGrain<IJobGrain>(id)
-                .UpdateJobStateAsync(dto);
+            var grain = _client.GetGrain<IJobGrain>(id);
+            var job = await grain.GetJobAsync();
+            if (job.CurrentJobState == JobState.WaitingForActivation)
+            {
+                throw new Exception($"job Id not exist: {id}");
+            }
+            await grain.UpdateJobStateAsync(dto);
             return "success";
         }
 
