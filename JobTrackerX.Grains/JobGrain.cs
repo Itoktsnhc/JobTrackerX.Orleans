@@ -17,7 +17,7 @@ namespace JobTrackerX.Grains
             var addJobDto = new AddJobDtoInner(dto);
             if (State.CurrentJobState != JobState.WaitingForActivation)
             {
-                throw new InvalidOperationException("duplicate jobId");
+                throw new InvalidOperationException($"job id duplicate: {this.GetPrimaryKeyLong()}");
             }
 
             const JobState state = JobState.WaitingToRun;
@@ -49,7 +49,7 @@ namespace JobTrackerX.Grains
             State.StateChanges.Add(new StateChangeDto(state));
             State.JobName = addJobDto.JobName;
             await WriteStateAsync();
-            if (!State.ParentJobId.HasValue /* && _config.IndexConfig != null*/)
+            if (!State.ParentJobId.HasValue)
             {
                 var indexGrain = GrainFactory.GetGrain<IShardJobIndexGrain>(Helper.GetTimeIndex());
                 await indexGrain.AddToIndexAsync(new JobIndexInner(State.JobId, State.JobName, State.CreateBy,
@@ -61,6 +61,10 @@ namespace JobTrackerX.Grains
 
         public async Task UpdateJobStateAsync(UpdateJobStateDto dto, bool writeState = true)
         {
+            if (State.CurrentJobState == JobState.WaitingForActivation)
+            {
+                throw new Exception($"job Id not exist: {this.GetPrimaryKeyLong()}");
+            }
             var jobStateDto = new UpdateJobStateDtoInner(dto);
             if (Helper.FinishedOrWaitingForChildrenJobStates.Contains(jobStateDto.JobState))
             {
@@ -106,12 +110,20 @@ namespace JobTrackerX.Grains
 
         public async Task UpdateJobOptionsAsync(UpdateJobOptionsDto dto)
         {
+            if (State.CurrentJobState == JobState.WaitingForActivation)
+            {
+                throw new Exception($"job Id not exist: {this.GetPrimaryKeyLong()}");
+            }
             State.Options = dto.Options;
             await WriteStateAsync();
         }
 
         public async Task<JobEntityState> GetJobAsync()
         {
+            if (State.CurrentJobState == JobState.WaitingForActivation)
+            {
+                throw new Exception($"job Id not exist: {this.GetPrimaryKeyLong()}");
+            }
             return await Task.FromResult(State);
         }
 

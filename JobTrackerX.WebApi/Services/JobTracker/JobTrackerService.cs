@@ -33,6 +33,7 @@ namespace JobTrackerX.WebApi.Services.JobTracker
 
         public async Task<List<JobEntity>> GetDescendantEntitiesAsync(long id)
         {
+            await _client.GetGrain<IJobGrain>(id).GetJobAsync();
             var childrenIds = await _client.GetGrain<IDescendantsRefGrain>(id).GetChildrenAsync();
             var jobs = new ConcurrentBag<JobEntityState>();
             var getJobInfoProcessor = new ActionBlock<long>(async jobId =>
