@@ -1,13 +1,12 @@
 # JobTrackerX.Orleans
 JobTrackerX.Orleans
 
-基于Azure服务(Table,Blob)和Orleans框架的JobTracker  
 项目基于ServiceBus + AzureStorageTable + AzureStorageBlob, 使用MsOrleans作为核心框架。实现了任务的创建、状态更新、多级任务状态联动更新、任务查询等功能
 
 # 项目组成
 JobTrackerX.WebApi     -> WebApi项目，宿主了Orleans Silo，MergeJobIndexWorker、IdGenerator等后台服务，并对外暴露了任务相关的API。  
-JobTrackerX.Client     -> Http请求的Wrapper。
-JobTrackerX.SharedLibs -> WebApi和Client项目共享的部分类
+JobTrackerX.Client     -> Http请求的Wrapper。  
+JobTrackerX.SharedLibs -> WebApi和Client项目共享的部分类  
 
 # Big picture
 1. 对于每一个任务的记录，在系统中映射为JobGrain，JobId即为JobGrain的long形Id。  
