@@ -328,3 +328,9 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
+
+
+#remove unsave config
+JobTrackerX.WebApi/appsettings.json
+JobTrackerX.WebApi/appsettings.dev.json
+JobTrackerX.WebApi/appsettings.prod.json

@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>JobTrackerX.WebApi</name>
+    </assembly>
+    <members>
+        <member name="M:JobTrackerX.WebApi.Controllers.JobTrackerController.GetJobByIdAsync(System.Int64)">
+            <summary>
+                获取该JobId的Job详情
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:JobTrackerX.WebApi.Controllers.JobTrackerController.GetDescendantEntitiesAsync(System.Int64)">
+            <summary>
+                获取该Id的包括所有子节点详情
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:JobTrackerX.WebApi.Controllers.JobTrackerController.GetDescendantIdsAsync(System.Int64)">
+            <summary>
+                获取该节点向后的节点Id(包括自身节点Id)
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:JobTrackerX.WebApi.Controllers.JobTrackerController.AddNewJob(JobTrackerX.SharedLibs.AddJobDto)">
+            <summary>
+                添加任务
+            </summary>
+            <param name="dto"></param>
+            <returns></returns>
+        </member>
+        <member name="M:JobTrackerX.WebApi.Controllers.JobTrackerController.UpdateJobStatusAsync(System.Int64,JobTrackerX.SharedLibs.UpdateJobStateDto)">
+            <summary>
+                更新任务状态
+            </summary>
+            <param name="id"></param>
+            <param name="dto"></param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>
