@@ -62,17 +62,22 @@ namespace JobTrackerX.Grains
         public async Task UpdateJobStateAsync(UpdateJobStateDto dto, bool writeState = true)
         {
             var jobStateDto = new UpdateJobStateDtoInner(dto);
+            var previous = jobStateDto.JobState;
             if (Helper.FinishedOrWaitingForChildrenJobStates.Contains(jobStateDto.JobState))
             {
                 if (State.PendingChildrenCount > 0)
                 {
                     jobStateDto.JobState = JobState.WaitingForChildrenToComplete;
                 }
-                else if (jobStateDto.JobState != JobState.Faulted)
+                else
                 {
                     jobStateDto.JobState =
                         State.FailedChildrenCount > 0 ? JobState.Faulted : JobState.RanToCompletion;
                 }
+            }
+            if (previous != jobStateDto.JobState)
+            {
+                jobStateDto.AdditionMsg += $" (sys: {previous} -> {jobStateDto.JobState})";
             }
 
             State.StateChanges

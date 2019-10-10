@@ -18,13 +18,20 @@ namespace JobTrackerX.Entities
                 JobState.RanToCompletion
             };
 
-        public static readonly List<JobState> FinishedOrWaitingForChildrenJobStates =
+        public static readonly List<JobState> FinishedOrWaitingForChildrenOrFaultedJobStates =
             new List<JobState>
             {
                 JobState.WaitingForChildrenToComplete,
                 JobState.Faulted,
                 JobState.RanToCompletion
             };
+
+        public static readonly List<JobState> FinishedOrWaitingForChildrenJobStates =
+           new List<JobState>
+           {
+                JobState.WaitingForChildrenToComplete,
+                JobState.RanToCompletion
+           };
 
         public static ExecutionDataflowBlockOptions GetOutOfGrainExecutionOptions()
         {

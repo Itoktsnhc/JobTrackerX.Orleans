@@ -27,7 +27,7 @@ namespace JobTrackerX.Entities.GrainStates
                 }
 
                 var returnState = StateChanges.Last().State;
-                if (Helper.FinishedOrWaitingForChildrenJobStates.Contains(returnState))
+                if (Helper.FinishedOrWaitingForChildrenOrFaultedJobStates.Contains(returnState))
                 {
                     if (SuccessChildrenCount == TotalChildrenCount)
                     {
@@ -39,6 +39,11 @@ namespace JobTrackerX.Entities.GrainStates
                     if (PendingChildrenCount == 0 && FailedChildrenCount > 0)
                     {
                         returnState = JobState.Faulted;
+                    }
+
+                    if (PendingChildrenCount > 0)
+                    {
+                        returnState = JobState.WaitingForChildrenToComplete;
                     }
                 }
 

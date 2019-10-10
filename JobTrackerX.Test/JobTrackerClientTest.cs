@@ -151,5 +151,31 @@ namespace JobTrackerX.Test
             });
             Assert.AreEqual(indices.IndexGrainHit > 0, true);
         }
+
+        [TestMethod]
+        public async Task TestReverseAsync()
+        {
+            var root = await _client.CreateNewJobAsync(new AddJobDto());
+            var child = await _client.CreateNewJobAsync(new AddJobDto("", root.JobId));
+            var childchild = await _client.CreateNewJobAsync(new AddJobDto("", child.JobId));
+
+            await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
+            root = await _client.GetJobEntityAsync(root.JobId);
+            Assert.AreEqual(JobState.WaitingForChildrenToComplete, root.CurrentJobState);
+
+            await _client.UpdateJobStatesAsync(child.JobId, new UpdateJobStateDto(JobState.Faulted));
+            child = await _client.GetJobEntityAsync(child.JobId);
+            Assert.AreEqual(JobState.WaitingForChildrenToComplete, child.CurrentJobState);
+
+            await _client.UpdateJobStatesAsync(childchild.JobId, new UpdateJobStateDto(JobState.WaitingForChildrenToComplete));
+            childchild = await _client.GetJobEntityAsync(childchild.JobId);
+            Assert.AreEqual(JobState.RanToCompletion, childchild.CurrentJobState);
+
+            child = await _client.GetJobEntityAsync(child.JobId);
+            Assert.AreEqual(JobState.Faulted, child.CurrentJobState);
+
+            root = await _client.GetJobEntityAsync(root.JobId);
+            Assert.AreEqual(JobState.Faulted, root.CurrentJobState);
+        }
     }
 }
