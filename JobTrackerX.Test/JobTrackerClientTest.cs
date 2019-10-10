@@ -17,7 +17,7 @@ namespace JobTrackerX.Test
 
         public JobTrackerClientTest()
         {
-            _client = new JobTrackerClient("http://jobsystemtestvm.chinaeast2.cloudapp.chinacloudapi.cn");
+            _client = new JobTrackerClient("{YourDomain}");
         }
 
         [TestMethod]
