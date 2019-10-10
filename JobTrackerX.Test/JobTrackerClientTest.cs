@@ -13,11 +13,11 @@ namespace JobTrackerX.Test
     [TestClass]
     public class JobTrackerClientTest
     {
-        private readonly JobTrackerClient _client;
+        private readonly IJobTrackerClient _client;
 
         public JobTrackerClientTest()
         {
-            _client = new JobTrackerClient("FILLME{YourDomain}");
+            _client = new JobTrackerClient("http://jobsystemtestvm.chinaeast2.cloudapp.chinacloudapi.cn");
         }
 
         [TestMethod]
@@ -35,7 +35,7 @@ namespace JobTrackerX.Test
                 new UpdateJobStateDto(JobState.Running, "rootJobRunningAgain"));
             await _client.UpdateJobStatesAsync(rootJob.JobId,
                 new UpdateJobStateDto(JobState.RanToCompletion, "rootJobFinished"));
-            rootJob = await _client.GetJobByIdAsync(rootJob.JobId);
+            rootJob = await _client.GetJobEntityAsync(rootJob.JobId);
             Assert.AreEqual(JobState.WaitingForChildrenToComplete, rootJob.CurrentJobState);
 
             await _client.UpdateJobStatesAsync(child1.JobId, new UpdateJobStateDto(JobState.Warning, "child1 Running"));
@@ -46,9 +46,9 @@ namespace JobTrackerX.Test
             await _client.UpdateJobStatesAsync(child2.JobId,
                 new UpdateJobStateDto(JobState.RanToCompletion, "child2 finished"));
 
-            child1 = await _client.GetJobByIdAsync(child1.JobId);
-            child2 = await _client.GetJobByIdAsync(child2.JobId);
-            rootJob = await _client.GetJobByIdAsync(rootJob.JobId);
+            child1 = await _client.GetJobEntityAsync(child1.JobId);
+            child2 = await _client.GetJobEntityAsync(child2.JobId);
+            rootJob = await _client.GetJobEntityAsync(rootJob.JobId);
             Assert.AreEqual(JobState.RanToCompletion, rootJob.CurrentJobState);
             Assert.AreEqual(JobState.RanToCompletion, child1.CurrentJobState);
             Assert.AreEqual(JobState.RanToCompletion, child2.CurrentJobState);
@@ -70,13 +70,13 @@ namespace JobTrackerX.Test
             await _client.UpdateJobStatesAsync(layer1Child2.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
             await _client.UpdateJobStatesAsync(layer2Child1.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
 
-            root = await _client.GetJobByIdAsync(root.JobId);
+            root = await _client.GetJobEntityAsync(root.JobId);
             Assert.AreEqual(JobState.WaitingForChildrenToComplete, root.CurrentJobState);
             await _client.UpdateJobStatesAsync(layer2Child2.JobId, new UpdateJobStateDto(JobState.Faulted));
-            root = await _client.GetJobByIdAsync(root.JobId);
+            root = await _client.GetJobEntityAsync(root.JobId);
             Assert.AreEqual(JobState.WaitingForChildrenToComplete, root.CurrentJobState);
             await _client.UpdateJobStatesAsync(layer2Child3.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
-            root = await _client.GetJobByIdAsync(root.JobId);
+            root = await _client.GetJobEntityAsync(root.JobId);
             Assert.AreEqual(JobState.Faulted, root.CurrentJobState);
         }
 
@@ -113,7 +113,7 @@ namespace JobTrackerX.Test
             createChildrenBlock.Complete();
             await updateStateBlock.Completion;
             await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
-            root = await _client.GetJobByIdAsync(root.JobId);
+            root = await _client.GetJobEntityAsync(root.JobId);
             Assert.AreEqual(JobState.Faulted, root.CurrentJobState);
         }
 
@@ -128,7 +128,7 @@ namespace JobTrackerX.Test
             });
             Assert.AreEqual(options, rootJob.Options);
             await _client.UpdateJobOptionsAsync(rootJob.JobId, new UpdateJobOptionsDto("Hello World"));
-            rootJob = await _client.GetJobByIdAsync(rootJob.JobId);
+            rootJob = await _client.GetJobEntityAsync(rootJob.JobId);
             Assert.AreEqual("Hello World", rootJob.Options);
         }
 

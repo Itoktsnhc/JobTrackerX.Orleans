@@ -1,8 +1,12 @@
 ﻿using JobTrackerX.Entities;
 using JobTrackerX.GrainInterfaces;
 using JobTrackerX.SharedLibs;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Orleans;
+using System;
+using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 
 namespace JobTrackerX.WebApi.Controllers
@@ -12,10 +16,12 @@ namespace JobTrackerX.WebApi.Controllers
     public class ConfigController : ControllerBase
     {
         private readonly IClusterClient _client;
+        private readonly JobTrackerConfig _config;
 
-        public ConfigController(IClusterClient client)
+        public ConfigController(IClusterClient client, IOptions<JobTrackerConfig> options)
         {
             _client = client;
+            _config = options.Value;
         }
 
         [HttpGet("offset")]
@@ -26,7 +32,7 @@ namespace JobTrackerX.WebApi.Controllers
         }
 
         [HttpPut("offset")]
-        public async Task<ReturnDto<long>> ApplyNewOffsetAsync(UpdateIdOffsetDto dto)
+        public async Task<ReturnDto<long>> ApplyNewOffsetAsync([FromBody][Required]UpdateIdOffsetDto dto)
         {
             var offsetGrain = _client.GetGrain<IJobIdOffsetGrain>(Constants.JobIdOffsetGrainDefaultName);
             await offsetGrain.ApplyOffsetAsync(dto.Offset);
@@ -37,6 +43,24 @@ namespace JobTrackerX.WebApi.Controllers
         public async Task<ReturnDto<long>> GetNextIdAsync()
         {
             return new ReturnDto<long>(await _client.GetGrain<IJobIdGrain>(Constants.JobIdGrainDefaultName).GetNewIdAsync());
+        }
+
+        [HttpGet("auth")]
+        public ReturnDto<string> CheckAndAddAuthToken([Required] string token)
+        {
+            HttpContext.Response.Cookies.Append(Constants.TokenAuthKey, token, new CookieOptions()
+            {
+                Expires = new DateTimeOffset(2038, 1, 1, 0, 0, 0, TimeSpan.FromHours(0))
+            });
+            if (token != _config.CommonConfig.AuthToken)
+            {
+                return new ReturnDto<string>()
+                {
+                    Result = false,
+                    Msg = "auth failed"
+                };
+            }
+            return new ReturnDto<string>("auth success");
         }
     }
 }

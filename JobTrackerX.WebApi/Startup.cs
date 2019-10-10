@@ -91,6 +91,11 @@ namespace JobTrackerX.WebApi
 
         public void Configure(IApplicationBuilder app)
         {
+            if (!string.IsNullOrEmpty(JobTrackerConfig.CommonConfig.AuthToken))
+            {
+                app.UseMiddleware<TokenAuth>();
+            }
+
             if (JobTrackerConfig.CommonConfig.UseDashboard)
             {
                 app.UseOrleansDashboard(new DashboardOptions { BasePath = "/dashboard" });
@@ -98,7 +103,7 @@ namespace JobTrackerX.WebApi
 
             app.UseStaticFiles();
             app.UseSwagger();
-            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "JobTracker.Orleans"));
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "JobTrackerX.Orleans"));
             app.UseDeveloperExceptionPage();
             app.UseRouting();
             app.UseEndpoints(endpoints => endpoints.MapControllers());

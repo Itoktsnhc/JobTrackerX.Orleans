@@ -14,8 +14,11 @@
 
         public const int DefaultDegreeOfParallelism = 100;
 
+        public const string TokenAuthKey = "x-jobtracker-token";
 #if DEBUG
+
         public const string EnvName = "Dev";
+
 #else
         public const string EnvName = "Prod";
 #endif
