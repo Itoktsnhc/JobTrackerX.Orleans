@@ -106,7 +106,11 @@ namespace JobTrackerX.Client
             {
                 req.Content = new StringContent(JsonConvert.SerializeObject(body), Encoding.UTF8, "application/json");
             }
-            await _requestProcessor?.Invoke(req);
+            var task = _requestProcessor?.Invoke(req);
+            if (task != null)
+            {
+                await task;
+            }
             var resp = await _httpClient.SendAsync(req).ConfigureAwait(false);
             resp.EnsureSuccessStatusCode();
             var content = await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
