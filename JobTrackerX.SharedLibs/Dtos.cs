@@ -15,6 +15,7 @@ namespace JobTrackerX.SharedLibs
             ParentJobId = parentJobId;
         }
 
+        public long? JobId { get; set; }
         public string CreatedBy { get; set; }
         public string Options { get; set; }
         public List<string> Tags { get; set; }

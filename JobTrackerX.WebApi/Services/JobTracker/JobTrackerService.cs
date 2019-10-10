@@ -61,7 +61,7 @@ namespace JobTrackerX.WebApi.Services.JobTracker
 
         public async Task<JobEntity> AddNewJobAsync(AddJobDto dto)
         {
-            var jobId = await _client.GetGrain<IJobIdGrain>(Constants.JobIdGrainDefaultName).GetNewIdAsync();
+            var jobId = dto.JobId ?? await _client.GetGrain<IJobIdGrain>(Constants.JobIdGrainDefaultName).GetNewIdAsync();
             return _mapper.Map<JobEntity>(await _client.GetGrain<IJobGrain>(jobId)
                 .AddJobAsync(dto));
         }
