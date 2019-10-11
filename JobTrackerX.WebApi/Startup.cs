@@ -114,7 +114,7 @@ namespace JobTrackerX.WebApi
             public MappingProfile()
             {
                 CreateMap<JobEntityState, JobEntity>();
-                CreateMap<JobIndexInner, JobIndex>();
+                CreateMap<JobIndexInternal, JobIndex>();
             }
         }
     }

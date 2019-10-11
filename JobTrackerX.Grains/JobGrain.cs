@@ -14,7 +14,7 @@ namespace JobTrackerX.Grains
     {
         public async Task<JobEntityState> AddJobAsync(AddJobDto dto)
         {
-            var addJobDto = new AddJobDtoInner(dto);
+            var addJobDto = new AddJobDtoInternal(dto);
             if (State.CurrentJobState != JobState.WaitingForActivation)
             {
                 throw new InvalidOperationException($"job id duplicate: {this.GetPrimaryKeyLong()}");
@@ -30,7 +30,7 @@ namespace JobTrackerX.Grains
             if (addJobDto.ParentJobId.HasValue)
             {
                 var parentGrain = GrainFactory.GetGrain<IJobGrain>(addJobDto.ParentJobId.Value);
-                var parent = await parentGrain.GetJobAsync();
+                var parent = await parentGrain.GetJobEntityAsync();
                 if (parent.CurrentJobState == JobState.WaitingForActivation)
                 {
                     throw new InvalidOperationException($"parent job {addJobDto.ParentJobId} not exist");
@@ -52,7 +52,7 @@ namespace JobTrackerX.Grains
             if (!State.ParentJobId.HasValue)
             {
                 var indexGrain = GrainFactory.GetGrain<IShardJobIndexGrain>(Helper.GetTimeIndex());
-                await indexGrain.AddToIndexAsync(new JobIndexInner(State.JobId, State.JobName, State.CreateBy,
+                await indexGrain.AddToIndexAsync(new JobIndexInternal(State.JobId, State.JobName, State.CreateBy,
                     State.Tags));
             }
 
@@ -61,7 +61,7 @@ namespace JobTrackerX.Grains
 
         public async Task UpdateJobStateAsync(UpdateJobStateDto dto, bool writeState = true)
         {
-            var jobStateDto = new UpdateJobStateDtoInner(dto);
+            var jobStateDto = new UpdateJobStateDtoInternal(dto);
             var previous = jobStateDto.JobState;
             if (Helper.FinishedOrWaitingForChildrenJobStates.Contains(jobStateDto.JobState))
             {
@@ -119,7 +119,7 @@ namespace JobTrackerX.Grains
             await WriteStateAsync();
         }
 
-        public async Task<JobEntityState> GetJobAsync()
+        public async Task<JobEntityState> GetJobEntityAsync()
         {
             if (State.CurrentJobState == JobState.WaitingForActivation)
             {
@@ -127,63 +127,5 @@ namespace JobTrackerX.Grains
             }
             return await Task.FromResult(State);
         }
-
-        #region Obsolete
-
-        /*
-               [Obsolete]
-               public async Task<IList<JobEntity>> GetJobWithChildrenAsync()
-               {
-                   var jobs = new ConcurrentBag<JobEntity> {State};
-                   var childrenIds = await GetAllWithChildrenIdsAsync(State.JobId);
-                   var getJobHandler = new ActionBlock<long>(async jobId =>
-                   {
-                       var jobGrain = GrainFactory.GetGrain<IJobGrain>(jobId);
-                       jobs.Add(await jobGrain.GetJobAsync());
-                   }, Helper.GetInnerGrainExecutionOptions());
-                   foreach (var childJobId in childrenIds)
-                   {
-                       await getJobHandler.PostToBlockUntilSuccess(childJobId);
-                   }
-
-                   getJobHandler.Complete();
-                   await getJobHandler.Completion;
-
-                   return jobs.OrderBy(s => s.JobId).ToList();
-               }
-       */
-
-        /*
-                [Obsolete]
-                private async Task<IEnumerable<long>> GetAllWithChildrenIdsAsync(long jobId)
-                {
-                    var jobCount = 1;
-                    var result = new ConcurrentBag<long>();
-                    this.AsReference<IJobGrain>();
-                    var buffer = new BufferBlock<long>(Helper.GetInnerGrainExecutionOptions());
-                    var action = new ActionBlock<long>(async id =>
-                    {
-                        var jobRef = GrainFactory.GetGrain<IDescendantsRefGrain>(id);
-                        foreach (var childId in await jobRef.GetChildrenAsync() ?? new List<long>())
-                        {
-                            result.Add(childId);
-                            await buffer.PostToBlockUntilSuccess(childId);
-                            Interlocked.Increment(ref jobCount);
-                        }
-
-                        Interlocked.Decrement(ref jobCount);
-                    }, Helper.GetInnerGrainExecutionOptions());
-                    buffer.LinkTo(action);
-                    await buffer.PostToBlockUntilSuccess(jobId);
-                    while (jobCount != 0)
-                    {
-                        await Task.Delay(10);
-                    }
-
-                    return result.ToList();
-                }
-        */
-
-        #endregion Obsolete
     }
 }

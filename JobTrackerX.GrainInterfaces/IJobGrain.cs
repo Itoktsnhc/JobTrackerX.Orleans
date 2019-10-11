@@ -9,7 +9,7 @@ namespace JobTrackerX.GrainInterfaces
     {
         Task<JobEntityState> AddJobAsync(AddJobDto addJobDto);
 
-        Task<JobEntityState> GetJobAsync();
+        Task<JobEntityState> GetJobEntityAsync();
 
         Task UpdateJobStateAsync(UpdateJobStateDto jobStateDto, bool writeState = true);
 

@@ -4,9 +4,11 @@ using JobTrackerX.GrainInterfaces;
 using Microsoft.Extensions.Options;
 using Orleans;
 using Orleans.Providers;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 
 namespace JobTrackerX.Grains
 {
@@ -20,20 +22,29 @@ namespace JobTrackerX.Grains
             _indexConfig = options.Value.JobIndexConfig;
         }
 
-        public Task<List<JobIndexInner>> QueryAsync(string queryStr)
+        public async Task<List<JobIndexInternal>> QueryAsync(string queryStr)
         {
-            var grains = new List<IRollingJobIndexGrain>();
+            var queryResult = new ConcurrentBag<JobIndexInternal>();
+            var queryActionBlock = new ActionBlock<int>(async index =>
+            {
+                var grain = GrainFactory.GetGrain<IRollingJobIndexGrain>(Helper.GetRollingIndexId(this.GetPrimaryKeyString(), index));
+                foreach (var item in await grain.QueryAsync(queryStr))
+                {
+                    queryResult.Add(item);
+                }
+            }, Helper.GetGrainInternalExecutionOptions());
+
             for (var i = 0; i <= State.RollingIndexCount; i++)
             {
-                grains.Add(GrainFactory.GetGrain<IRollingJobIndexGrain>(
-                    Helper.GetRollingIndexId(this.GetPrimaryKeyString(), State.RollingIndexCount)));
+                await queryActionBlock.PostToBlockUntilSuccessAsync(i);
             }
 
-            return Task.FromResult(grains.AsParallel().WithDegreeOfParallelism(Constants.DefaultDegreeOfParallelism)
-                .SelectMany(s => s.QueryAsync(queryStr).Result).ToList());
+            queryActionBlock.Complete();
+            await queryActionBlock.Completion;
+            return queryResult.ToList();
         }
 
-        public async Task MergeIntoIndicesAsync(List<JobIndexInner> indices)
+        public async Task MergeIntoIndicesAsync(List<JobIndexInternal> indices)
         {
             var current = GrainFactory.GetGrain<IRollingJobIndexGrain>(Helper.GetRollingIndexId(
                 this.GetPrimaryKeyString(),

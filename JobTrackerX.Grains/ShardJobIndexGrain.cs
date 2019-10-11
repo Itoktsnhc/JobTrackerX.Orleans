@@ -29,7 +29,7 @@ namespace JobTrackerX.Grains
 
         private CloudTableClient Client => _account.CreateCloudTableClient();
 
-        public async Task AddToIndexAsync(JobIndexInner jobIndex)
+        public async Task AddToIndexAsync(JobIndexInternal jobIndex)
         {
             jobIndex.PartitionKey = Helper.GetShardIndexPartitionKeyName(jobIndex, this.GetPrimaryKeyString());
             jobIndex.RowKey = jobIndex.JobId.ToString();
@@ -38,10 +38,10 @@ namespace JobTrackerX.Grains
         }
 
         [Obsolete("slow query")]
-        public async Task<List<JobIndexInner>> QueryAsync(string queryStr)
+        public async Task<List<JobIndexInternal>> QueryAsync(string queryStr)
         {
             var token = new TableContinuationToken();
-            var result = new List<JobIndexInner>();
+            var result = new List<JobIndexInternal>();
             while (token != null)
             {
                 var res = await FetchWithTokenAsync(token);
@@ -52,11 +52,11 @@ namespace JobTrackerX.Grains
             return string.IsNullOrEmpty(queryStr) ? result : result.AsQueryable().Where(queryStr).ToList();
         }
 
-        public async Task<TableQuerySegment<JobIndexInner>> FetchWithTokenAsync(TableContinuationToken token,
+        public async Task<TableQuerySegment<JobIndexInternal>> FetchWithTokenAsync(TableContinuationToken token,
             int takeCount = 5000)
         {
             var table = Client.GetTableReference(_tableName);
-            var query = new TableQuery<JobIndexInner>
+            var query = new TableQuery<JobIndexInternal>
             {
                 FilterString =
                     $"PartitionKey lt '{this.GetPrimaryKeyString()}.' and PartitionKey ge '{this.GetPrimaryKeyString()}-'",

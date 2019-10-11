@@ -13,7 +13,7 @@ namespace JobTrackerX.Entities.GrainStates
 
     public class JobIndexState
     {
-        public Dictionary<long, JobIndexInner> JobIndices { get; set; } = new Dictionary<long, JobIndexInner>();
+        public Dictionary<long, JobIndexInternal> JobIndices { get; set; } = new Dictionary<long, JobIndexInternal>();
     }
 
     public class CompressIndexWrapper
@@ -21,13 +21,13 @@ namespace JobTrackerX.Entities.GrainStates
         public byte[] DataArray { get; set; }
     }
 
-    public class JobIndexInner : TableEntity
+    public class JobIndexInternal : TableEntity
     {
-        public JobIndexInner()
+        public JobIndexInternal()
         {
         }
 
-        public JobIndexInner(long jobId, string jobName, string createdBy, List<string> tags)
+        public JobIndexInternal(long jobId, string jobName, string createdBy, List<string> tags)
         {
             JobId = jobId;
             JobName = jobName;

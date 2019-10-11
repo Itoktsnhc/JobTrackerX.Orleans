@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace JobTrackerX.Entities
 {
-    public class AddJobDtoInner
+    public class AddJobDtoInternal
     {
-        public AddJobDtoInner(AddJobDto dto)
+        public AddJobDtoInternal(AddJobDto dto)
         {
             JobName = dto.JobName;
             ParentJobId = dto.ParentJobId;
@@ -14,7 +14,7 @@ namespace JobTrackerX.Entities
             Options = dto.Options;
         }
 
-        public AddJobDtoInner()
+        public AddJobDtoInternal()
         {
         }
 
@@ -25,13 +25,13 @@ namespace JobTrackerX.Entities
         public string JobName { get; set; }
     }
 
-    public class UpdateJobStateDtoInner
+    public class UpdateJobStateDtoInternal
     {
-        public UpdateJobStateDtoInner()
+        public UpdateJobStateDtoInternal()
         {
         }
 
-        public UpdateJobStateDtoInner(UpdateJobStateDto dto)
+        public UpdateJobStateDtoInternal(UpdateJobStateDto dto)
         {
             AdditionMsg = dto.Message;
             JobState = dto.JobState;

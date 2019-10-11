@@ -26,24 +26,24 @@ namespace JobTrackerX.Grains
             }
             else
             {
-                InnerState = new JobIndexState();
+                InternalState = new JobIndexState();
             }
         }
 
-        public JobIndexState InnerState { get; set; }
+        public JobIndexState InternalState { get; set; }
 
-        public Task<List<JobIndexInner>> QueryAsync(string queryStr)
+        public Task<List<JobIndexInternal>> QueryAsync(string queryStr)
         {
             return Task.FromResult(string.IsNullOrEmpty(queryStr)
-                ? InnerState.JobIndices.Values.ToList()
-                : InnerState.JobIndices.Values.AsQueryable().Where(queryStr).ToList());
+                ? InternalState.JobIndices.Values.ToList()
+                : InternalState.JobIndices.Values.AsQueryable().Where(queryStr).ToList());
         }
 
-        public async Task MergeIntoIndicesAsync(List<JobIndexInner> indices)
+        public async Task MergeIntoIndicesAsync(List<JobIndexInternal> indices)
         {
             foreach (var index in indices)
             {
-                InnerState.JobIndices[index.JobId] = index;
+                InternalState.JobIndices[index.JobId] = index;
             }
             FlushToState();
             await WriteStateAsync();
@@ -51,7 +51,7 @@ namespace JobTrackerX.Grains
 
         public Task<long> GetItemSizeAsync()
         {
-            return Task.FromResult<long>(InnerState.JobIndices.Count);
+            return Task.FromResult<long>(InternalState.JobIndices.Count);
         }
 
         private void LoadFromState()
@@ -61,14 +61,14 @@ namespace JobTrackerX.Grains
                 using (var decompressedStream = new MemoryStream())
                 {
                     gZipStream.CopyTo(decompressedStream);
-                    InnerState = JsonConvert.DeserializeObject<JobIndexState>(Encoding.UTF8.GetString(decompressedStream.ToArray()));
+                    InternalState = JsonConvert.DeserializeObject<JobIndexState>(Encoding.UTF8.GetString(decompressedStream.ToArray()));
                 }
             }
         }
 
         private void FlushToState()
         {
-            var data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(InnerState));
+            var data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(InternalState));
             using (var target = new MemoryStream())
             {
                 using (var rawStream = new GZipStream(target, CompressionMode.Compress))

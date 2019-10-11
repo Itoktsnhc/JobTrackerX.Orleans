@@ -27,20 +27,20 @@ namespace JobTrackerX.WebApi.Services.JobTracker
         public async Task<JobEntity> GetJobByIdAsync(long id)
         {
             var jobGrain = _client.GetGrain<IJobGrain>(id);
-            var res = await jobGrain.GetJobAsync();
+            var res = await jobGrain.GetJobEntityAsync();
 
             return _mapper.Map<JobEntity>(res);
         }
 
         public async Task<List<JobEntity>> GetDescendantEntitiesAsync(long id)
         {
-            await _client.GetGrain<IJobGrain>(id).GetJobAsync();
+            await _client.GetGrain<IJobGrain>(id).GetJobEntityAsync();
             var childrenIds = await _client.GetGrain<IDescendantsRefGrain>(id).GetChildrenAsync();
             var jobs = new ConcurrentBag<JobEntityState>();
             var getJobInfoProcessor = new ActionBlock<long>(async jobId =>
             {
-                var innerJobGrain = _client.GetGrain<IJobGrain>(jobId);
-                jobs.Add(await innerJobGrain.GetJobAsync());
+                var jobGrain = _client.GetGrain<IJobGrain>(jobId);
+                jobs.Add(await jobGrain.GetJobEntityAsync());
             }, Helper.GetOutOfGrainExecutionOptions());
 
             foreach (var childJobId in childrenIds)
@@ -69,7 +69,7 @@ namespace JobTrackerX.WebApi.Services.JobTracker
         public async Task<string> UpdateJobStatusAsync(long id, UpdateJobStateDto dto)
         {
             var grain = _client.GetGrain<IJobGrain>(id);
-            var job = await grain.GetJobAsync();
+            var job = await grain.GetJobEntityAsync();
             if (job.CurrentJobState == JobState.WaitingForActivation)
             {
                 throw new Exception($"job Id not exist: {id}");

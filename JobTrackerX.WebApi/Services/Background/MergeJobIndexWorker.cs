@@ -53,7 +53,7 @@ namespace JobTrackerX.WebApi.Services.Background
                         var token = new TableContinuationToken();
                         var shardGrain = _client.GetGrain<IShardJobIndexGrain>(index);
                         var aggregator = _client.GetGrain<IAggregateJobIndexGrain>(index);
-                        var indexResults = new List<JobIndexInner>();
+                        var indexResults = new List<JobIndexInternal>();
                         while (token != null && indexResults.Count < _indexConfig.MaxRoundSize)
                         {
                             var result = await shardGrain.FetchWithTokenAsync(token);

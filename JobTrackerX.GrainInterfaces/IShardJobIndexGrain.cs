@@ -9,11 +9,11 @@ namespace JobTrackerX.GrainInterfaces
 {
     public interface IShardJobIndexGrain : IGrainWithStringKey
     {
-        Task AddToIndexAsync(JobIndexInner jobIndex);
+        Task AddToIndexAsync(JobIndexInternal jobIndex);
 
-        Task<TableQuerySegment<JobIndexInner>> FetchWithTokenAsync(TableContinuationToken token, int takeCount = 5000);
+        Task<TableQuerySegment<JobIndexInternal>> FetchWithTokenAsync(TableContinuationToken token, int takeCount = 5000);
 
         [Obsolete("slow query")]
-        Task<List<JobIndexInner>> QueryAsync(string queryStr);
+        Task<List<JobIndexInternal>> QueryAsync(string queryStr);
     }
 }

@@ -42,7 +42,7 @@ namespace JobTrackerX.WebApi.Services.Query
             }
 
             var timeIndices = Helper.GetTimeIndexRange(dto.Start, dto.End);
-            var result = new ConcurrentDictionary<long, JobIndexInner>();
+            var result = new ConcurrentDictionary<long, JobIndexInternal>();
             var queryIndicesBlock = new ActionBlock<string>(
                 async index =>
                 {

@@ -41,6 +41,15 @@ namespace JobTrackerX.Entities
             };
         }
 
+        public static ExecutionDataflowBlockOptions GetGrainInternalExecutionOptions()
+        {
+            return new ExecutionDataflowBlockOptions
+            {
+                MaxDegreeOfParallelism = Constants.DefaultDegreeOfParallelism,
+                TaskScheduler = TaskScheduler.Current
+            };
+        }
+
         public static IEnumerable<List<T>> SplitListByCount<T>(int nSize, List<T> list)
         {
             for (var i = 0; i < list.Count; i += nSize)
@@ -49,12 +58,12 @@ namespace JobTrackerX.Entities
             }
         }
 
-        public static string GetShardIndexBlobName(JobIndexInner jobIndex, string prefix)
+        public static string GetShardIndexBlobName(JobIndexInternal jobIndex, string prefix)
         {
             return $"{prefix}/{jobIndex.JobId}";
         }
 
-        public static string GetShardIndexPartitionKeyName(JobIndexInner jobIndex, string prefix)
+        public static string GetShardIndexPartitionKeyName(JobIndexInternal jobIndex, string prefix)
         {
             return $"{prefix}-{jobIndex.JobId}";
         }
