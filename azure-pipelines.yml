@@ -23,7 +23,6 @@ steps:
   inputs:
     command: 'pack'
     packagesToPack: '**/JobTrackerX.Client.csproj'
-    versioningScheme: 'byBuildNumber'
 
 - task: DotNetCoreCLI@2
   inputs:
