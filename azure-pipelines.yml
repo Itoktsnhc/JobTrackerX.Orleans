@@ -24,6 +24,14 @@ steps:
     command: 'pack'
     packagesToPack: '**/JobTrackerX.Client.csproj'
     versioningScheme: 'off'
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'pack'
+    packagesToPack: '**/JobTrackerX.SharedLibs.csproj'
+    versioningScheme: 'off'
+
+
     
 - task: NuGetCommand@2
   inputs:
