@@ -70,6 +70,10 @@ namespace JobTrackerX.WebApi.Services.JobTracker
         {
             var grain = _client.GetGrain<IJobGrain>(id);
             var job = await grain.GetJobEntityAsync();
+            if (dto.JobState == JobState.WaitingForActivation)
+            {
+                throw new Exception($"cannot set {id}'s state to {JobState.WaitingForActivation}");
+            }
             if (job.CurrentJobState == JobState.WaitingForActivation)
             {
                 throw new Exception($"job Id not exist: {id}");
