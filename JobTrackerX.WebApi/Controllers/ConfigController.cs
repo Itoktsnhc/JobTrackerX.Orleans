@@ -62,5 +62,11 @@ namespace JobTrackerX.WebApi.Controllers
             }
             return new ReturnDto<string>("auth success");
         }
+
+        [HttpGet("exception")]
+        public ReturnDto<string> FireException()
+        {
+            throw new Exception("sampleException");
+        }
     }
 }

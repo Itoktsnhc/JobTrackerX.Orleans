@@ -15,6 +15,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Orleans;
 using OrleansDashboard;
+using Serilog;
 
 namespace JobTrackerX.WebApi
 {
@@ -31,7 +32,6 @@ namespace JobTrackerX.WebApi
         public void ConfigureServices(IServiceCollection services)
         {
             #region Configurations
-
             services.AddOptions();
             services.Configure<JobTrackerConfig>(Configuration.GetSection(nameof(JobTrackerConfig)));
             services.AddSwaggerGen(c =>
@@ -91,7 +91,7 @@ namespace JobTrackerX.WebApi
 
         public void Configure(IApplicationBuilder app)
         {
-            if (!string.IsNullOrEmpty(JobTrackerConfig.CommonConfig.AuthToken))
+            if (JobTrackerConfig.CommonConfig.AuthToken != null)
             {
                 app.UseMiddleware<TokenAuth>();
             }
@@ -102,6 +102,7 @@ namespace JobTrackerX.WebApi
             }
 
             app.UseStaticFiles();
+            app.UseSerilogRequestLogging();
             app.UseSwagger();
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "JobTrackerX.Orleans"));
             app.UseDeveloperExceptionPage();

@@ -1,6 +1,7 @@
 ﻿using JobTrackerX.SharedLibs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Logging;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -9,15 +10,23 @@ namespace JobTrackerX.WebApi.Misc
 {
     internal class GlobalExceptionFilter : IExceptionFilter
     {
+        private readonly ILogger<GlobalExceptionFilter> _logger;
+
+        public GlobalExceptionFilter(ILogger<GlobalExceptionFilter> logger)
+        {
+            _logger = logger;
+        }
+
         public void OnException(ExceptionContext context)
         {
             context.HttpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
             context.Result = new JsonResult(new ReturnDto<object>
             {
-                Msg = "Exception！！！ -- " + context.Exception.Message,
+                Msg = "InternalException : " + context.Exception.Message,
                 Result = false,
                 Data = null
             });
+            _logger.LogError(context.Exception, $"Exception captured in {nameof(GlobalExceptionFilter)}");
         }
     }
 
