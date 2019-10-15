@@ -6,6 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="DynamicExpresso.Core" Version="2.3.1" />
       <PackageReference Include="Microsoft.Azure.ServiceBus" Version="4.0.0" />
       <PackageReference Include="Microsoft.Extensions.Options" Version="3.0.0" />
       <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.10.0" />

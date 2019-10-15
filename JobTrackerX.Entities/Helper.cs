@@ -1,9 +1,11 @@
+using DynamicExpresso;
 using JobTrackerX.Entities.GrainStates;
 using JobTrackerX.SharedLibs;
 using Microsoft.WindowsAzure.Storage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
@@ -32,6 +34,16 @@ namespace JobTrackerX.Entities
                 JobState.WaitingForChildrenToComplete,
                 JobState.RanToCompletion
            };
+
+        public static readonly Interpreter Interpreter;
+        private delegate bool RegexMatch(string str, string pattern);
+
+        static Helper()
+        {
+            RegexMatch del = Regex.IsMatch;
+            Interpreter = new Interpreter().SetFunction("RegexMatch",
+                del);
+        }
 
         public static ExecutionDataflowBlockOptions GetOutOfGrainExecutionOptions()
         {

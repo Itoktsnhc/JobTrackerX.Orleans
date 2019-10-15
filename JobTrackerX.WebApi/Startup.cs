@@ -15,7 +15,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Orleans;
 using OrleansDashboard;
-using Serilog;
 
 namespace JobTrackerX.WebApi
 {
@@ -32,6 +31,7 @@ namespace JobTrackerX.WebApi
         public void ConfigureServices(IServiceCollection services)
         {
             #region Configurations
+
             services.AddOptions();
             services.Configure<JobTrackerConfig>(Configuration.GetSection(nameof(JobTrackerConfig)));
             services.AddSwaggerGen(c =>

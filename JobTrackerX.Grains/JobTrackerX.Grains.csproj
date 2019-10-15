@@ -10,7 +10,6 @@
 
     <ItemGroup>
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.0.0" />
-      <PackageReference Include="System.Linq.Dynamic.Core" Version="1.0.19" />
     </ItemGroup>
 
 </Project>

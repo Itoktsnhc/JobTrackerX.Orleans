@@ -6,10 +6,6 @@ using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 using Orleans;
 using Orleans.Concurrency;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 
 namespace JobTrackerX.Grains
@@ -35,21 +31,6 @@ namespace JobTrackerX.Grains
             jobIndex.RowKey = jobIndex.JobId.ToString();
             var table = Client.GetTableReference(_tableName);
             await table.ExecuteAsync(TableOperation.Insert(jobIndex));
-        }
-
-        [Obsolete("slow query")]
-        public async Task<List<JobIndexInternal>> QueryAsync(string queryStr)
-        {
-            var token = new TableContinuationToken();
-            var result = new List<JobIndexInternal>();
-            while (token != null)
-            {
-                var res = await FetchWithTokenAsync(token);
-                result.AddRange(res.Results);
-                token = res.ContinuationToken;
-            }
-
-            return string.IsNullOrEmpty(queryStr) ? result : result.AsQueryable().Where(queryStr).ToList();
         }
 
         public async Task<TableQuerySegment<JobIndexInternal>> FetchWithTokenAsync(TableContinuationToken token,

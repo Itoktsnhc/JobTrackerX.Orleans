@@ -1,15 +1,17 @@
-﻿using JobTrackerX.Entities;
+﻿using DynamicExpresso;
+using JobTrackerX.Entities;
 using JobTrackerX.Entities.GrainStates;
 using JobTrackerX.GrainInterfaces;
 using Newtonsoft.Json;
 using Orleans;
 using Orleans.Providers;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Linq.Dynamic.Core;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace JobTrackerX.Grains
@@ -36,7 +38,8 @@ namespace JobTrackerX.Grains
         {
             return Task.FromResult(string.IsNullOrEmpty(queryStr)
                 ? InternalState.JobIndices.Values.ToList()
-                : InternalState.JobIndices.Values.AsQueryable().Where(queryStr).ToList());
+                : InternalState.JobIndices.Values.Where(
+                    Helper.Interpreter.ParseAsDelegate<Func<JobIndexInternal, bool>>(queryStr, "index")).ToList());
         }
 
         public async Task MergeIntoIndicesAsync(List<JobIndexInternal> indices)
