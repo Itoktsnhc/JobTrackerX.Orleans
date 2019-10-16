@@ -1,5 +1,4 @@
-﻿using DynamicExpresso;
-using JobTrackerX.Entities;
+﻿using JobTrackerX.Entities;
 using JobTrackerX.Entities.GrainStates;
 using JobTrackerX.GrainInterfaces;
 using Newtonsoft.Json;
@@ -11,7 +10,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace JobTrackerX.Grains
@@ -32,7 +30,7 @@ namespace JobTrackerX.Grains
             }
         }
 
-        public JobIndexState InternalState { get; set; }
+        private JobIndexState InternalState { get; set; }
 
         public Task<List<JobIndexInternal>> QueryAsync(string queryStr)
         {

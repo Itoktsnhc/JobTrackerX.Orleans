@@ -2,14 +2,15 @@
 using JobTrackerX.Grains;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Orleans;
 using Orleans.Configuration;
 using Orleans.Hosting;
+using Orleans.Statistics;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace JobTrackerX.WebApi.Services.Background
 {
@@ -51,11 +52,6 @@ namespace JobTrackerX.WebApi.Services.Background
                 .AddAzureTableGrainStorage(Constants.JobIdStoreName, jobEntityStorageOptions)
                 .AddAzureTableGrainStorage(Constants.JobIdOffsetStoreName, jobEntityStorageOptions)
                 .AddAzureBlobGrainStorage(Constants.ReadOnlyJobIndexStoreName, readOnlyJobIndexStorageOptions)
-                .ConfigureLogging(x =>
-                {
-                    x.AddConsole();
-                    x.SetMinimumLevel(LogLevel.Error);
-                })
                 .ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => jobTrackerConfigOptions);
@@ -70,15 +66,11 @@ namespace JobTrackerX.WebApi.Services.Background
                     options.ClassSpecificCollectionAge[typeof(RollingJobIndexGrain).FullName ?? throw new
                                                            InvalidOperationException()] = TimeSpan.FromMinutes(5);
                 })
-                //.Configure<SerializationProviderOptions>(options =>
-                //{
-                //    options.SerializationProviders.Clear();
-                //    options.SerializationProviders.Add(typeof(ProtobufSerializer).GetTypeInfo());
-                //})
-                ;
+                .ConfigureLogging(loggingBuilder => loggingBuilder.AddSerilog());
             if (jobTrackerConfigOptions.Value.CommonConfig.UseDashboard)
             {
                 builder.UseDashboard(x => x.HostSelf = false);
+                builder.UsePerfCounterEnvironmentStatistics();
             }
 
             _silo = builder.Build();

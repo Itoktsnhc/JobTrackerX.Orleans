@@ -12,11 +12,11 @@ namespace JobTrackerX.WebApi
 {
     public static class Program
     {
-        public static string SettingFileName = $"appsettings.{Constants.EnvName}.json";
+        private static readonly string SettingFileName = $"appsettings.{Constants.EnvName}.json";
 
-        public static IConfiguration Configuration { get; } = new ConfigurationBuilder()
+        private static IConfiguration Configuration { get; } = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile(SettingFileName, optional: false)
+            .AddJsonFile(SettingFileName, false)
             .AddEnvironmentVariables()
             .Build();
 
