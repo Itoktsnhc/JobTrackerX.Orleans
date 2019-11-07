@@ -19,7 +19,7 @@ namespace JobTrackerX.WebApi.Controllers
         }
 
         /// <summary>
-        ///     获取该JobId的Job详情
+        ///     GetJobDetail
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -30,7 +30,7 @@ namespace JobTrackerX.WebApi.Controllers
         }
 
         /// <summary>
-        ///     获取该Id的包括所有子节点详情
+        ///     GetJobDetailDescendants
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -41,7 +41,7 @@ namespace JobTrackerX.WebApi.Controllers
         }
 
         /// <summary>
-        ///     获取该节点向后的节点Id(包括自身节点Id)
+        ///     GetJobDetailDescendantsIds
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -52,7 +52,7 @@ namespace JobTrackerX.WebApi.Controllers
         }
 
         /// <summary>
-        /// 获取子节点详情
+        /// GetChildrenDetails
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -63,7 +63,7 @@ namespace JobTrackerX.WebApi.Controllers
         }
 
         /// <summary>
-        ///     添加任务
+        ///     AddJob
         /// </summary>
         /// <param name="dto"></param>
         /// <returns></returns>
@@ -75,7 +75,7 @@ namespace JobTrackerX.WebApi.Controllers
         }
 
         /// <summary>
-        ///     更新任务状态
+        ///     UpdateJobState
         /// </summary>
         /// <param name="id"></param>
         /// <param name="dto"></param>
@@ -88,7 +88,7 @@ namespace JobTrackerX.WebApi.Controllers
         }
 
         /// <summary>
-        /// 更新Options
+        /// UpdateOptions
         /// </summary>
         /// <param name="id"></param>
         /// <param name="dto"></param>
