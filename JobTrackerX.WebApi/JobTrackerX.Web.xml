@@ -25,6 +25,13 @@
             <param name="id"></param>
             <returns></returns>
         </member>
+        <member name="M:JobTrackerX.WebApi.Controllers.JobTrackerController.GetChildrenEntitiesAsync(System.Int64)">
+            <summary>
+            获取子节点详情
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
         <member name="M:JobTrackerX.WebApi.Controllers.JobTrackerController.AddNewJob(JobTrackerX.SharedLibs.AddJobDto)">
             <summary>
                 添加任务
@@ -35,6 +42,14 @@
         <member name="M:JobTrackerX.WebApi.Controllers.JobTrackerController.UpdateJobStatusAsync(System.Int64,JobTrackerX.SharedLibs.UpdateJobStateDto)">
             <summary>
                 更新任务状态
+            </summary>
+            <param name="id"></param>
+            <param name="dto"></param>
+            <returns></returns>
+        </member>
+        <member name="M:JobTrackerX.WebApi.Controllers.JobTrackerController.UpdateJobOptionsAsync(System.Int64,JobTrackerX.SharedLibs.UpdateJobOptionsDto)">
+            <summary>
+            更新Options
             </summary>
             <param name="id"></param>
             <param name="dto"></param>

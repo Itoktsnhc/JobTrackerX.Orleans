@@ -1,0 +1,25 @@
+﻿@inherits LayoutComponentBase
+@using Blazored.Toast.Configuration
+
+<nav class="navbar navbar-expand-sm bg-dark">
+    <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+            <a class="font-weight-bold nav-link" style="color:white" href="/">Home</a>
+        </li>
+        <li class="nav-item">
+            <a class="font-weight-bold nav-link" style="color:white" target="_blank" href="/dashboard">OrleansDashboard</a>
+        </li>
+        <li class="nav-item">
+            <a class="font-weight-bold nav-link" style="color:white" target="_blank" href="/swagger">Swagger</a>
+        </li>
+    </ul>
+</nav>
+<BlazoredToasts Position="ToastPosition.TopRight"
+                Timeout="2"
+                SuccessClass="success-toast-override"
+                SuccessIconClass="fa fa-thumbs-up"
+                ErrorIconClass="fa fa-bug" />
+<br />
+<div class="container" style="max-width:1920px">
+    @Body
+</div>

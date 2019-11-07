@@ -17,5 +17,7 @@ namespace JobTrackerX.WebApi.Services.JobTracker
         Task<string> UpdateJobStatusAsync(long id, UpdateJobStateDto dto);
 
         Task<string> UpdateJobOptionsAsync(long id, UpdateJobOptionsDto dto);
+
+        Task<List<JobEntity>> GetChildrenEntitiesAsync(long id);
     }
 }

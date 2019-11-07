@@ -2,6 +2,7 @@ using JobTrackerX.SharedLibs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace JobTrackerX.Entities.GrainStates
 {
@@ -60,9 +61,12 @@ namespace JobTrackerX.Entities.GrainStates
         {
             get
             {
-                return StateChanges.LastOrDefault(s =>
-                    Helper.FinishedJobStates
-                        .Contains(s.State))?.TimePoint;
+                if (Helper.FinishedOrFaultedJobStates.Contains(CurrentJobState))
+                {
+                    var stateCollection = TotalChildrenCount > 0 ? Helper.FinishedOrFaultedJobStates : Helper.FinishedOrWaitingForChildrenOrFaultedJobStates;
+                    return StateChanges.LastOrDefault(s => stateCollection.Contains(s.State))?.TimePoint;
+                }
+                return null;
             }
         }
 

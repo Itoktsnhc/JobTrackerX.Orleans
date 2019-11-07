@@ -6,7 +6,6 @@ using Microsoft.Extensions.Options;
 using Orleans;
 using Orleans.Configuration;
 using Orleans.Hosting;
-using Orleans.Statistics;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -70,7 +69,6 @@ namespace JobTrackerX.WebApi.Services.Background
             if (jobTrackerConfigOptions.Value.CommonConfig.UseDashboard)
             {
                 builder.UseDashboard(x => x.HostSelf = false);
-                builder.UsePerfCounterEnvironmentStatistics();
             }
 
             _silo = builder.Build();

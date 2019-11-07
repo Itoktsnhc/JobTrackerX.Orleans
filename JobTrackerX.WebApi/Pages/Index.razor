@@ -1,0 +1,245 @@
+﻿@page "/"
+@page "/index"
+@inject IQueryIndexService _service
+@inject IJobTrackerService _trackService
+@inject IMapper _mapper
+@inject IToastService _toastService
+
+<h1>
+    JobList
+</h1>
+
+@if (SharedData.LastMergeTimePoint != null)
+{
+    <span class="small" style="line-height: 38px;">
+        UpdateTime：@SharedData.LastMergeTimePoint.Value.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUIShowDateTimeFormat) 条数：@totalCount
+    </span>
+}
+@if (jobIndices.Any())
+{
+
+    <div class="float-right">
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <span class="input-group-text">TimeIndexRange(@Constants.WebUIInputDateTimeFormat)</span>
+            </div>
+            <input type="text" @bind-value="@setStartTimeStr" placeholder="Start" class="form-control" />
+            <input type="text" @bind-value="@setEndTimeStr" placeholder="End" class="form-control" />
+        </div>
+    </div>
+    <br />
+    <br />
+    <div class="input-group mb-3">
+        <input type="text" class="form-control" @bind-value="@setPredicate" placeholder="lambda expression with 'index' as parameter" />
+        <div class="input-group-append">
+            <button type="button" class="btn btn-outline-secondary" @onclick="@(e=>ApplyPredicateAsync())">Query Now</button>
+        </div>
+    </div>
+    <div class="table-responsive-md text-center">
+        <table class="table table-striped table-sm table-hover">
+            <thead>
+                <tr>
+                    <th class="text-info">JobId</th>
+                    <th class="text-info">JobName</th>
+                    <th class="text-muted">State</th>
+                    <th class="text-info">IndexTime</th>
+                    <th class="text-info">CreatedBy</th>
+                    <th class="text-info">Tags</th>
+                    <th class="text-muted">Progress</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var jobIndex in jobIndices)
+                {
+                    <tr>
+                        <td>
+                            <NavLink href="@jobIndex.DetailPath">@jobIndex.JobId</NavLink>
+                        </td>
+                        <td>@jobIndex.JobName</td>
+                        <td>
+                            <span class="@Helper.GetStateBadgeColor(jobIndex.JobEntity.CurrentJobState)">@jobIndex.JobEntity.CurrentJobState</span>
+                        </td>
+                        <td>@jobIndex.IndexTime.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUIShowDateTimeFormat)</td>
+                        <td>@jobIndex.CreatedBy</td>
+                        <td>
+                            @if (jobIndex.Tags?.Any() == true)
+                            {
+                                foreach (var tag in jobIndex.Tags)
+                                {
+                                    <span class="@Constants.TagClassStr">@tag</span>
+                                }
+                            }
+                        </td>
+                        <td>
+                            <div class="progress" style="max-width:300px">
+                                <div class="progress-bar @(jobIndex.JobEntity.FailedChildrenCount>0?" bg-danger":"bg-success")"
+                                     role="progressbar"
+                                     style="width:@(((jobIndex.JobEntity.TotalChildrenCount-jobIndex.JobEntity.PendingChildrenCount)/(jobIndex.JobEntity.TotalChildrenCount*1.0)).ToString(Constants.PercentageFormat))"></div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div>
+        <div class="float-left">
+            <span>Set page size:</span>
+            <input type="text" style="max-width:50px" @bind-value="@setPageSize" @onblur="@(e=>RefreshByPageSizeAsync())" />
+        </div>
+        <div class="float-right">
+            <select class="custom-select" @onchange="@(e=>GoToPageNumberAsync(e))">
+                @for (int i = 1; i <= MaxPageNumber; i++)
+                {
+                    if (pageNumber == i)
+                    {
+                        <option value="@i" selected="selected">@i</option>
+                    }
+                    else
+                    {
+                        <option value="@i">@i</option>
+                    }
+                }
+            </select>
+        </div>
+    </div>
+}
+else
+{
+    <p class="h2 text-center bg-light">
+        Loading 。。。
+    </p>
+}
+
+@code{
+    private string predicate = null;
+    private string setPredicate = null;
+    private int totalCount = 0;
+    private int pageNumber = 1;
+    private int pageSize = 10;
+    private int setPageSize = 10;
+    private int MaxPageNumber { get { return (int)Math.Ceiling((totalCount * 1.0) / pageSize); } }
+    private IEnumerable<JobIndexViewModel>
+    jobIndices
+    { get; set; } = new List<JobIndexViewModel>
+        ();
+    private string startTimeStr;
+    private string endTimeStr;
+    private string setStartTimeStr;
+    private string setEndTimeStr;
+    private DateTime StartTime;
+    private DateTime EndTime;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await InitAsync();
+    }
+
+    private async Task InitAsync(bool force = false)
+    {
+        var current = DateTimeOffset.Now.ToOffset(TimeSpan.FromHours(8)).DateTime;
+        StartTime = current.AddHours(-1);
+        EndTime = current;
+        startTimeStr = StartTime.ToString(Constants.WebUIInputDateTimeFormat);
+        endTimeStr = EndTime.ToString(Constants.WebUIInputDateTimeFormat);
+        setStartTimeStr = startTimeStr;
+        setEndTimeStr = endTimeStr;
+        await QueryIndicesAsync();
+    }
+
+    private async Task QueryIndicesAsync()
+    {
+        try
+        {
+            if (!DateTime.TryParseExact(startTimeStr, Constants.WebUIInputDateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _)
+            || !DateTime.TryParseExact(endTimeStr, Constants.WebUIInputDateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _))
+            {
+                _toastService.ShowError("Time index range error");
+                return;
+            }
+
+            StartTime = DateTime.ParseExact(startTimeStr, Constants.WebUIInputDateTimeFormat, CultureInfo.InvariantCulture);
+            EndTime = DateTime.ParseExact(endTimeStr, Constants.WebUIInputDateTimeFormat, CultureInfo.InvariantCulture);
+
+            if (EndTime < StartTime)
+            {
+                _toastService.ShowError("Start time and end time set error");
+                return;
+            }
+            if (EndTime - StartTime > TimeSpan.FromHours(24))
+            {
+                _toastService.ShowError("time range cannot longer than 24h");
+                return;
+            }
+
+            CorrectPageSetting();
+            var currentTime = DateTimeOffset.Now;
+            var defaultResult = await _service.QueryJobsAsync(new QueryJobIndexDto
+            {
+                Start = new DateTimeOffset(StartTime, TimeSpan.FromHours(8)),
+                End = new DateTimeOffset(EndTime, TimeSpan.FromHours(8)),
+                Predicate = predicate,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            });
+            totalCount = defaultResult.TotalCount;
+            jobIndices = _mapper.Map<IList<JobIndexViewModel>>(defaultResult.Indices);
+            foreach (var index in jobIndices)
+            {
+                index.JobEntity = _mapper.Map<JobEntityViewModel>(await _trackService.GetJobByIdAsync(index.JobId));
+            }
+        }
+        catch (Exception ex)
+        {
+            _toastService.ShowError(ex.Message, "query error");
+        }
+
+    }
+
+    private void CorrectPageSetting()
+    {
+        if (pageNumber < 1)
+        {
+            pageNumber = 1;
+        }
+        if (pageSize < 1)
+        {
+            pageSize = 10;
+        }
+        if (pageNumber > MaxPageNumber)
+        {
+            pageNumber = MaxPageNumber;
+        }
+    }
+
+    private async Task GoToPageNumberAsync(ChangeEventArgs e)
+    {
+        pageNumber = int.Parse(e.Value.ToString());
+        await QueryIndicesAsync();
+    }
+
+    private async Task ApplyPredicateAsync()
+    {
+        if (predicate == setPredicate && setStartTimeStr == startTimeStr && setEndTimeStr == endTimeStr)
+        {
+            return;
+        }
+
+        predicate = setPredicate;
+        startTimeStr = setStartTimeStr;
+        endTimeStr = setEndTimeStr;
+        pageNumber = 1;
+        await QueryIndicesAsync();
+    }
+
+    private async Task RefreshByPageSizeAsync()
+    {
+        if (pageSize == setPageSize)
+        {
+            return;
+        }
+        pageSize = setPageSize;
+        pageNumber = 1;
+        await QueryIndicesAsync();
+    }
+}

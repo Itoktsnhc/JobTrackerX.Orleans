@@ -5,6 +5,7 @@ using JobTrackerX.SharedLibs;
 using Orleans;
 using Orleans.Providers;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace JobTrackerX.Grains
@@ -30,7 +31,7 @@ namespace JobTrackerX.Grains
             if (addJobDto.ParentJobId.HasValue)
             {
                 var parentGrain = GrainFactory.GetGrain<IJobGrain>(addJobDto.ParentJobId.Value);
-                var parent = await parentGrain.GetJobEntityAsync();
+                var parent = await parentGrain.GetJobAsync();
                 if (parent.CurrentJobState == JobState.WaitingForActivation)
                 {
                     throw new InvalidOperationException($"parent job {addJobDto.ParentJobId} not exist");
@@ -62,24 +63,6 @@ namespace JobTrackerX.Grains
         public async Task UpdateJobStateAsync(UpdateJobStateDto dto, bool writeState = true)
         {
             var jobStateDto = new UpdateJobStateDtoInternal(dto);
-            var previous = jobStateDto.JobState;
-            if (Helper.FinishedOrWaitingForChildrenJobStates.Contains(jobStateDto.JobState))
-            {
-                if (State.PendingChildrenCount > 0)
-                {
-                    jobStateDto.JobState = JobState.WaitingForChildrenToComplete;
-                }
-                else
-                {
-                    jobStateDto.JobState =
-                        State.FailedChildrenCount > 0 ? JobState.Faulted : JobState.RanToCompletion;
-                }
-            }
-            if (previous != jobStateDto.JobState)
-            {
-                jobStateDto.AdditionMsg += $" (sys: {previous} -> {jobStateDto.JobState})";
-            }
-
             State.StateChanges
                 .Add(new StateChangeDto(jobStateDto.JobState, jobStateDto.AdditionMsg));
 
@@ -99,6 +82,11 @@ namespace JobTrackerX.Grains
         public async Task OnChildStateChangeAsync(long childJobId, JobStateCategory state)
         {
             State.ChildrenStatesDic[childJobId] = state;
+            if (Helper.FinishedOrFaultedJobStates.Contains(State.CurrentJobState))
+            {
+                State.StateChanges
+                    .Add(new StateChangeDto(JobState.RanToCompletion, $"(sys: fired by child {childJobId})"));
+            }
             if (State.ParentJobId.HasValue)
             {
                 var parentGrain = GrainFactory.GetGrain<IJobGrain>(State.ParentJobId.Value);
@@ -119,7 +107,7 @@ namespace JobTrackerX.Grains
             await WriteStateAsync();
         }
 
-        public async Task<JobEntityState> GetJobEntityAsync()
+        public async Task<JobEntityState> GetJobAsync()
         {
             if (State.CurrentJobState == JobState.WaitingForActivation)
             {

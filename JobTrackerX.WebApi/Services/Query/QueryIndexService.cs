@@ -65,8 +65,8 @@ namespace JobTrackerX.WebApi.Services.Query
             return new ReturnQueryIndexDto
             {
                 Indices = _mapper.Map<List<JobIndex>>(result.Values
-                    .OrderByDescending(s => s.JobId)
-                    .Skip((dto.PageNumber - 1) * dto.PageNumber)
+                    .OrderByDescending(s => s.IndexTime)
+                    .Skip((dto.PageNumber - 1) * dto.PageSize)
                     .Take(dto.PageSize)
                     .ToList()),
                 IndexGrainHit = timeIndices.Count,

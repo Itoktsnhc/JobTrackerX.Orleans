@@ -13,7 +13,7 @@ namespace JobTrackerX.Entities
 {
     public static class Helper
     {
-        public static readonly List<JobState> FinishedJobStates
+        public static readonly List<JobState> FinishedOrFaultedJobStates
             = new List<JobState>
             {
                 JobState.Faulted,
@@ -43,6 +43,20 @@ namespace JobTrackerX.Entities
             RegexMatch del = Regex.IsMatch;
             Interpreter = new Interpreter().SetFunction("RegexMatch",
                 del);
+        }
+
+        public static string GetStateBadgeColor(JobState state)
+        {
+            return state switch
+            {
+                JobState.RanToCompletion => "badge badge-pill badge-success",
+                JobState.Faulted => "badge badge-pill badge-danger",
+                JobState.WaitingToRun => "badge badge-pill badge-primary",
+                JobState.WaitingForChildrenToComplete => "badge badge-pill badge-secondary",
+                JobState.Running => "badge badge-pill badge-info",
+                JobState.Warning => "badge badge-pill badge-warning",
+                _ => "badge badge-pill badge-light"
+            };
         }
 
         public static ExecutionDataflowBlockOptions GetOutOfGrainExecutionOptions()

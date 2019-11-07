@@ -27,30 +27,38 @@ namespace JobTrackerX.WebApi.Services.JobTracker
         public async Task<JobEntity> GetJobByIdAsync(long id)
         {
             var jobGrain = _client.GetGrain<IJobGrain>(id);
-            var res = await jobGrain.GetJobEntityAsync();
+            var res = await jobGrain.GetJobAsync();
 
             return _mapper.Map<JobEntity>(res);
         }
 
         public async Task<List<JobEntity>> GetDescendantEntitiesAsync(long id)
         {
-            await _client.GetGrain<IJobGrain>(id).GetJobEntityAsync();
             var childrenIds = await _client.GetGrain<IDescendantsRefGrain>(id).GetChildrenAsync();
+            return await BatchGetJobEntitiesAsync(childrenIds);
+        }
+
+        public async Task<List<JobEntity>> GetChildrenEntitiesAsync(long id)
+        {
+            var root = await _client.GetGrain<IJobGrain>(id).GetJobAsync();
+            return await BatchGetJobEntitiesAsync(root.ChildrenStatesDic.Keys);
+        }
+
+        private async Task<List<JobEntity>> BatchGetJobEntitiesAsync(IEnumerable<long> jobIds)
+        {
             var jobs = new ConcurrentBag<JobEntityState>();
             var getJobInfoProcessor = new ActionBlock<long>(async jobId =>
             {
                 var jobGrain = _client.GetGrain<IJobGrain>(jobId);
-                jobs.Add(await jobGrain.GetJobEntityAsync());
+                jobs.Add(await jobGrain.GetJobAsync());
             }, Helper.GetOutOfGrainExecutionOptions());
-
-            foreach (var childJobId in childrenIds)
+            foreach (var childJobId in jobIds)
             {
                 await getJobInfoProcessor.PostToBlockUntilSuccessAsync(childJobId);
             }
-
             getJobInfoProcessor.Complete();
             await getJobInfoProcessor.Completion;
-            return _mapper.Map<List<JobEntity>>(jobs.OrderBy(s => s.JobId).ToList());
+            return _mapper.Map<List<JobEntity>>(jobs.OrderByDescending(s => s.JobId).ToList());
         }
 
         public async Task<IList<long>> GetDescendantIdsAsync(long id)
@@ -69,7 +77,7 @@ namespace JobTrackerX.WebApi.Services.JobTracker
         public async Task<string> UpdateJobStatusAsync(long id, UpdateJobStateDto dto)
         {
             var grain = _client.GetGrain<IJobGrain>(id);
-            var job = await grain.GetJobEntityAsync();
+            var job = await grain.GetJobAsync();
             if (dto.JobState == JobState.WaitingForActivation)
             {
                 throw new Exception($"cannot set {id}'s state to {JobState.WaitingForActivation}");

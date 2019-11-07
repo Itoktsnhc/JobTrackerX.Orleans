@@ -15,6 +15,14 @@
         public const int DefaultDegreeOfParallelism = 100;
 
         public const string TokenAuthKey = "x-jobtracker-token";
+
+        public const string NotAvailableStr = "--";
+        public const string PercentageFormat = "P";
+        public const string DecimalFormat = "0.##";
+        public const string TagClassStr = "badge badge-dark";
+        public const string WebUIInputDateTimeFormat = "yyyy-MM-dd HH";
+        public const string WebUIShowDateTimeFormat = "yyyy-MM-dd HH:mm:ss";
+        public const string WebUIShowTimeSpanFormat = "d'd 'h'h 'm'm 's's'";
 #if DEBUG
 
         public const string EnvName = "Dev";

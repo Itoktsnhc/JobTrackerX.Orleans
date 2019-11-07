@@ -1,6 +1,7 @@
 ﻿using JobTrackerX.Entities;
 using JobTrackerX.Entities.GrainStates;
 using JobTrackerX.GrainInterfaces;
+using JobTrackerX.WebApi.Entities;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -84,7 +85,7 @@ namespace JobTrackerX.WebApi.Services.Background
                 {
                     _logger.LogError(e, $"Error in {nameof(MergeJobIndexWorker)}");
                 }
-
+                SharedData.LastMergeTimePoint = DateTimeOffset.Now;
                 await Task.Delay(_indexConfig.IndexMergeInterval, stoppingToken);
             }
         }

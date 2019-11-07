@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using Blazored.Toast;
 using JobTrackerX.Entities;
 using JobTrackerX.Entities.GrainStates;
 using JobTrackerX.SharedLibs;
+using JobTrackerX.WebApi.Entities;
 using JobTrackerX.WebApi.Misc;
 using JobTrackerX.WebApi.Services.Background;
 using JobTrackerX.WebApi.Services.JobTracker;
@@ -53,12 +55,14 @@ namespace JobTrackerX.WebApi
 
             services.AddSingleton<IHostedService>(c => c.GetRequiredService<InProcessSilo>());
             services.AddHostedService<IdGenerator>();
+#if !DEBUG
             services.AddHostedService<MergeJobIndexWorker>();
+#endif
 
             #endregion
 
             #region Dependencies
-
+            services.AddBlazoredToast();
             services.AddSingleton<InProcessSilo>();
             services.AddSingleton(c => c.GetRequiredService<InProcessSilo>().Client);
             services.AddSingleton<IGrainFactory>(c => c.GetRequiredService<IClusterClient>());
@@ -75,6 +79,12 @@ namespace JobTrackerX.WebApi
                 services.AddServicesForSelfHostedDashboard();
             }
 
+            services.AddRazorPages();
+            services.AddServerSideBlazor()
+                .AddCircuitOptions(options =>
+                {
+                    options.DetailedErrors = true;
+                });
             services.AddControllers(options =>
             options.Filters.Add(new TypeFilterAttribute(typeof(GlobalExceptionFilter)))).AddNewtonsoftJson();
 
@@ -106,7 +116,12 @@ namespace JobTrackerX.WebApi
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "JobTrackerX.Orleans"));
             app.UseDeveloperExceptionPage();
             app.UseRouting();
-            app.UseEndpoints(endpoints => endpoints.MapControllers());
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+                endpoints.MapBlazorHub();
+                endpoints.MapFallbackToPage("/_Host");
+            });
         }
 
         private class MappingProfile : Profile
@@ -115,6 +130,8 @@ namespace JobTrackerX.WebApi
             {
                 CreateMap<JobEntityState, JobEntity>();
                 CreateMap<JobIndexInternal, JobIndex>();
+                CreateMap<JobIndex, JobIndexViewModel>();
+                CreateMap<JobEntity, JobEntityViewModel>();
             }
         }
     }

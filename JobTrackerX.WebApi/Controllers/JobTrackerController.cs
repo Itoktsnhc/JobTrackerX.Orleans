@@ -52,6 +52,17 @@ namespace JobTrackerX.WebApi.Controllers
         }
 
         /// <summary>
+        /// 获取子节点详情
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet("{id}/children/detail")]
+        public async Task<ReturnDto<List<JobEntity>>> GetChildrenEntitiesAsync(long id)
+        {
+            return new ReturnDto<List<JobEntity>>(await _service.GetChildrenEntitiesAsync(id));
+        }
+
+        /// <summary>
         ///     添加任务
         /// </summary>
         /// <param name="dto"></param>
@@ -76,6 +87,12 @@ namespace JobTrackerX.WebApi.Controllers
             return new ReturnDto<string>(await _service.UpdateJobStatusAsync(id, dto));
         }
 
+        /// <summary>
+        /// 更新Options
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="dto"></param>
+        /// <returns></returns>
         [HttpPut("updateOptions/{id}")]
         public async Task<ReturnDto<string>> UpdateJobOptionsAsync([FromRoute] long id,
             [FromBody] [Required] UpdateJobOptionsDto dto)
