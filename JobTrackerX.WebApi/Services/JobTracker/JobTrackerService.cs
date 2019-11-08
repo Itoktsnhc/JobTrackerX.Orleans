@@ -44,7 +44,7 @@ namespace JobTrackerX.WebApi.Services.JobTracker
             return await BatchGetJobEntitiesAsync(root.ChildrenStatesDic.Keys);
         }
 
-        private async Task<List<JobEntity>> BatchGetJobEntitiesAsync(IEnumerable<long> jobIds)
+        public async Task<List<JobEntity>> BatchGetJobEntitiesAsync(IEnumerable<long> jobIds)
         {
             var jobs = new ConcurrentBag<JobEntityState>();
             var getJobInfoProcessor = new ActionBlock<long>(async jobId =>
@@ -78,14 +78,6 @@ namespace JobTrackerX.WebApi.Services.JobTracker
         {
             var grain = _client.GetGrain<IJobGrain>(id);
             var job = await grain.GetJobAsync();
-            if (dto.JobState == JobState.WaitingForActivation)
-            {
-                throw new Exception($"cannot set {id}'s state to {JobState.WaitingForActivation}");
-            }
-            if (job.CurrentJobState == JobState.WaitingForActivation)
-            {
-                throw new Exception($"job Id not exist: {id}");
-            }
             await grain.UpdateJobStateAsync(dto);
             return "success";
         }

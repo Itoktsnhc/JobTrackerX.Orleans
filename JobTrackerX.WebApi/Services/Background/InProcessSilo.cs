@@ -10,6 +10,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
+using Newtonsoft.Json;
 
 namespace JobTrackerX.WebApi.Services.Background
 {
@@ -25,20 +26,20 @@ namespace JobTrackerX.WebApi.Services.Background
             var jobEntityStorageOptions = new Action<AzureTableStorageOptions>(options =>
             {
                 options.ConnectionString = siloConfig.JobEntityPersistConfig.ConnStr;
-                options.UseJson = siloConfig.JobEntityPersistConfig.UseJson;
                 if (!string.IsNullOrEmpty(siloConfig.JobEntityPersistConfig.TableName))
                 {
                     options.TableName = siloConfig.JobEntityPersistConfig.TableName;
+                    options.UseJson = true;
                 }
             });
 
             var readOnlyJobIndexStorageOptions = new Action<AzureBlobStorageOptions>(options =>
             {
                 options.ConnectionString = siloConfig.ReadOnlyJobIndexPersistConfig.ConnStr;
-                options.UseJson = siloConfig.ReadOnlyJobIndexPersistConfig.UseJson;
                 if (!string.IsNullOrEmpty(siloConfig.ReadOnlyJobIndexPersistConfig.ContainerName))
                 {
                     options.ContainerName = siloConfig.ReadOnlyJobIndexPersistConfig.ContainerName;
+                    options.UseJson = true;
                 }
             });
 
@@ -65,6 +66,7 @@ namespace JobTrackerX.WebApi.Services.Background
                     options.ClassSpecificCollectionAge[typeof(RollingJobIndexGrain).FullName ?? throw new
                                                            InvalidOperationException()] = TimeSpan.FromMinutes(5);
                 })
+                //.Configure<SerializationProviderOptions>()
                 .ConfigureLogging(loggingBuilder => loggingBuilder.AddSerilog());
             if (jobTrackerConfigOptions.Value.CommonConfig.UseDashboard)
             {
@@ -84,6 +86,13 @@ namespace JobTrackerX.WebApi.Services.Background
         public async Task StopAsync(CancellationToken cancellationToken)
         {
             await _silo.StopAsync(cancellationToken);
+        }
+
+        [Obsolete]
+        private void SetOrleansJsonSerializerSettings(JsonSerializerSettings settings)
+        {
+            settings.TypeNameHandling = TypeNameHandling.None;
+            settings.PreserveReferencesHandling = PreserveReferencesHandling.None;
         }
     }
 }

@@ -2,7 +2,6 @@ using JobTrackerX.SharedLibs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 
 namespace JobTrackerX.Entities.GrainStates
 {
@@ -15,6 +14,7 @@ namespace JobTrackerX.Entities.GrainStates
         public List<string> Tags { get; set; }
         public string Options { get; set; }
         public string CreateBy { get; set; }
+        public string SourceLink { get; set; }
 
         public List<StateChangeDto> StateChanges { get; } = new List<StateChangeDto>();
 

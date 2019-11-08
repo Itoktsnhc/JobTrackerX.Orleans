@@ -10,6 +10,7 @@ namespace JobTrackerX.Entities
         public CommonConfig CommonConfig { get; set; }
         public IdGeneratorConfig IdGeneratorConfig { get; set; }
         public IndexConfig JobIndexConfig { get; set; }
+        public WebUIConfig WebUIConfig { get; set; }
     }
 
     public class IdGeneratorConfig
@@ -51,8 +52,15 @@ namespace JobTrackerX.Entities
     public class GrainPersistConfig
     {
         public string ConnStr { get; set; }
-        public bool UseJson { get; set; }
         public string TableName { get; set; }
         public string ContainerName { get; set; }
+    }
+
+    public class WebUIConfig
+    {
+        public bool EnabledRefresh { get; set; }
+        public TimeSpan NotificationHideTime { get; set; }
+        public TimeSpan UIRefreshInterval { get; set; }
+        public TimeSpan FirstUIRefreshDelay { get; set; }
     }
 }

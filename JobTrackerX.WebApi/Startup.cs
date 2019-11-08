@@ -36,6 +36,7 @@ namespace JobTrackerX.WebApi
 
             services.AddOptions();
             services.Configure<JobTrackerConfig>(Configuration.GetSection(nameof(JobTrackerConfig)));
+            services.Configure<WebUIConfig>(Configuration.GetSection(nameof(WebUIConfig)));
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo

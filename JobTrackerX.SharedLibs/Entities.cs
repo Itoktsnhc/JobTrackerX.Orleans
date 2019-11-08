@@ -22,6 +22,7 @@ namespace JobTrackerX.SharedLibs
         public int FailedChildrenCount { get; set; }
         public int PendingChildrenCount { get; set; }
         public Dictionary<long, JobStateCategory> ChildrenStatesDic { get; set; }
+        public string SourceLink { get; set; }
     }
 
     public class JobIndex

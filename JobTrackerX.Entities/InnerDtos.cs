@@ -12,6 +12,7 @@ namespace JobTrackerX.Entities
             Tags = dto.Tags;
             CreatedBy = dto.CreatedBy;
             Options = dto.Options;
+            SourceLink = dto.SourceLink;
         }
 
         public AddJobDtoInternal()
@@ -23,6 +24,7 @@ namespace JobTrackerX.Entities
         public List<string> Tags { get; set; }
         public long? ParentJobId { get; set; }
         public string JobName { get; set; }
+        public string SourceLink { get; set; }
     }
 
     public class UpdateJobStateDtoInternal

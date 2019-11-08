@@ -15,12 +15,12 @@ namespace JobTrackerX.Grains
     {
         public async Task<JobEntityState> AddJobAsync(AddJobDto dto)
         {
-            var addJobDto = new AddJobDtoInternal(dto);
             if (State.CurrentJobState != JobState.WaitingForActivation)
             {
                 throw new InvalidOperationException($"job id duplicate: {this.GetPrimaryKeyLong()}");
             }
 
+            var addJobDto = new AddJobDtoInternal(dto);
             const JobState state = JobState.WaitingToRun;
             var jobId = this.GetPrimaryKeyLong();
             State.JobId = jobId;
@@ -49,19 +49,28 @@ namespace JobTrackerX.Grains
             await ancestorRefGrain.AttachToChildrenAsync(jobId);
             State.StateChanges.Add(new StateChangeDto(state));
             State.JobName = addJobDto.JobName;
-            await WriteStateAsync();
+            State.SourceLink = addJobDto.SourceLink;
             if (!State.ParentJobId.HasValue)
             {
                 var indexGrain = GrainFactory.GetGrain<IShardJobIndexGrain>(Helper.GetTimeIndex());
                 await indexGrain.AddToIndexAsync(new JobIndexInternal(State.JobId, State.JobName, State.CreateBy,
                     State.Tags));
             }
-
+            await WriteStateAsync();
             return State;
         }
 
-        public async Task UpdateJobStateAsync(UpdateJobStateDto dto, bool writeState = true)
+        public async Task UpdateJobStateAsync(UpdateJobStateDto dto, bool outerCall = true)
         {
+            if (dto.JobState == JobState.WaitingForActivation)
+            {
+                throw new Exception($"cannot set {this.GetPrimaryKeyLong()}'s state to {JobState.WaitingForActivation}");
+            }
+            if (outerCall && State.CurrentJobState == JobState.WaitingForActivation)
+            {
+                throw new Exception($"job Id not exist: {this.GetPrimaryKeyLong()}");
+            }
+
             var jobStateDto = new UpdateJobStateDtoInternal(dto);
             State.StateChanges
                 .Add(new StateChangeDto(jobStateDto.JobState, jobStateDto.AdditionMsg));
@@ -73,7 +82,7 @@ namespace JobTrackerX.Grains
                 await parentGrain.OnChildStateChangeAsync(State.JobId, summaryStateCategory);
             }
 
-            if (writeState)
+            if (outerCall)
             {
                 await WriteStateAsync();
             }

@@ -19,5 +19,7 @@ namespace JobTrackerX.WebApi.Services.JobTracker
         Task<string> UpdateJobOptionsAsync(long id, UpdateJobOptionsDto dto);
 
         Task<List<JobEntity>> GetChildrenEntitiesAsync(long id);
+        
+        Task<List<JobEntity>> BatchGetJobEntitiesAsync(IEnumerable<long> jobIds);
     }
 }

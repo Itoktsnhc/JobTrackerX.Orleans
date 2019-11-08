@@ -21,6 +21,7 @@ namespace JobTrackerX.SharedLibs
         public List<string> Tags { get; set; }
         public long? ParentJobId { get; set; }
         public string JobName { get; set; }
+        public string SourceLink { get; set; }
     }
 
     public class UpdateJobStateDto

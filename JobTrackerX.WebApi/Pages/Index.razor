@@ -4,27 +4,27 @@
 @inject IJobTrackerService _trackService
 @inject IMapper _mapper
 @inject IToastService _toastService
-
+@inject IOptions<WebUIConfig> _options
+@implements IDisposable
 <h1>
-    JobList
+    任务列表
 </h1>
 
 @if (SharedData.LastMergeTimePoint != null)
 {
     <span class="small" style="line-height: 38px;">
-        UpdateTime：@SharedData.LastMergeTimePoint.Value.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUIShowDateTimeFormat) 条数：@totalCount
+        更新时间：@SharedData.LastMergeTimePoint.Value.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUIShowDateTimeFormat) 条数：@totalCount
     </span>
 }
 @if (jobIndices.Any())
 {
-
     <div class="float-right">
         <div class="input-group">
             <div class="input-group-prepend">
-                <span class="input-group-text">TimeIndexRange(@Constants.WebUIInputDateTimeFormat)</span>
+                <span class="input-group-text">时间范围(@Constants.WebUIInputDateTimeFormat)</span>
             </div>
-            <input type="text" @bind-value="@setStartTimeStr" placeholder="Start" class="form-control" />
-            <input type="text" @bind-value="@setEndTimeStr" placeholder="End" class="form-control" />
+            <input type="text" @bind-value="@setStartTimeStr" placeholder="开始" class="form-control" />
+            <input type="text" @bind-value="@setEndTimeStr" placeholder="结束" class="form-control" />
         </div>
     </div>
     <br />
@@ -53,7 +53,7 @@
                 {
                     <tr>
                         <td>
-                            <NavLink href="@jobIndex.DetailPath">@jobIndex.JobId</NavLink>
+                            <a href="@jobIndex.DetailPath">@jobIndex.JobId</a>
                         </td>
                         <td>@jobIndex.JobName</td>
                         <td>
@@ -106,9 +106,19 @@
 }
 else
 {
-    <p class="h2 text-center bg-light">
-        Loading 。。。
-    </p>
+    if (loadCompleted)
+    {
+        <p class="h2 bg-light">
+            暂无数据 ~
+        </p>
+    }
+    else
+    {
+        <p class="h2 bg-light">
+            加载中。。。
+        </p>
+    }
+
 }
 
 @code{
@@ -119,20 +129,23 @@ else
     private int pageSize = 10;
     private int setPageSize = 10;
     private int MaxPageNumber { get { return (int)Math.Ceiling((totalCount * 1.0) / pageSize); } }
-    private IEnumerable<JobIndexViewModel>
+    private List<JobIndexViewModel>
     jobIndices
-    { get; set; } = new List<JobIndexViewModel>
-        ();
+    { get; set; } = new List<JobIndexViewModel>();
     private string startTimeStr;
     private string endTimeStr;
     private string setStartTimeStr;
     private string setEndTimeStr;
     private DateTime StartTime;
     private DateTime EndTime;
+    private Timer _timer;
+    private bool loadCompleted;
 
     protected override async Task OnInitializedAsync()
     {
+
         await InitAsync();
+        BuildTimer();
     }
 
     private async Task InitAsync(bool force = false)
@@ -149,12 +162,13 @@ else
 
     private async Task QueryIndicesAsync()
     {
+        loadCompleted = false;
         try
         {
             if (!DateTime.TryParseExact(startTimeStr, Constants.WebUIInputDateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _)
             || !DateTime.TryParseExact(endTimeStr, Constants.WebUIInputDateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _))
             {
-                _toastService.ShowError("Time index range error");
+                _toastService.ShowError("时间范围格式错误");
                 return;
             }
 
@@ -163,12 +177,12 @@ else
 
             if (EndTime < StartTime)
             {
-                _toastService.ShowError("Start time and end time set error");
+                _toastService.ShowError("开始时间不可以大于结束时间");
                 return;
             }
             if (EndTime - StartTime > TimeSpan.FromHours(24))
             {
-                _toastService.ShowError("time range cannot longer than 24h");
+                _toastService.ShowError("时间范围不可以超过24小时");
                 return;
             }
 
@@ -183,7 +197,7 @@ else
                 PageSize = pageSize
             });
             totalCount = defaultResult.TotalCount;
-            jobIndices = _mapper.Map<IList<JobIndexViewModel>>(defaultResult.Indices);
+            jobIndices = _mapper.Map<List<JobIndexViewModel>>(defaultResult.Indices);
             foreach (var index in jobIndices)
             {
                 index.JobEntity = _mapper.Map<JobEntityViewModel>(await _trackService.GetJobByIdAsync(index.JobId));
@@ -191,9 +205,9 @@ else
         }
         catch (Exception ex)
         {
-            _toastService.ShowError(ex.Message, "query error");
+            _toastService.ShowError(ex.Message, "查询错误");
         }
-
+        loadCompleted = true;
     }
 
     private void CorrectPageSetting()
@@ -216,6 +230,28 @@ else
     {
         pageNumber = int.Parse(e.Value.ToString());
         await QueryIndicesAsync();
+    }
+
+    private async void RefreshCurrentDataAsync(object state)
+    {
+        if (jobIndices?.Any() == true)
+        {
+            var refreshUi = false;
+            foreach (var jobIndex in jobIndices)
+            {
+                if (Helper.FinishedOrFaultedJobStates.Contains(jobIndex.JobEntity.CurrentJobState))
+                {
+                    continue;
+                }
+                jobIndex.JobEntity = _mapper.Map<JobEntityViewModel>(await _trackService.GetJobByIdAsync(jobIndex.JobId));
+                refreshUi = true;
+            }
+            if (refreshUi)
+            {
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+
     }
 
     private async Task ApplyPredicateAsync()
@@ -241,5 +277,25 @@ else
         pageSize = setPageSize;
         pageNumber = 1;
         await QueryIndicesAsync();
+        StateHasChanged();
+    }
+
+    public void DisposeTimer()
+    {
+        _timer?.Change(Timeout.Infinite, Timeout.Infinite);
+        _timer?.Dispose();
+    }
+    public void BuildTimer()
+    {
+        _timer = new Timer(new TimerCallback(RefreshCurrentDataAsync),
+            null,
+            _options.Value.FirstUIRefreshDelay,
+            _options.Value.UIRefreshInterval);
+    }
+
+    public void Dispose()
+    {
+        DisposeTimer();
+        GC.SuppressFinalize(this);
     }
 }

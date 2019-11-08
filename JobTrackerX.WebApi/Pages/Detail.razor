@@ -2,39 +2,41 @@
 @inject IJobTrackerService _service
 @inject IMapper _mapper
 @inject IToastService _toastService
+@inject IOptions<WebUIConfig> _options
+@implements IDisposable
 
 @if (_jobEntity == null)
 {
-    if (!_isJobExist)
+    if (_isJobEntityLoadFinish)
     {
         <p class="h2 text-center bg-danger">
-            <em>JobNotExist：@JobId</em>
+            <em>加载失败：@JobId</em>
         </p>
     }
     else
     {
         <p class="h2 text-center bg-light">
-            Loading：@JobId
+            加载中：@JobId
         </p>
     }
 }
 else
 {
     <div class="container" style="max-width: 1440px; margin: 0 auto;}">
-        <p class="h2">JobDetail</p>
+        <p class="h2">任务详情</p>
         <br />
         <table class="table text-left">
             <tbody>
                 <tr>
-                    <td>@nameof(_jobEntity.JobId): </td>
+                    <td>任务Id (@nameof(_jobEntity.JobId)): </td>
                     <td class="font-weight-bold">@_jobEntity.JobId</td>
                 </tr>
                 <tr>
-                    <td>@nameof(_jobEntity.ParentJobId): </td>
+                    <td>上级任务Id (@nameof(_jobEntity.ParentJobId)): </td>
                     <td>
                         @if (_jobEntity.ParentJobId.HasValue)
                         {
-                            <NavLink href="@_jobEntity.ParentJobPath">@(_jobEntity.ParentJobId.Value.ToString())</NavLink>
+                            <a href="@_jobEntity.ParentJobPath">@(_jobEntity.ParentJobId.Value.ToString())</a>
                         }
                         else
                         {
@@ -43,29 +45,29 @@ else
                     </td>
                 </tr>
                 <tr>
-                    <td>@nameof(_jobEntity.AncestorJobId): </td>
+                    <td>根任务Id (@nameof(_jobEntity.AncestorJobId)): </td>
                     <td>
-                        <NavLink href="@_jobEntity.AncestorJobPath">@_jobEntity.AncestorJobId</NavLink>
+                        <a href="@_jobEntity.AncestorJobPath">@_jobEntity.AncestorJobId</a>
                     </td>
                 </tr>
                 <tr>
-                    <td>@nameof(_jobEntity.JobName): </td>
+                    <td>任务名称 (@nameof(_jobEntity.JobName)): </td>
                     <td>@_jobEntity.JobName</td>
                 </tr>
                 <tr>
-                    <td>@nameof(_jobEntity.StartTime): </td>
+                    <td>开始时间 (@nameof(_jobEntity.StartTime)): </td>
                     <td>@(_jobEntity.StartTime.HasValue ? _jobEntity.StartTime.Value.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUIShowDateTimeFormat) : Constants.NotAvailableStr)</td>
                 </tr>
                 <tr>
-                    <td>@nameof(_jobEntity.EndTime): </td>
+                    <td>结束时间 (@nameof(_jobEntity.EndTime)): </td>
                     <td>@(_jobEntity.EndTime.HasValue ? _jobEntity.EndTime.Value.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUIShowDateTimeFormat) : Constants.NotAvailableStr)</td>
                 </tr>
                 <tr>
-                    <td>ExecutionTime: </td>
+                    <td>执行耗时 (ExecutionTime): </td>
                     <td>@(GetTimeSpanStr(_jobEntity.StartTime, _jobEntity.EndTime))</td>
                 </tr>
                 <tr>
-                    <td>@nameof(_jobEntity.CurrentJobState): </td>
+                    <td>状态 (@nameof(_jobEntity.CurrentJobState)): </td>
                     <td>
                         <span class="@(Helper.GetStateBadgeColor(_jobEntity.CurrentJobState))">@(_jobEntity.CurrentJobState)</span>
                     </td>
@@ -73,12 +75,12 @@ else
                 @if (_jobEntity.TotalChildrenCount > 0)
                 {
                     <tr>
-                        <td>ChildrenProgress: </td>
+                        <td>子任务进度: </td>
                         <td>
-                            <div class="badge badge-pill badge-success">Success: @_jobEntity.SuccessChildrenCount</div>
-                            <div class="badge badge-pill badge-danger">Failed: @_jobEntity.FailedChildrenCount</div>
-                            <div class="badge badge-pill badge-info">Total: @_jobEntity.TotalChildrenCount</div>
-                            <div class="badge badge-pill badge-secondary">Pending: @_jobEntity.PendingChildrenCount</div>
+                            <div class="badge badge-pill badge-success">成功: @_jobEntity.SuccessChildrenCount</div>
+                            <div class="badge badge-pill badge-danger">失败: @_jobEntity.FailedChildrenCount</div>
+                            <div class="badge badge-pill badge-info">总数: @_jobEntity.TotalChildrenCount</div>
+                            <div class="badge badge-pill badge-secondary">等待: @_jobEntity.PendingChildrenCount</div>
                             <br />
                             <div class="progress" style="max-width:300px">
                                 <div class="progress-bar @(_jobEntity.FailedChildrenCount>0?" bg-danger":"bg-success")"
@@ -91,12 +93,12 @@ else
                 else
                 {
                     <tr>
-                        <td>No Children</td>
+                        <td>无子任务信息</td>
                         <td></td>
                     </tr>
                 }
                 <tr>
-                    <td>@nameof(_jobEntity.Options): </td>
+                    <td>附加信息 (@nameof(_jobEntity.Options)): </td>
                     <td>
                         <p>@_jobEntity.Options</p>
                     </td>
@@ -113,6 +115,20 @@ else
                         }
                     </td>
                 </tr>
+                <tr>
+                    <td>来源链接 (@nameof(_jobEntity.SourceLink)): </td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(_jobEntity.SourceLink))
+                        {
+                            <a target="_blank" href="@_jobEntity.SourceLink">@_jobEntity.SourceLink</a>
+                        }
+                        else
+                        {
+                            <span>@Constants.NotAvailableStr</span>
+                        }
+
+                    </td>
+                </tr>
 
             </tbody>
         </table>
@@ -123,8 +139,9 @@ else
     {
         <div class="container" style="max-width: 4096px; margin: 0 auto;}">
             <div>
-                <p class="h2">Children</p>
-                <span class="small">Count: @totalCount</span>
+                <p class="h2">子任务</p>
+                <button class="btn btn-secondary" @onclick="@(e=>OnRefreshChildrenClickedAsync())">RefreshChildren</button>
+                <span class="small">条数: @totalCount</span>
                 <div class="form-group float-right">
                     <select @onchange="@(e=>ApplyQueryByStatusAsync(e))" class="form-control">
                         <option class="text-white-50" value="-1">@Constants.NotAvailableStr</option>
@@ -162,7 +179,7 @@ else
                         {
                             <tr>
                                 <td>
-                                    <NavLink href="@child.DetailPath">@child.JobId</NavLink>
+                                    <a href="@child.DetailPath">@child.JobId</a>
                                 </td>
                                 <td>@child.JobName</td>
                                 <td>
@@ -222,6 +239,24 @@ else
             </div>
         </div>
     }
+    else
+    {
+        if (_isJobChildrenLoadFinish)
+        {
+            if (_jobEntity.ChildrenStatesDic.Count > 0)
+            {
+                <p class="h2 text-center bg-danger">
+                    <em>子任务加载失败：@JobId </em>
+                </p>
+            }
+        }
+        else
+        {
+            <p class="h2 text-center bg-light">
+                子任务加载中：@JobId 。。。
+            </p>
+        }
+    }
 }
 
 @code{
@@ -238,7 +273,14 @@ else
     private List<JobEntityViewModel>
         ChildrenInternal = new List<JobEntityViewModel>();
     private JobEntityViewModel _jobEntity;
-    private bool _isJobExist = true;
+    private Timer _timer;
+    private bool _isJobEntityLoadFinish = false;
+    private bool _isJobChildrenLoadFinish = false;
+
+    protected override void OnInitialized()
+    {
+        BuildTimer();
+    }
 
     private string GetTimeSpanStr(DateTimeOffset? start, DateTimeOffset? end)
     {
@@ -261,21 +303,21 @@ else
         }
         if (ts.Value.TotalDays >= 1)
         {
-            return ts.Value.ToString("d'd 'h'h 'm'm 's's'");
+            return ts.Value.ToString("d'天 'h'时 'm'分 's'秒'");
         }
         if (ts.Value.TotalHours >= 1)
         {
-            return ts.Value.ToString("h'h 'm'm 's's'");
+            return ts.Value.ToString("h'时 'm'分 's'秒'");
         }
         if (ts.Value.TotalMinutes >= 1)
         {
-            return ts.Value.ToString("m'm 's's'");
+            return ts.Value.ToString("m'分 's'秒'");
         }
         if (ts.Value.TotalSeconds >= 1)
         {
-            return ts.Value.ToString("s's'");
+            return ts.Value.ToString("s'秒'");
         }
-        return $"{ts.Value.TotalSeconds.ToString(Constants.DecimalFormat)}s";
+        return $"{ts.Value.TotalSeconds.ToString(Constants.DecimalFormat)}秒";
     }
 
     private async Task LoadJobEntityAsync()
@@ -286,9 +328,8 @@ else
         }
         catch (Exception ex)
         {
-            _toastService.ShowError(ex.Message, "LoadDetailError");
+            _toastService.ShowError(ex.Message, "加载详情错误");
         }
-
     }
 
     private async Task LoadJobChildrenAsync(bool force = false)
@@ -316,7 +357,7 @@ else
         }
         catch (Exception ex)
         {
-            _toastService.ShowError(ex.Message, "LoadChildrenError");
+            _toastService.ShowError(ex.Message, "加载子任务错误");
         }
     }
 
@@ -324,6 +365,7 @@ else
     {
         var val = int.Parse(e.Value.ToString());
         JobStateFilter = val;
+        pageNumber = 1;
         await LoadJobChildrenAsync();
     }
 
@@ -347,6 +389,49 @@ else
     protected override async Task OnParametersSetAsync()
     {
         await LoadJobEntityAsync();
+        _isJobEntityLoadFinish = true;
         await LoadJobChildrenAsync(true);
+        _isJobChildrenLoadFinish = true;
+    }
+
+    private async void OnRefreshChildrenClickedAsync()
+    {
+        pageNumber = 1;
+        await LoadJobChildrenAsync(true);
+        await InvokeAsync(StateHasChanged);
+        _toastService.ShowSuccess("子任务加载完成");
+    }
+
+    private async void RefreshCurrentDataAsync(object state)
+    {
+        if (_jobEntity != null)
+        {
+            if (Helper.FinishedOrFaultedJobStates.Contains(_jobEntity.CurrentJobState))
+            {
+                return;
+            }
+            await LoadJobEntityAsync();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        DisposeTimer();
+        GC.SuppressFinalize(this);
+    }
+
+    public void DisposeTimer()
+    {
+        _timer?.Change(Timeout.Infinite, Timeout.Infinite);
+        _timer?.Dispose();
+    }
+
+    public void BuildTimer()
+    {
+        _timer = new Timer(new TimerCallback(RefreshCurrentDataAsync),
+            null,
+            _options.Value.FirstUIRefreshDelay,
+            _options.Value.UIRefreshInterval);
     }
 }
