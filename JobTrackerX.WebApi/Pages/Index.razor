@@ -16,25 +16,25 @@
         更新时间：@SharedData.LastMergeTimePoint.Value.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUIShowDateTimeFormat) 条数：@totalCount
     </span>
 }
+<div class="float-right">
+    <div class="input-group">
+        <div class="input-group-prepend">
+            <span class="input-group-text">时间范围(@Constants.WebUIInputDateTimeFormat)</span>
+        </div>
+        <input type="text" @bind-value="@setStartTimeStr" placeholder="开始" class="form-control" />
+        <input type="text" @bind-value="@setEndTimeStr" placeholder="结束" class="form-control" />
+    </div>
+</div>
+<br />
+<br />
+<div class="input-group mb-3">
+    <input type="text" class="form-control" @bind-value="@setPredicate" placeholder="lambda expression with 'index' as parameter" />
+    <div class="input-group-append">
+        <button type="button" class="btn btn-outline-secondary" @onclick="@(e=>ApplyPredicateAsync())">Query Now</button>
+    </div>
+</div>
 @if (jobIndices.Any())
 {
-    <div class="float-right">
-        <div class="input-group">
-            <div class="input-group-prepend">
-                <span class="input-group-text">时间范围(@Constants.WebUIInputDateTimeFormat)</span>
-            </div>
-            <input type="text" @bind-value="@setStartTimeStr" placeholder="开始" class="form-control" />
-            <input type="text" @bind-value="@setEndTimeStr" placeholder="结束" class="form-control" />
-        </div>
-    </div>
-    <br />
-    <br />
-    <div class="input-group mb-3">
-        <input type="text" class="form-control" @bind-value="@setPredicate" placeholder="lambda expression with 'index' as parameter" />
-        <div class="input-group-append">
-            <button type="button" class="btn btn-outline-secondary" @onclick="@(e=>ApplyPredicateAsync())">Query Now</button>
-        </div>
-    </div>
     <div class="table-responsive-md text-center">
         <table class="table table-striped table-sm table-hover">
             <thead>
