@@ -16,7 +16,7 @@ namespace JobTrackerX.Entities.GrainStates
         public string CreateBy { get; set; }
         public string SourceLink { get; set; }
 
-        public List<StateChangeDto> StateChanges { get; } = new List<StateChangeDto>();
+        public List<StateChangeDto> StateChanges { get; set; } = new List<StateChangeDto>();
 
         public JobState CurrentJobState
         {
@@ -104,6 +104,6 @@ namespace JobTrackerX.Entities.GrainStates
             }
         }
 
-        public Dictionary<long, JobStateCategory> ChildrenStatesDic { get; } = new Dictionary<long, JobStateCategory>();
+        public Dictionary<long, JobStateCategory> ChildrenStatesDic { get; set; } = new Dictionary<long, JobStateCategory>();
     }
 }

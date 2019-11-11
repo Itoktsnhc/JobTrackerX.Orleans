@@ -50,7 +50,7 @@ namespace JobTrackerX.SharedLibs
         }
 
         public JobState State { get; set; }
-        public string AdditionMsg { get; }
+        public string AdditionMsg { get; set; }
         public DateTimeOffset TimePoint { get; set; }
     }
 
