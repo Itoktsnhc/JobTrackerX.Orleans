@@ -93,7 +93,7 @@ namespace JobTrackerX.Grains
             if (Helper.FinishedOrFaultedJobStates.Contains(State.CurrentJobState))
             {
                 State.StateChanges
-                    .Add(new StateChangeDto(JobState.RanToCompletion, $"(sys: fired by child {childJobId})"));
+                    .Add(new StateChangeDto(JobState.RanToCompletion, $"(sys: raised by child {childJobId})"));
             }
             if (State.ParentJobId.HasValue)
             {
