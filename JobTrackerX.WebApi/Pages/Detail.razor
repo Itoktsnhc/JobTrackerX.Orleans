@@ -72,6 +72,26 @@ else
                         <span class="@(Helper.GetStateBadgeColor(_jobEntity.CurrentJobState))">@(_jobEntity.CurrentJobState)</span>
                     </td>
                 </tr>
+                <tr>
+                    <td>状态变化 (@nameof(_jobEntity.StateChanges))</td>
+                    <td>
+                        <ul class="list-group small list-group-flush">
+
+                            @foreach (var stateChange in _jobEntity.StateChanges.OrderBy(s => s.TimePoint))
+                            {
+                                <li class="list-group-item">
+                                    <span> @stateChange.TimePoint.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUIShowDateTimeFormat) - </span>
+                                    <span class="@Helper.GetStateBadgeColor(stateChange.State)">@stateChange.State</span>
+                                    @if (!string.IsNullOrEmpty(stateChange.AdditionMsg))
+                                    {
+                                        <span> - @stateChange.AdditionMsg</span>
+                                    }
+
+                                </li>
+                            }
+                        </ul>
+                    </td>
+                </tr>
                 @if (_jobEntity.TotalChildrenCount > 0)
                 {
                     <tr>
