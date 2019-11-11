@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -46,7 +47,7 @@ namespace JobTrackerX.Client
         public async Task<JobEntity> CreateNewJobAsync(AddJobDto dto)
         {
             var resp = await SendRequestAsync<JobEntity, AddJobDto>(HttpMethod.Post,
-                $"api/jobTracker/new", dto);
+                "api/jobTracker/new", dto);
             if (resp.Result)
             {
                 return resp.Data;
@@ -78,17 +79,13 @@ namespace JobTrackerX.Client
         {
             var resp = await SendRequestAsync<JobEntity, object>(HttpMethod.Get,
                 $"api/jobTracker/{jobId}");
-            if (resp.Result)
-            {
-                return resp.Data;
-            }
-            throw new Exception($"{nameof(GetJobEntityAsync)} failed {resp.Msg}");
+            return resp.Data;
         }
 
         public async Task<ReturnQueryIndexDto> QueryJobIndexAsync(QueryJobIndexDto dto)
         {
             var resp = await SendRequestAsync<ReturnQueryIndexDto, QueryJobIndexDto>(HttpMethod.Post,
-                $"api/QueryIndex",
+                "api/QueryIndex",
                 dto);
             if (resp.Result)
             {
@@ -99,7 +96,6 @@ namespace JobTrackerX.Client
 
         private async Task<ReturnDto<TData>> SendRequestAsync<TData, TRequestBody>(HttpMethod method, string uri,
             TRequestBody body = default)
-
         {
             var req = new HttpRequestMessage(method, uri);
             if (!EqualityComparer<TRequestBody>.Default.Equals(body, default))
@@ -112,8 +108,13 @@ namespace JobTrackerX.Client
                 await task;
             }
             var resp = await _httpClient.SendAsync(req).ConfigureAwait(false);
-            resp.EnsureSuccessStatusCode();
             var content = await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
+            if (!resp.Headers.TryGetValues(nameof(JobNotFoundException), out var notFound)
+                || !notFound.Any()
+                || notFound.First() != "true")//not JobNotFoundException, must be success
+            {
+                resp.EnsureSuccessStatusCode();
+            }
             return JsonConvert.DeserializeObject<ReturnDto<TData>>(content);
         }
     }

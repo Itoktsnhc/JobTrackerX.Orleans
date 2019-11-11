@@ -19,14 +19,31 @@ namespace JobTrackerX.WebApi.Misc
 
         public void OnException(ExceptionContext context)
         {
-            context.HttpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-            context.Result = new JsonResult(new ReturnDto<object>
+            var info = $"Exception captured in {nameof(GlobalExceptionFilter)}";
+            if (context.Exception is JobNotFoundException)
             {
-                Msg = "InternalException : " + context.Exception.Message,
-                Result = false,
-                Data = null
-            });
-            _logger.LogError(context.Exception, $"Exception captured in {nameof(GlobalExceptionFilter)}");
+                context.HttpContext.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                context.HttpContext.Response.Headers.Add(nameof(JobNotFoundException), "true");
+                context.Result = new JsonResult(new ReturnDto<object>
+                {
+                    Msg = context.Exception.Message,
+                    Result = false,
+                    Data = null
+                });
+                _logger.LogWarning(context.Exception, info);
+            }
+            else
+            {
+                context.HttpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+
+                context.Result = new JsonResult(new ReturnDto<object>
+                {
+                    Msg = "InternalException : " + context.Exception.Message,
+                    Result = false,
+                    Data = null
+                });
+                _logger.LogError(context.Exception, info);
+            }
         }
     }
 
@@ -36,6 +53,7 @@ namespace JobTrackerX.WebApi.Misc
         {
             if (!context.ModelState.IsValid)
             {
+                context.HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 context.Result = new JsonResult(new ReturnDto<string>
                 {
                     Data = null,

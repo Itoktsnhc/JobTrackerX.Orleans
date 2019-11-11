@@ -5,7 +5,6 @@ using JobTrackerX.SharedLibs;
 using Orleans;
 using Orleans.Providers;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace JobTrackerX.Grains
@@ -34,7 +33,7 @@ namespace JobTrackerX.Grains
                 var parent = await parentGrain.GetJobAsync();
                 if (parent.CurrentJobState == JobState.WaitingForActivation)
                 {
-                    throw new InvalidOperationException($"parent job {addJobDto.ParentJobId} not exist");
+                    throw new JobNotFoundException($"parent job {addJobDto.ParentJobId} not exist");
                 }
 
                 State.AncestorJobId = parent.AncestorJobId;
@@ -68,7 +67,7 @@ namespace JobTrackerX.Grains
             }
             if (outerCall && State.CurrentJobState == JobState.WaitingForActivation)
             {
-                throw new Exception($"job Id not exist: {this.GetPrimaryKeyLong()}");
+                throw new JobNotFoundException($"job Id not exist: {this.GetPrimaryKeyLong()}");
             }
 
             var jobStateDto = new UpdateJobStateDtoInternal(dto);
@@ -110,7 +109,7 @@ namespace JobTrackerX.Grains
         {
             if (State.CurrentJobState == JobState.WaitingForActivation)
             {
-                throw new Exception($"job Id not exist: {this.GetPrimaryKeyLong()}");
+                throw new JobNotFoundException($"job Id not exist: {this.GetPrimaryKeyLong()}");
             }
             State.Options = dto.Options;
             await WriteStateAsync();
@@ -120,7 +119,7 @@ namespace JobTrackerX.Grains
         {
             if (State.CurrentJobState == JobState.WaitingForActivation)
             {
-                throw new Exception($"job Id not exist: {this.GetPrimaryKeyLong()}");
+                throw new JobNotFoundException($"job Id not exist: {this.GetPrimaryKeyLong()}");
             }
             return await Task.FromResult(State);
         }
