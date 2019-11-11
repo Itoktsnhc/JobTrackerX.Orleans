@@ -71,11 +71,19 @@
                             }
                         </td>
                         <td>
-                            <div class="progress" style="max-width:300px">
-                                <div class="progress-bar @(jobIndex.JobEntity.FailedChildrenCount>0?" bg-danger":"bg-success")"
-                                     role="progressbar"
-                                     style="width:@(((jobIndex.JobEntity.TotalChildrenCount-jobIndex.JobEntity.PendingChildrenCount)/(jobIndex.JobEntity.TotalChildrenCount*1.0)).ToString(Constants.PercentageFormat))"></div>
-                            </div>
+                            @if (jobIndex.JobEntity.TotalChildrenCount > 0)
+                            {
+                                <div class="progress" style="max-width:300px">
+                                    <div class="progress-bar @(jobIndex.JobEntity.FailedChildrenCount>0?" bg-danger":"bg-success")"
+                                         role="progressbar"
+                                         style="width:@(((jobIndex.JobEntity.TotalChildrenCount-jobIndex.JobEntity.PendingChildrenCount)/(jobIndex.JobEntity.TotalChildrenCount*1.0)).ToString(Constants.PercentageFormat))"></div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div>N/A</div>
+                            }
+
                         </td>
                     </tr>
                 }
