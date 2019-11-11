@@ -273,13 +273,15 @@ else
     private List<JobEntityViewModel>
         ChildrenInternal = new List<JobEntityViewModel>();
     private JobEntityViewModel _jobEntity;
-    private Timer _timer;
+    private Task _refresher;
+    private CancellationTokenSource _cancelRefreshSource = new CancellationTokenSource();
+    private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
     private bool _isJobEntityLoadFinish = false;
     private bool _isJobChildrenLoadFinish = false;
 
     protected override void OnInitialized()
     {
-        BuildTimer();
+        BuildTask();
     }
 
     private string GetTimeSpanStr(DateTimeOffset? start, DateTimeOffset? end)
@@ -381,6 +383,10 @@ else
         {
             return;
         }
+        if (setPageSize > 100)
+        {
+            setPageSize = 100;
+        }
         pageSize = setPageSize;
         pageNumber = 1;
         await LoadJobChildrenAsync();
@@ -402,7 +408,7 @@ else
         _toastService.ShowSuccess("子任务加载完成");
     }
 
-    private async void RefreshCurrentDataAsync(object state)
+    private async Task RefreshCurrentDataAsync()
     {
         if (_jobEntity != null)
         {
@@ -417,21 +423,45 @@ else
 
     public void Dispose()
     {
-        DisposeTimer();
-        GC.SuppressFinalize(this);
+        DisposeTask();
     }
 
-    public void DisposeTimer()
+    public void DisposeTask()
     {
-        _timer?.Change(Timeout.Infinite, Timeout.Infinite);
-        _timer?.Dispose();
+        _cancelRefreshSource.Cancel();
+        _cancelRefreshSource.Dispose();
+        _semaphore.Dispose();
     }
 
-    public void BuildTimer()
+    public void BuildTask()
     {
-        _timer = new Timer(new TimerCallback(RefreshCurrentDataAsync),
-            null,
-            _options.Value.FirstUIRefreshDelay,
-            _options.Value.UIRefreshInterval);
+        _refresher = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(_options.Value.FirstUIRefreshDelay);
+
+                while (!_cancelRefreshSource.Token.IsCancellationRequested)
+                {
+                    try
+                    {
+                        await _semaphore.WaitAsync(_cancelRefreshSource.Token);
+                        await RefreshCurrentDataAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        _toastService.ShowError(ex.Message, nameof(RefreshCurrentDataAsync));
+                    }
+                    finally
+                    {
+                        _semaphore.Release();
+                    }
+                    await Task.Delay(_options.Value.UIRefreshInterval, _cancelRefreshSource.Token);
+                }
+            }
+            catch (TaskCanceledException)
+            {
+            }
+        });
     }
 }

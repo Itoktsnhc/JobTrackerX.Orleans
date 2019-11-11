@@ -138,14 +138,16 @@ else
     private string setEndTimeStr;
     private DateTime StartTime;
     private DateTime EndTime;
-    private Timer _timer;
+    private Task _refresher;
+    private CancellationTokenSource _cancelRefreshSource = new CancellationTokenSource();
+    private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
     private bool loadCompleted;
 
     protected override async Task OnInitializedAsync()
     {
 
         await InitAsync();
-        BuildTimer();
+        BuildTask();
     }
 
     private async Task InitAsync(bool force = false)
@@ -165,6 +167,7 @@ else
         loadCompleted = false;
         try
         {
+            await _semaphore.WaitAsync();
             if (!DateTime.TryParseExact(startTimeStr, Constants.WebUIInputDateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _)
             || !DateTime.TryParseExact(endTimeStr, Constants.WebUIInputDateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _))
             {
@@ -207,6 +210,10 @@ else
         {
             _toastService.ShowError(ex.Message, "查询错误");
         }
+        finally
+        {
+            _semaphore.Release();
+        }
         loadCompleted = true;
     }
 
@@ -232,7 +239,7 @@ else
         await QueryIndicesAsync();
     }
 
-    private async void RefreshCurrentDataAsync(object state)
+    private async Task RefreshCurrentDataAsync()
     {
         if (jobIndices?.Any() == true)
         {
@@ -274,28 +281,58 @@ else
         {
             return;
         }
+        if (setPageSize > 100)
+        {
+            setPageSize = 100;
+        }
         pageSize = setPageSize;
         pageNumber = 1;
         await QueryIndicesAsync();
         StateHasChanged();
     }
 
-    public void DisposeTimer()
+    public void DisposeTask()
     {
-        _timer?.Change(Timeout.Infinite, Timeout.Infinite);
-        _timer?.Dispose();
+        _cancelRefreshSource.Cancel();
+        _cancelRefreshSource.Dispose();
+        _semaphore.Dispose();
     }
-    public void BuildTimer()
+
+    public void BuildTask()
     {
-        _timer = new Timer(new TimerCallback(RefreshCurrentDataAsync),
-            null,
-            _options.Value.FirstUIRefreshDelay,
-            _options.Value.UIRefreshInterval);
+        _refresher = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(_options.Value.FirstUIRefreshDelay);
+
+                while (!_cancelRefreshSource.Token.IsCancellationRequested)
+                {
+                    try
+                    {
+                        await _semaphore.WaitAsync(_cancelRefreshSource.Token);
+                        await RefreshCurrentDataAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        _toastService.ShowError(ex.Message, nameof(RefreshCurrentDataAsync));
+                    }
+                    finally
+                    {
+                        _semaphore.Release();
+                    }
+                    await Task.Delay(_options.Value.UIRefreshInterval, _cancelRefreshSource.Token);
+                }
+            }
+            catch (TaskCanceledException)
+            {
+            }
+
+        });
     }
 
     public void Dispose()
     {
-        DisposeTimer();
-        GC.SuppressFinalize(this);
+        DisposeTask();
     }
 }
