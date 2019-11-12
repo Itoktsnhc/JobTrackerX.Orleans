@@ -1,4 +1,5 @@
 ﻿using JobTrackerX.SharedLibs;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace JobTrackerX.Client
@@ -14,5 +15,11 @@ namespace JobTrackerX.Client
         Task<JobEntity> GetJobEntityAsync(long jobId);
 
         Task<ReturnQueryIndexDto> QueryJobIndexAsync(QueryJobIndexDto dto);
+
+        Task<List<JobEntity>> GetDescendantsAsync(long jobId);
+
+        Task<List<JobEntity>> GetChildrenAsync(long jobId);
+
+        Task<List<long>> GetDescendantIdsAsync(long jobId);
     }
 }
