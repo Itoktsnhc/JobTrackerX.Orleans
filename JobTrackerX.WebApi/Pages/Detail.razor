@@ -126,7 +126,7 @@ else
                 <tr>
                     <td>创建人 (@nameof(_jobEntity.CreatedBy)): </td>
                     <td>
-                        @_jobEntity.CreatedBy
+                        @(_jobEntity.CreatedBy ?? Constants.NotAvailableStr)
                     </td>
                 </tr>
                 <tr>
