@@ -13,7 +13,7 @@ namespace JobTrackerX.Entities.GrainStates
         public long AncestorJobId { get; set; }
         public List<string> Tags { get; set; }
         public string Options { get; set; }
-        public string CreateBy { get; set; }
+        public string CreatedBy { get; set; }
         public string SourceLink { get; set; }
 
         public List<StateChangeDto> StateChanges { get; set; } = new List<StateChangeDto>();

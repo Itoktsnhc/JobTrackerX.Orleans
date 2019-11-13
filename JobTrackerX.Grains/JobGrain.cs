@@ -24,7 +24,7 @@ namespace JobTrackerX.Grains
             var jobId = this.GetPrimaryKeyLong();
             State.JobId = jobId;
             State.ParentJobId = addJobDto.ParentJobId;
-            State.CreateBy = addJobDto.CreatedBy;
+            State.CreatedBy = addJobDto.CreatedBy;
             State.Tags = addJobDto.Tags;
             State.Options = addJobDto.Options;
             if (addJobDto.ParentJobId.HasValue)
@@ -52,7 +52,7 @@ namespace JobTrackerX.Grains
             if (!State.ParentJobId.HasValue)
             {
                 var indexGrain = GrainFactory.GetGrain<IShardJobIndexGrain>(Helper.GetTimeIndex());
-                await indexGrain.AddToIndexAsync(new JobIndexInternal(State.JobId, State.JobName, State.CreateBy,
+                await indexGrain.AddToIndexAsync(new JobIndexInternal(State.JobId, State.JobName, State.CreatedBy,
                     State.Tags));
             }
             await WriteStateAsync();

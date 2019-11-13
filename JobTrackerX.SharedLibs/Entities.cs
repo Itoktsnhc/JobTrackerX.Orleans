@@ -11,7 +11,7 @@ namespace JobTrackerX.SharedLibs
         public long? AncestorJobId { get; set; }
         public List<string> Tags { get; set; }
         public string Options { get; set; }
-        public string CreateBy { get; set; }
+        public string CreatedBy { get; set; }
         public List<StateChangeDto> StateChanges { get; set; }
         public JobState CurrentJobState { get; set; }
         public DateTimeOffset? CreateTime { get; set; }

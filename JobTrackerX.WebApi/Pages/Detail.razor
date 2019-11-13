@@ -25,7 +25,7 @@ else
     <div class="container" style="max-width: 1440px; margin: 0 auto;}">
         <p class="h2">任务详情</p>
         <br />
-        <table class="table text-left">
+        <table class="table table-sm text-left">
             <tbody>
                 <tr>
                     <td>任务Id (@nameof(_jobEntity.JobId)): </td>
@@ -120,7 +120,13 @@ else
                 <tr>
                     <td>附加信息 (@nameof(_jobEntity.Options)): </td>
                     <td>
-                        <p>@_jobEntity.Options</p>
+                        <p style="max-width:1024px">@_jobEntity.Options</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td>创建人 (@nameof(_jobEntity.CreatedBy)): </td>
+                    <td>
+                        @_jobEntity.CreatedBy
                     </td>
                 </tr>
                 <tr>
@@ -220,7 +226,7 @@ else
                                         }
                                     }
                                 </td>
-                                <td>@child.CreateBy</td>
+                                <td>@child.CreatedBy</td>
                                 @if (child.TotalChildrenCount > 0)
                                 {
                                     <td>
