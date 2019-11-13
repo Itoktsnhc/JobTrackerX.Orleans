@@ -30,7 +30,7 @@ namespace JobTrackerX.Entities.GrainStates
                 var returnState = StateChanges.Last().State;
                 if (Helper.FinishedOrWaitingForChildrenOrFaultedJobStates.Contains(returnState))
                 {
-                    if (SuccessChildrenCount == TotalChildrenCount)
+                    if (SuccessfulChildrenCount == TotalChildrenCount)
                     {
                         returnState = StateChanges.Any(s => s.State == JobState.Faulted)
                             ? JobState.Faulted
@@ -77,12 +77,12 @@ namespace JobTrackerX.Entities.GrainStates
 
         public int TotalChildrenCount => ChildrenStatesDic.Count;
 
-        public int SuccessChildrenCount
+        public int SuccessfulChildrenCount
         {
             get
             {
                 return ChildrenStatesDic.Count(s =>
-                    s.Value == JobStateCategory.Success);
+                    s.Value == JobStateCategory.Successful);
             }
         }
 

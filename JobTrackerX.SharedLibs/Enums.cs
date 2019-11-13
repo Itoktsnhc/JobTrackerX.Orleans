@@ -26,7 +26,7 @@
     {
         None = 0,
         Pending = 1,
-        Success = 2,
+        Successful = 2,
         Failed = 3
     }
 

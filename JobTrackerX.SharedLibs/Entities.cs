@@ -18,7 +18,7 @@ namespace JobTrackerX.SharedLibs
         public DateTimeOffset? StartTime { get; set; }
         public DateTimeOffset? EndTime { get; set; }
         public int TotalChildrenCount { get; set; }
-        public int SuccessChildrenCount { get; set; }
+        public int SuccessfulChildrenCount { get; set; }
         public int FailedChildrenCount { get; set; }
         public int PendingChildrenCount { get; set; }
         public Dictionary<long, JobStateCategory> ChildrenStatesDic { get; set; }

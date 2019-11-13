@@ -122,7 +122,7 @@ namespace JobTrackerX.Entities
                     return JobStateCategory.Failed;
 
                 case JobState.RanToCompletion:
-                    return JobStateCategory.Success;
+                    return JobStateCategory.Successful;
 
                 default:
                     return JobStateCategory.None;
@@ -194,13 +194,13 @@ namespace JobTrackerX.Entities
                         category = JobStateCategory.Failed;
                         break;
 
-                    case JobStateCategory.Success when category != JobStateCategory.Failed:
-                        category = JobStateCategory.Success;
+                    case JobStateCategory.Successful when category != JobStateCategory.Failed:
+                        category = JobStateCategory.Successful;
                         break;
 
                     case JobStateCategory.Pending
                         when category != JobStateCategory.Failed
-                             && category != JobStateCategory.Success:
+                             && category != JobStateCategory.Successful:
                         category = JobStateCategory.Pending;
                         break;
                 }
