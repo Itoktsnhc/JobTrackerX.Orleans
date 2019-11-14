@@ -45,24 +45,6 @@ namespace JobTrackerX.WebApi.Controllers
             return new ReturnDto<long>(await _client.GetGrain<IJobIdGrain>(Constants.JobIdGrainDefaultName).GetNewIdAsync());
         }
 
-        [HttpGet("auth")]
-        public ReturnDto<string> CheckAndAddAuthToken([Required] string token)
-        {
-            HttpContext.Response.Cookies.Append(Constants.TokenAuthKey, token, new CookieOptions()
-            {
-                Expires = new DateTimeOffset(2038, 1, 1, 0, 0, 0, TimeSpan.FromHours(0))
-            });
-            if (token != _config.CommonConfig.AuthToken)
-            {
-                return new ReturnDto<string>()
-                {
-                    Result = false,
-                    Msg = "auth failed"
-                };
-            }
-            return new ReturnDto<string>("auth success");
-        }
-
         [HttpGet("exception")]
         public ReturnDto<string> FireException()
         {

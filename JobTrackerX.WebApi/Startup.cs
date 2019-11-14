@@ -82,10 +82,7 @@ namespace JobTrackerX.WebApi
 
             services.AddRazorPages();
             services.AddServerSideBlazor()
-                .AddCircuitOptions(options =>
-                {
-                    options.DetailedErrors = true;
-                });
+                .AddCircuitOptions(options => options.DetailedErrors = true);
             services.AddControllers(options =>
             options.Filters.Add(new TypeFilterAttribute(typeof(GlobalExceptionFilter)))).AddNewtonsoftJson();
 
@@ -102,11 +99,6 @@ namespace JobTrackerX.WebApi
 
         public void Configure(IApplicationBuilder app)
         {
-            if (JobTrackerConfig.CommonConfig.AuthToken != null)
-            {
-                app.UseMiddleware<TokenAuth>();
-            }
-
             if (JobTrackerConfig.CommonConfig.UseDashboard)
             {
                 app.UseOrleansDashboard(new DashboardOptions { BasePath = "/dashboard" });

@@ -27,7 +27,6 @@ namespace JobTrackerX.Entities
     public class CommonConfig
     {
         public bool UseDashboard { get; set; }
-        public string AuthToken { get; set; }
     }
 
     public class IndexConfig
