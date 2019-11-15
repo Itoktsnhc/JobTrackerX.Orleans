@@ -13,6 +13,7 @@ namespace JobTrackerX.Entities
             CreatedBy = dto.CreatedBy;
             Options = dto.Options;
             SourceLink = dto.SourceLink;
+            ActionConfigs = dto.ActionConfigs;
         }
 
         public AddJobDtoInternal()
@@ -25,6 +26,7 @@ namespace JobTrackerX.Entities
         public long? ParentJobId { get; set; }
         public string JobName { get; set; }
         public string SourceLink { get; set; }
+        public List<ActionConfig> ActionConfigs { get; set; }
     }
 
     public class UpdateJobStateDtoInternal
@@ -53,5 +55,12 @@ namespace JobTrackerX.Entities
 
         public int Count { get; set; }
         public long Offset { get; set; }
+    }
+
+    public class ActionMessageDto
+    {
+        public long JobId { get; set; }
+        public JobState JobState { get; set; }
+        public ActionConfig ActionConfig { get; set; }
     }
 }

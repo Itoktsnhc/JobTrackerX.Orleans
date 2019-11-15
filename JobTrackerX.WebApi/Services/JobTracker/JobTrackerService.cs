@@ -4,7 +4,6 @@ using JobTrackerX.Entities.GrainStates;
 using JobTrackerX.GrainInterfaces;
 using JobTrackerX.SharedLibs;
 using Orleans;
-using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,7 +27,10 @@ namespace JobTrackerX.WebApi.Services.JobTracker
         {
             var jobGrain = _client.GetGrain<IJobGrain>(id);
             var res = await jobGrain.GetJobAsync();
-
+            if (res == null)
+            {
+                return null;
+            }
             return _mapper.Map<JobEntity>(res);
         }
 
@@ -77,7 +79,6 @@ namespace JobTrackerX.WebApi.Services.JobTracker
         public async Task<string> UpdateJobStatusAsync(long id, UpdateJobStateDto dto)
         {
             var grain = _client.GetGrain<IJobGrain>(id);
-            var job = await grain.GetJobAsync();
             await grain.UpdateJobStateAsync(dto);
             return "success";
         }

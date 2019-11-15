@@ -1,4 +1,4 @@
-using JobTrackerX.Client;
+ using JobTrackerX.Client;
 using JobTrackerX.Entities;
 using JobTrackerX.SharedLibs;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -17,7 +17,7 @@ namespace JobTrackerX.Test
 
         public JobTrackerClientTest()
         {
-            _client = new JobTrackerClient("{YourDomain}");
+            _client = new JobTrackerClient("http://localhost:55382/");
         }
 
         [TestMethod]
@@ -133,26 +133,6 @@ namespace JobTrackerX.Test
         }
 
         [TestMethod]
-        public async Task TestQueryJobs()
-        {
-            var jobName = "foobar" + DateTime.Now.Ticks;
-            var createdBy = "itok";
-            var tags = new[] { "red", "rootJob", "named" };
-            await _client.CreateNewJobAsync(new AddJobDto(jobName)
-            {
-                CreatedBy = createdBy,
-                Tags = tags.ToList()
-            });
-            var indices = await _client.QueryJobIndexAsync(new QueryJobIndexDto
-            {
-                Start = DateTimeOffset.Now.AddHours(-1),
-                End = DateTimeOffset.Now.AddHours(1),
-                Predicate = $@"JobName=""{jobName}"" and CreatedBy=""{createdBy}"" and Tags.Contains(""red"")"
-            });
-            Assert.AreEqual(indices.IndexGrainHit > 0, true);
-        }
-
-        [TestMethod]
         public async Task TestReverseAsync()
         {
             var root = await _client.CreateNewJobAsync(new AddJobDto());
@@ -177,5 +157,52 @@ namespace JobTrackerX.Test
             root = await _client.GetJobEntityAsync(root.JobId);
             Assert.AreEqual(JobState.Faulted, root.CurrentJobState);
         }
+
+        [TestMethod]
+        public async Task TestEmailActionTriggerAsync()
+        {
+            var root = await _client.CreateNewJobAsync(new AddJobDto("testTrigger")
+            {
+                ActionConfigs = new List<ActionConfig>()
+                {
+                    new ActionConfig()
+                    {
+                        JobStateFilters = new List<JobState>(){ JobState.RanToCompletion, JobState.Running},
+                        ActionWrapper= new ActionConfigWrapper(){
+                        EmailConfig=new EmailActionConfig(){
+                        Recipients=new List<string>(){ /*"xx@xxx.com"*/} } }
+                    }
+                }
+            });
+            await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.Running));
+            await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
+        }
+
+        [TestMethod]
+        public async Task TestPostActionTriggerAsync()
+        {
+            var root = await _client.CreateNewJobAsync(new AddJobDto("testTrigger")
+            {
+                ActionConfigs = new List<ActionConfig>()
+                {
+                    new ActionConfig()
+                    {
+                        JobStateFilters = new List<JobState>(){ JobState.RanToCompletion, JobState.Running,JobState.Faulted},
+                        ActionWrapper= new ActionConfigWrapper()
+                        {
+                            HttpConfig=new HttpActionConfig()
+                            {
+                                Headers=new Dictionary<string, string>(){ { "x-test", "val" } },
+                                Payload=new { Name="this isName",Value="this is vv"},
+                                Url = "http://www.azure.com/test"
+                            }
+                        }
+                    }
+                }
+            });
+            await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.Running));
+            await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
+        }
+
     }
 }

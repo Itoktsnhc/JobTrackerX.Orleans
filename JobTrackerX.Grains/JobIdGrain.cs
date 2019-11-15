@@ -54,7 +54,7 @@ namespace JobTrackerX.Grains
 
         private async Task AcquireNewIdRangeAsync()
         {
-            var message = await _wrapper.Receiver.ReceiveAsync();
+            var message = await _wrapper.IdQueueReceiver.ReceiveAsync();
             Current = _wrapper.ScaleSize * (message.SystemProperties.SequenceNumber - 1);
             _idRangeEnd = _wrapper.ScaleSize * message.SystemProperties.SequenceNumber;
         }

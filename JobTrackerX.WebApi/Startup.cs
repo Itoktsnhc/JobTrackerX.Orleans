@@ -5,10 +5,12 @@ using JobTrackerX.Entities.GrainStates;
 using JobTrackerX.SharedLibs;
 using JobTrackerX.WebApi.Entities;
 using JobTrackerX.WebApi.Misc;
+using JobTrackerX.WebApi.Services.ActionHandler;
 using JobTrackerX.WebApi.Services.Background;
 using JobTrackerX.WebApi.Services.JobTracker;
 using JobTrackerX.WebApi.Services.Query;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,12 +39,13 @@ namespace JobTrackerX.WebApi
             services.AddOptions();
             services.Configure<JobTrackerConfig>(Configuration.GetSection(nameof(JobTrackerConfig)));
             services.Configure<WebUIConfig>(Configuration.GetSection(nameof(WebUIConfig)));
+            services.Configure<EmailConfig>(Configuration.GetSection(nameof(EmailConfig)));
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo
                 {
-                    Title = "JobTrackerX",
-                    Version = "0.0.1"
+                    Title = Constants.BrandName,
+                    Version = "1.0.0"
                 });
                 c.IncludeXmlComments("./JobTrackerX.Web.xml");
             });
@@ -56,6 +59,7 @@ namespace JobTrackerX.WebApi
 
             services.AddSingleton<IHostedService>(c => c.GetRequiredService<InProcessSilo>());
             services.AddHostedService<IdGenerator>();
+            services.AddHostedService<ActionHandlerService>();
 #if !DEBUG
             services.AddHostedService<MergeJobIndexWorker>();
 #endif
@@ -63,7 +67,10 @@ namespace JobTrackerX.WebApi
             #endregion
 
             #region Dependencies
+
+            services.AddHttpClient();
             services.AddBlazoredToast();
+            services.AddSingleton<ActionHandlerPool>();
             services.AddSingleton<InProcessSilo>();
             services.AddSingleton(c => c.GetRequiredService<InProcessSilo>().Client);
             services.AddSingleton<IGrainFactory>(c => c.GetRequiredService<IClusterClient>());
@@ -106,7 +113,7 @@ namespace JobTrackerX.WebApi
 
             app.UseStaticFiles();
             app.UseSwagger();
-            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "JobTrackerX.Orleans"));
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", Constants.BrandName));
             app.UseDeveloperExceptionPage();
             app.UseRouting();
             app.UseEndpoints(endpoints =>

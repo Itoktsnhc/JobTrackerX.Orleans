@@ -15,7 +15,7 @@ namespace JobTrackerX.Entities.GrainStates
         public string Options { get; set; }
         public string CreatedBy { get; set; }
         public string SourceLink { get; set; }
-
+        public List<ActionConfig> ActionConfigs { get; set; }
         public List<StateChangeDto> StateChanges { get; set; } = new List<StateChangeDto>();
 
         public JobState CurrentJobState

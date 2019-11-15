@@ -10,7 +10,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
-using Newtonsoft.Json;
+using AutoMapper;
 
 namespace JobTrackerX.WebApi.Services.Background
 {
@@ -20,7 +20,7 @@ namespace JobTrackerX.WebApi.Services.Background
         public readonly IClusterClient Client;
 
         public InProcessSilo(IOptions<JobTrackerConfig> jobTrackerConfigOptions, ServiceBusWrapper wrapper,
-            IndexStorageAccountWrapper accountWrapper)
+            IndexStorageAccountWrapper accountWrapper, IMapper mapper)
         {
             var siloConfig = jobTrackerConfigOptions.Value.SiloConfig;
             var jobEntityStorageOptions = new Action<AzureTableStorageOptions>(options =>
@@ -57,6 +57,8 @@ namespace JobTrackerX.WebApi.Services.Background
                     services.AddSingleton(_ => jobTrackerConfigOptions);
                     services.AddSingleton(_ => wrapper);
                     services.AddSingleton(_ => accountWrapper);
+                    services.AddSingleton(_ => mapper);
+                    services.AddHttpClient();
                 })
                 .Configure<GrainCollectionOptions>(options =>
                 {
@@ -86,13 +88,6 @@ namespace JobTrackerX.WebApi.Services.Background
         public async Task StopAsync(CancellationToken cancellationToken)
         {
             await _silo.StopAsync(cancellationToken);
-        }
-
-        [Obsolete]
-        private void SetOrleansJsonSerializerSettings(JsonSerializerSettings settings)
-        {
-            settings.TypeNameHandling = TypeNameHandling.None;
-            settings.PreserveReferencesHandling = PreserveReferencesHandling.None;
         }
     }
 }

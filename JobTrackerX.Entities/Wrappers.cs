@@ -3,26 +3,42 @@ using Microsoft.Azure.ServiceBus.Core;
 using Microsoft.Azure.ServiceBus.Management;
 using Microsoft.Extensions.Options;
 using Microsoft.WindowsAzure.Storage;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace JobTrackerX.Entities
 {
     public class ServiceBusWrapper
     {
+        private static readonly Random _rand = new Random();
+
         public ServiceBusWrapper(IOptions<JobTrackerConfig> options)
         {
             var idGeneratorConfig = options.Value.IdGeneratorConfig;
             ScaleSize = idGeneratorConfig.ScaleSize;
             CrashDistance = idGeneratorConfig.CrashDistance;
-            Receiver = new MessageReceiver(idGeneratorConfig.ConnStr, idGeneratorConfig.EntityPath,
+            IdQueueReceiver = new MessageReceiver(idGeneratorConfig.ConnStr, idGeneratorConfig.IdQueueEntityPath,
                 ReceiveMode.ReceiveAndDelete);
-            Sender = new MessageSender(idGeneratorConfig.ConnStr, idGeneratorConfig.EntityPath);
+            IdQueueSender = new MessageSender(idGeneratorConfig.ConnStr, idGeneratorConfig.IdQueueEntityPath);
             ManagementClient = new ManagementClient(idGeneratorConfig.ConnStr);
+            ActionQueues =
+                idGeneratorConfig.ActionQueues
+                .Select(name => new QueueClient(idGeneratorConfig.ConnStr, name)).ToList();
         }
 
-        public IMessageReceiver Receiver { get; }
+        public IQueueClient GetRandomActionQueueClient()
+        {
+            int index = _rand.Next(ActionQueues.Count);
+            return ActionQueues[index];
+        }
+
+        public List<QueueClient> ActionQueues { get; set; } = new List<QueueClient>();
+        public IMessageReceiver IdQueueReceiver { get; }
         public int ScaleSize { get; }
         public int CrashDistance { get; }
-        public IMessageSender Sender { get; }
+        public IMessageSender IdQueueSender { get; }
         public ManagementClient ManagementClient { get; }
     }
 

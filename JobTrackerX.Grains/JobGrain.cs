@@ -2,9 +2,14 @@ using JobTrackerX.Entities;
 using JobTrackerX.Entities.GrainStates;
 using JobTrackerX.GrainInterfaces;
 using JobTrackerX.SharedLibs;
+using Microsoft.Azure.ServiceBus;
+using Newtonsoft.Json;
 using Orleans;
 using Orleans.Providers;
+using Polly;
 using System;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace JobTrackerX.Grains
@@ -12,6 +17,13 @@ namespace JobTrackerX.Grains
     [StorageProvider(ProviderName = Constants.JobEntityStoreName)]
     public class JobGrain : Grain<JobEntityState>, IJobGrain
     {
+        private readonly ServiceBusWrapper _wrapper;
+
+        public JobGrain(ServiceBusWrapper wrapper)
+        {
+            _wrapper = wrapper;
+        }
+
         public async Task<JobEntityState> AddJobAsync(AddJobDto dto)
         {
             if (State.CurrentJobState != JobState.WaitingForActivation)
@@ -49,6 +61,7 @@ namespace JobTrackerX.Grains
             State.StateChanges.Add(new StateChangeDto(state));
             State.JobName = addJobDto.JobName;
             State.SourceLink = addJobDto.SourceLink;
+            State.ActionConfigs = addJobDto.ActionConfigs;
             if (!State.ParentJobId.HasValue)
             {
                 var indexGrain = GrainFactory.GetGrain<IShardJobIndexGrain>(Helper.GetTimeIndex());
@@ -85,6 +98,7 @@ namespace JobTrackerX.Grains
             {
                 await WriteStateAsync();
             }
+            await TryTriggerActionAsync();
         }
 
         public async Task OnChildStateChangeAsync(long childJobId, JobStateCategory state)
@@ -95,6 +109,7 @@ namespace JobTrackerX.Grains
                 State.StateChanges
                     .Add(new StateChangeDto(JobState.RanToCompletion, $"(sys: raised by child {childJobId})"));
             }
+
             if (State.ParentJobId.HasValue)
             {
                 var parentGrain = GrainFactory.GetGrain<IJobGrain>(State.ParentJobId.Value);
@@ -103,6 +118,7 @@ namespace JobTrackerX.Grains
             }
 
             await WriteStateAsync();
+            await TryTriggerActionAsync();
         }
 
         public async Task UpdateJobOptionsAsync(UpdateJobOptionsDto dto)
@@ -115,13 +131,45 @@ namespace JobTrackerX.Grains
             await WriteStateAsync();
         }
 
-        public async Task<JobEntityState> GetJobAsync()
+        public async Task<JobEntityState> GetJobAsync(bool ignoreNotExist = false)
         {
             if (State.CurrentJobState == JobState.WaitingForActivation)
             {
-                throw new JobNotFoundException($"job Id not exist: {this.GetPrimaryKeyLong()}");
+                if (ignoreNotExist)
+                {
+                    return null;
+                }
+                else
+                {
+                    throw new JobNotFoundException($"job Id not exist: {this.GetPrimaryKeyLong()}");
+                }
             }
             return await Task.FromResult(State);
+        }
+
+        private async Task TryTriggerActionAsync()
+        {
+            if (State.ActionConfigs?.Any() == true)
+            {
+                var state = State.CurrentJobState;
+                var targets = State.ActionConfigs.Where(
+                    s => s.JobStateFilters?.Any() == true
+                    && s.JobStateFilters.Contains(state)
+                    && s.ActionWrapper != null);
+                foreach (var target in targets)
+                {
+                    var actionDto = new ActionMessageDto()
+                    {
+                        ActionConfig = target,
+                        JobId = State.JobId,
+                        JobState = State.CurrentJobState
+                    };
+                    var msg = new Message(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(actionDto)));
+                    await Policy.Handle<Exception>()
+                        .WaitAndRetryAsync(Constants.GlobalRetryTimes, _ => TimeSpan.FromSeconds(Constants.GlobalRetryWaitSec))
+                        .ExecuteAsync(async () => await _wrapper.GetRandomActionQueueClient().SendAsync(msg));
+                }
+            }
         }
     }
 }

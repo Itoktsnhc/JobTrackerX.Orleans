@@ -30,13 +30,13 @@ namespace JobTrackerX.WebApi.Services.Background
                 try
                 {
                     var queueInfo =
-                        await _wrapper.ManagementClient.GetQueueRuntimeInfoAsync(_config.EntityPath, stoppingToken);
+                        await _wrapper.ManagementClient.GetQueueRuntimeInfoAsync(_config.IdQueueEntityPath, stoppingToken);
                     if (queueInfo.MessageCount < _config.MinMessageCountLeft)
                     {
                         var diff = (int)(_config.MaxMessageCountLeft - queueInfo.MessageCount);
                         foreach (var batch in Helper.SplitIntBySize(100, diff))
                         {
-                            await _wrapper.Sender.SendAsync(Enumerable.Range(0, batch).Select(_ => new Message())
+                            await _wrapper.IdQueueSender.SendAsync(Enumerable.Range(0, batch).Select(_ => new Message())
                                 .ToList());
                         }
                     }

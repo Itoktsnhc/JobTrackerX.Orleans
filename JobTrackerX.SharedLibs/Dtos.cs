@@ -22,6 +22,7 @@ namespace JobTrackerX.SharedLibs
         public long? ParentJobId { get; set; }
         public string JobName { get; set; }
         public string SourceLink { get; set; }
+        public List<ActionConfig> ActionConfigs { get; set; }
     }
 
     public class UpdateJobStateDto
@@ -88,18 +89,6 @@ namespace JobTrackerX.SharedLibs
         public int TotalCount { get; set; }
     }
 
-    //public class QueryCondition
-    //{
-    //    public QueryCondition(string value, bool useRegex = false)
-    //    {
-    //        UseRegex = useRegex;
-    //        Value = value;
-    //    }
-
-    //    public bool UseRegex { get; set; }
-    //    public string Value { get; set; }
-    //}
-
     public class UpdateJobOptionsDto
     {
         public UpdateJobOptionsDto(string options)
@@ -118,5 +107,13 @@ namespace JobTrackerX.SharedLibs
         }
 
         public long Offset { get; set; }
+    }
+
+    public class HttpActionBody
+    {
+        public object Payload { get; set; }
+        public HttpActionConfig Config { get; set; }
+        public long JobId { get; set; }
+        public JobState JobState { get; set; }
     }
 }

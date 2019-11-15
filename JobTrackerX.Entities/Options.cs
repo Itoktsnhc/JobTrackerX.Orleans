@@ -1,6 +1,5 @@
-// ReSharper disable UnusedAutoPropertyAccessor.Global
-
 using System;
+using System.Collections.Generic;
 
 namespace JobTrackerX.Entities
 {
@@ -16,7 +15,8 @@ namespace JobTrackerX.Entities
     public class IdGeneratorConfig
     {
         public string ConnStr { get; set; }
-        public string EntityPath { get; set; }
+        public string IdQueueEntityPath { get; set; }
+        public IList<string> ActionQueues { get; set; }
         public int ScaleSize { get; set; }
         public int CrashDistance { get; set; }
         public int MinMessageCountLeft { get; set; }
@@ -61,5 +61,13 @@ namespace JobTrackerX.Entities
         public TimeSpan NotificationHideTime { get; set; }
         public TimeSpan UIRefreshInterval { get; set; }
         public TimeSpan FirstUIRefreshDelay { get; set; }
+    }
+
+    public class EmailConfig
+    {
+        public string Account { get; set; }
+        public string Password { get; set; }
+        public string SmtpHost { get; set; }
+        public int SmtpPort { get; set; }
     }
 }

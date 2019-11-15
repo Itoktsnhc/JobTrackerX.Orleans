@@ -23,6 +23,7 @@ namespace JobTrackerX.SharedLibs
         public int PendingChildrenCount { get; set; }
         public Dictionary<long, JobStateCategory> ChildrenStatesDic { get; set; }
         public string SourceLink { get; set; }
+        public List<ActionConfig> ActionConfigs { get; set; }
     }
 
     public class JobIndex
@@ -44,5 +45,29 @@ namespace JobTrackerX.SharedLibs
         public string CreatedBy { get; set; }
         public List<string> Tags { get; set; }
         public DateTimeOffset IndexTime { get; set; }
+    }
+
+    public class ActionConfig
+    {
+        public List<JobState> JobStateFilters { get; set; }
+        public ActionConfigWrapper ActionWrapper { get; set; }
+    }
+
+    public class EmailActionConfig
+    {
+        public IList<string> Recipients { get; set; }
+    }
+
+    public class HttpActionConfig
+    {
+        public string Url { get; set; }
+        public object Payload { get; set; }
+        public Dictionary<string, string> Headers { get; set; } = new Dictionary<string, string>();
+    }
+
+    public class ActionConfigWrapper
+    {
+        public EmailActionConfig EmailConfig { get; set; }
+        public HttpActionConfig HttpConfig { get; set; }
     }
 }
