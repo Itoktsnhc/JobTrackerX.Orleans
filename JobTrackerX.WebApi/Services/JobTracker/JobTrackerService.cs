@@ -26,7 +26,7 @@ namespace JobTrackerX.WebApi.Services.JobTracker
         public async Task<JobEntity> GetJobByIdAsync(long id)
         {
             var jobGrain = _client.GetGrain<IJobGrain>(id);
-            var res = await jobGrain.GetJobAsync();
+            var res = await jobGrain.GetJobAsync(true);
             if (res == null)
             {
                 return null;
