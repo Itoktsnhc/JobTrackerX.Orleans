@@ -312,7 +312,7 @@ else
         {
             try
             {
-                await Task.Delay(_options.Value.FirstUIRefreshDelay);
+                await Task.Delay(_options.Value.FirstUIRefreshDelay, _cancelRefreshSource.Token);
 
                 while (!_cancelRefreshSource.Token.IsCancellationRequested)
                 {

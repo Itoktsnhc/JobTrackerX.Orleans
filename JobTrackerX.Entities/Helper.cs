@@ -1,10 +1,16 @@
 using DynamicExpresso;
 using JobTrackerX.Entities.GrainStates;
 using JobTrackerX.SharedLibs;
-using Microsoft.WindowsAzure.Storage;
+using Microsoft.Azure.Cosmos.Table;
+using Microsoft.Azure.Storage;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -210,19 +216,99 @@ namespace JobTrackerX.Entities
         }
 
         public static TReturn GetWrapperStorageAccount<TReturn>(string connStr)
-            where TReturn : StorageAccountWrapperBase, new()
+            where TReturn : IndexStorageAccountWrapper, new()
         {
-            if (!CloudStorageAccount.TryParse(connStr, out var account))
+            if (!Microsoft.Azure.Storage.CloudStorageAccount.TryParse(connStr, out var account))
+            {
+                throw new Exception("Cannot create Storage Account");
+            }
+            if (!Microsoft.Azure.Cosmos.Table.CloudStorageAccount.TryParse(connStr, out var tableAccount))
             {
                 throw new Exception("Cannot create Storage Account");
             }
 
-            return new TReturn { Account = account };
+            return new TReturn { Account = account, TableAccount = tableAccount };
         }
 
         public static string GetRollingIndexId(string prefix, int indexCount)
         {
             return $"{prefix}-{indexCount}";
+        }
+
+        public static string CompressGZipString(string input, Encoding encoding = null)
+        {
+            if (encoding == null)
+            {
+                encoding = Encoding.UTF8;
+            }
+
+            var buffer = encoding.GetBytes(input);
+            using (var memory = new MemoryStream())
+            {
+                using (var gzip = new GZipStream(memory,
+                    CompressionMode.Compress, true))
+                {
+                    gzip.Write(buffer, 0, buffer.Length);
+                }
+
+                return Convert.ToBase64String(memory.ToArray());
+            }
+        }
+
+        public static string DecompressGZipString(string input, Encoding encoding = null)
+        {
+            if (encoding == null)
+            {
+                encoding = Encoding.UTF8;
+            }
+
+            var gZipBuffer = Convert.FromBase64String(input);
+            using (var stream = new GZipStream(new MemoryStream(gZipBuffer),
+                CompressionMode.Decompress))
+            {
+                const int size = 4096;
+                var buffer = new byte[size];
+                using (var memory = new MemoryStream())
+                {
+                    int count;
+                    do
+                    {
+                        count = stream.Read(buffer, 0, size);
+                        if (count > 0)
+                        {
+                            memory.Write(buffer, 0, count);
+                        }
+                    } while (count > 0);
+
+                    return encoding.GetString(memory.ToArray());
+                }
+            }
+        }
+
+        public static string Mac(string method, string path, long ts, string secretkey)
+        {
+            using (var hmacMD5 = new HMACMD5(Encoding.UTF8.GetBytes(secretkey)))
+            {
+                using (var md5 = MD5.Create())
+                {
+                    var digest = md5.ComputeHash(Encoding.UTF8.GetBytes($"{method}{path}{ts}"));
+                    var bytes = hmacMD5.ComputeHash(digest);
+                    var m = BitConverter.ToString(bytes).Replace("-", string.Empty).ToLowerInvariant();
+                    return m;
+                }
+            }
+        }
+
+        public static string Encode(string method, string path, long ts, string key, string mac)
+        {
+            var s = string.Format("key={0}&mac={1}&ts={2}&method={3}&path={4}",
+                            key,
+                            mac,
+                            ts,
+                            method,
+                            path);
+            var b = Convert.ToBase64String(Encoding.UTF8.GetBytes(s));
+            return b;
         }
     }
 

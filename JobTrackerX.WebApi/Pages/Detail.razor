@@ -25,7 +25,7 @@ else
     <div class="container" style="max-width: 1440px; margin: 0 auto;}">
         <p class="h2">任务详情</p>
         <br />
-        <table class="table table-sm text-left">
+        <table class="table table-sm table-hover text-left">
             <tbody>
                 <tr>
                     <td>任务Id (@nameof(_jobEntity.JobId)): </td>
@@ -294,7 +294,7 @@ else
     private int pageNumber = 1;
     private int totalCount = 0;
     private int JobStateFilter = -1;
-    private IEnumerable<JobEntityViewModel>
+    private IList<JobEntityViewModel>
     Children;
     private List<JobEntityViewModel>
         ChildrenInternal = new List<JobEntityViewModel>();
@@ -364,6 +364,7 @@ else
     {
         try
         {
+            await _semaphore.WaitAsync(_cancelRefreshSource.Token);
             if (force || ChildrenInternal?.Any() != true)
             {
                 ChildrenInternal = _mapper.Map<List<JobEntityViewModel>>((await _service.GetChildrenEntitiesAsync(JobId)).Where(s => s.JobId != JobId).OrderBy(s => s.JobId));
@@ -373,19 +374,23 @@ else
             if (JobStateFilter < 0)
             {
                 totalCount = ChildrenInternal.Count;
-                Children = ChildrenInternal.Skip(skip).Take(pageSize);
+                Children = ChildrenInternal.Skip(skip).Take(pageSize).ToList();
             }
             else
             {
                 var status = (JobState)JobStateFilter;
                 var targetCollection = ChildrenInternal.Where(s => s.CurrentJobState == status).ToList();
                 totalCount = targetCollection.Count;
-                Children = targetCollection.Skip(skip).Take(pageSize);
+                Children = targetCollection.Skip(skip).Take(pageSize).ToList();
             }
         }
         catch (Exception ex)
         {
             _toastService.ShowError(ex.Message, "加载子任务错误");
+        }
+        finally
+        {
+            _semaphore.Release();
         }
     }
 
@@ -443,6 +448,8 @@ else
                 return;
             }
             await LoadJobEntityAsync();
+            await LoadJobChildrenAsync(true);
+
             await InvokeAsync(StateHasChanged);
         }
     }
@@ -465,22 +472,17 @@ else
         {
             try
             {
-                await Task.Delay(_options.Value.FirstUIRefreshDelay);
+                await Task.Delay(_options.Value.FirstUIRefreshDelay, _cancelRefreshSource.Token);
 
                 while (!_cancelRefreshSource.Token.IsCancellationRequested)
                 {
                     try
                     {
-                        await _semaphore.WaitAsync(_cancelRefreshSource.Token);
                         await RefreshCurrentDataAsync();
                     }
                     catch (Exception ex)
                     {
                         _toastService.ShowError(ex.Message, nameof(RefreshCurrentDataAsync));
-                    }
-                    finally
-                    {
-                        _semaphore.Release();
                     }
                     await Task.Delay(_options.Value.UIRefreshInterval, _cancelRefreshSource.Token);
                 }

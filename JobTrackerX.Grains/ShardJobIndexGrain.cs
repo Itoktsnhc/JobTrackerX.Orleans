@@ -2,11 +2,10 @@
 using JobTrackerX.Entities.GrainStates;
 using JobTrackerX.GrainInterfaces;
 using Microsoft.Extensions.Options;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Table;
 using Orleans;
 using Orleans.Concurrency;
 using System.Threading.Tasks;
+using Microsoft.Azure.Cosmos.Table;
 
 namespace JobTrackerX.Grains
 {
@@ -19,7 +18,7 @@ namespace JobTrackerX.Grains
 
         public ShardJobIndexGrainWithTable(IndexStorageAccountWrapper wrapper, IOptions<JobTrackerConfig> options)
         {
-            _account = wrapper.Account;
+            _account = wrapper.TableAccount;
             _indexConfig = options.Value.JobIndexConfig;
         }
 
@@ -34,15 +33,21 @@ namespace JobTrackerX.Grains
         }
 
         public async Task<TableQuerySegment<JobIndexInternal>> FetchWithTokenAsync(TableContinuationToken token,
-            int takeCount = 5000)
+            int takeCount = 1000)
         {
             var table = Client.GetTableReference(_tableName);
-            var query = new TableQuery<JobIndexInternal>
+            var query = new TableQuery<JobIndexInternal>()
+                .Where(TableQuery.CombineFilters(
+                    TableQuery.GenerateFilterCondition("PartitionKey",
+                    QueryComparisons.LessThanOrEqual, this.GetPrimaryKeyString() + "."),
+                    TableOperators.And,
+                    TableQuery.GenerateFilterCondition("PartitionKey",
+                        QueryComparisons.GreaterThan, this.GetPrimaryKeyString() + "-")));
+            if (takeCount > 1000)
             {
-                FilterString =
-                    $"PartitionKey lt '{this.GetPrimaryKeyString()}.' and PartitionKey ge '{this.GetPrimaryKeyString()}-'",
-                TakeCount = takeCount
-            };
+                takeCount = 1000;
+            }
+            query.TakeCount = takeCount;
             return await table.ExecuteQuerySegmentedAsync(query, token);
         }
 

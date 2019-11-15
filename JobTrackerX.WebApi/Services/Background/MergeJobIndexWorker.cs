@@ -2,11 +2,10 @@
 using JobTrackerX.Entities.GrainStates;
 using JobTrackerX.GrainInterfaces;
 using JobTrackerX.WebApi.Entities;
+using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Table;
 using Orleans;
 using System;
 using System.Collections.Generic;
@@ -18,7 +17,7 @@ namespace JobTrackerX.WebApi.Services.Background
 {
     public class MergeJobIndexWorker : BackgroundService
     {
-        private readonly CloudStorageAccount _account;
+        private readonly Microsoft.Azure.Cosmos.Table.CloudStorageAccount _account;
         private readonly IClusterClient _client;
         private readonly IndexConfig _indexConfig;
         private readonly ILogger<MergeJobIndexWorker> _logger;
@@ -28,7 +27,7 @@ namespace JobTrackerX.WebApi.Services.Background
             IOptions<JobTrackerConfig> config, IndexStorageAccountWrapper wrapper)
         {
             _client = client;
-            _account = wrapper.Account;
+            _account = wrapper.TableAccount;
             _logger = logger;
             _indexConfig = config.Value.JobIndexConfig;
             _tableName = _indexConfig.TableName;

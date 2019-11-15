@@ -1,5 +1,5 @@
 ﻿using JobTrackerX.Entities.GrainStates;
-using Microsoft.WindowsAzure.Storage.Table;
+using Microsoft.Azure.Cosmos.Table;
 using Orleans;
 using System.Threading.Tasks;
 
