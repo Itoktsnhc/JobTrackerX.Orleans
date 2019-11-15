@@ -284,32 +284,6 @@ namespace JobTrackerX.Entities
                 }
             }
         }
-
-        public static string Mac(string method, string path, long ts, string secretkey)
-        {
-            using (var hmacMD5 = new HMACMD5(Encoding.UTF8.GetBytes(secretkey)))
-            {
-                using (var md5 = MD5.Create())
-                {
-                    var digest = md5.ComputeHash(Encoding.UTF8.GetBytes($"{method}{path}{ts}"));
-                    var bytes = hmacMD5.ComputeHash(digest);
-                    var m = BitConverter.ToString(bytes).Replace("-", string.Empty).ToLowerInvariant();
-                    return m;
-                }
-            }
-        }
-
-        public static string Encode(string method, string path, long ts, string key, string mac)
-        {
-            var s = string.Format("key={0}&mac={1}&ts={2}&method={3}&path={4}",
-                            key,
-                            mac,
-                            ts,
-                            method,
-                            path);
-            var b = Convert.ToBase64String(Encoding.UTF8.GetBytes(s));
-            return b;
-        }
     }
 
     public static class Extension
