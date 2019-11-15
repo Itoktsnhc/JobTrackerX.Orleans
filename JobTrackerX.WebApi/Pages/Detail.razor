@@ -418,6 +418,10 @@ else
         {
             setPageSize = 100;
         }
+        if (setPageSize < 1)
+        {
+            setPageSize = 10;
+        }
         pageSize = setPageSize;
         pageNumber = 1;
         await LoadJobChildrenAsync();
