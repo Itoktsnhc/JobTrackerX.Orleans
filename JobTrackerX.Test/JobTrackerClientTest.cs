@@ -23,7 +23,8 @@ namespace JobTrackerX.Test
             _client = new JobTrackerClient(new HttpClient()
             {
                 BaseAddress = new Uri(_baseUrlStr)
-            }, retryPolicy: Policy.Handle<Exception>().WaitAndRetryAsync(10, _ => TimeSpan.FromSeconds(1)));
+            },
+            retryCount: 3, retryInterval: _ => TimeSpan.FromSeconds(3));
         }
 
         [TestMethod]
@@ -126,8 +127,8 @@ namespace JobTrackerX.Test
         [TestMethod]
         public async Task TestOptionUpdate()
         {
-            var jobName = "foobar";
-            var options = "balabala";
+            const string jobName = "foobar";
+            const string options = "balabala";
             var rootJob = await _client.CreateNewJobAsync(new AddJobDto(jobName)
             {
                 Options = options
@@ -209,6 +210,5 @@ namespace JobTrackerX.Test
             await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.Running));
             await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
         }
-
     }
 }

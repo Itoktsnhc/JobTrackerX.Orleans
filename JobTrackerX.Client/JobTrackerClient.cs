@@ -16,7 +16,8 @@ namespace JobTrackerX.Client
         private readonly HttpClient _httpClient;
 
         private readonly Func<HttpRequestMessage, Task> _requestProcessor;
-        private readonly AsyncRetryPolicy _retryPolicy;
+        private readonly int? _retryCount;
+        private readonly Func<int, TimeSpan> _getRetryInterval;
 
         /// <summary>
         /// default httpClient with no proxy
@@ -44,11 +45,13 @@ namespace JobTrackerX.Client
         /// <param name="retryPolicy">retryPolicy</param>
         public JobTrackerClient(HttpClient client,
             Func<HttpRequestMessage, Task> requestProcessor = null,
-            AsyncRetryPolicy retryPolicy = null)
+            int? retryCount = null,
+            Func<int, TimeSpan> retryInterval = null)
         {
             _httpClient = client;
             _requestProcessor = requestProcessor;
-            _retryPolicy = retryPolicy;
+            _retryCount = retryCount;
+            _getRetryInterval = retryInterval;
         }
 
         public async Task<JobEntity> CreateNewJobAsync(AddJobDto dto)
@@ -134,12 +137,13 @@ namespace JobTrackerX.Client
         private async Task<ReturnDto<TData>> SendRequestAsync<TData, TRequestBody>(HttpMethod method, string uri,
             TRequestBody body = default)
         {
-            if (_retryPolicy == null)
+            if (_retryCount.HasValue && _getRetryInterval != null)
             {
-                return await SendRequestImplAsync<TData, TRequestBody>(method, uri, body);
+                return await Policy.Handle<Exception>()
+                    .WaitAndRetryAsync(_retryCount.Value, _getRetryInterval)
+                    .ExecuteAsync(async () => await SendRequestImplAsync<TData, TRequestBody>(method, uri, body));
             }
-            return await _retryPolicy.ExecuteAsync(
-                async () => await SendRequestImplAsync<TData, TRequestBody>(method, uri, body));
+            return await SendRequestImplAsync<TData, TRequestBody>(method, uri, body);
         }
 
         private async Task<ReturnDto<TData>> SendRequestImplAsync<TData, TRequestBody>(HttpMethod method, string uri,
