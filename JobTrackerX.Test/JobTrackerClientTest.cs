@@ -1,10 +1,12 @@
- using JobTrackerX.Client;
+using JobTrackerX.Client;
 using JobTrackerX.Entities;
 using JobTrackerX.SharedLibs;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Polly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
@@ -13,11 +15,15 @@ namespace JobTrackerX.Test
     [TestClass]
     public class JobTrackerClientTest
     {
+        private const string _baseUrlStr = "http://localhost:55382/";
         private readonly IJobTrackerClient _client;
 
         public JobTrackerClientTest()
         {
-            _client = new JobTrackerClient("http://localhost:55382/");
+            _client = new JobTrackerClient(new HttpClient()
+            {
+                BaseAddress = new Uri(_baseUrlStr)
+            }, retryPolicy: Policy.Handle<Exception>().WaitAndRetryAsync(10, _ => TimeSpan.FromSeconds(1)));
         }
 
         [TestMethod]

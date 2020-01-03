@@ -1,5 +1,7 @@
 ﻿using JobTrackerX.SharedLibs;
 using Newtonsoft.Json;
+using Polly;
+using Polly.Retry;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +16,7 @@ namespace JobTrackerX.Client
         private readonly HttpClient _httpClient;
 
         private readonly Func<HttpRequestMessage, Task> _requestProcessor;
+        private readonly AsyncRetryPolicy _retryPolicy;
 
         /// <summary>
         /// default httpClient with no proxy
@@ -38,10 +41,14 @@ namespace JobTrackerX.Client
         /// </summary>
         /// <param name="client">httpClient</param>
         /// <param name="requestProcessor">modify request</param>
-        public JobTrackerClient(HttpClient client, Func<HttpRequestMessage, Task> requestProcessor = null)
+        /// <param name="retryPolicy">retryPolicy</param>
+        public JobTrackerClient(HttpClient client,
+            Func<HttpRequestMessage, Task> requestProcessor = null,
+            AsyncRetryPolicy retryPolicy = null)
         {
             _httpClient = client;
             _requestProcessor = requestProcessor;
+            _retryPolicy = retryPolicy;
         }
 
         public async Task<JobEntity> CreateNewJobAsync(AddJobDto dto)
@@ -125,6 +132,17 @@ namespace JobTrackerX.Client
         }
 
         private async Task<ReturnDto<TData>> SendRequestAsync<TData, TRequestBody>(HttpMethod method, string uri,
+            TRequestBody body = default)
+        {
+            if (_retryPolicy == null)
+            {
+                return await SendRequestImplAsync<TData, TRequestBody>(method, uri, body);
+            }
+            return await _retryPolicy.ExecuteAsync(
+                async () => await SendRequestImplAsync<TData, TRequestBody>(method, uri, body));
+        }
+
+        private async Task<ReturnDto<TData>> SendRequestImplAsync<TData, TRequestBody>(HttpMethod method, string uri,
             TRequestBody body = default)
         {
             var req = new HttpRequestMessage(method, uri);
