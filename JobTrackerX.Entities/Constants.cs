@@ -5,6 +5,7 @@
         public const string JobEntityStoreName = "JobStore";
         public const string JobRefStoreName = "JobRefStore";
         public const string ReadOnlyJobIndexStoreName = "ReadOnlyJobIndexStore";
+        public const string AttachmentStoreName = "AttachmentStore";
 
         public const string JobIdOffsetStoreName = "JobIdOffsetStore";
         public const string JobIdStoreName = "JobIdStore";

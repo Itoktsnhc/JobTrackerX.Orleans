@@ -6,6 +6,7 @@ using JobTrackerX.SharedLibs;
 using JobTrackerX.WebApi.Entities;
 using JobTrackerX.WebApi.Misc;
 using JobTrackerX.WebApi.Services.ActionHandler;
+using JobTrackerX.WebApi.Services.Attachment;
 using JobTrackerX.WebApi.Services.Background;
 using JobTrackerX.WebApi.Services.JobTracker;
 using JobTrackerX.WebApi.Services.Query;
@@ -81,6 +82,7 @@ namespace JobTrackerX.WebApi
 
             services.AddScoped<IQueryIndexService, QueryIndexService>();
             services.AddScoped<IJobTrackerService, JobTrackerService>();
+            services.AddScoped<IAttachmentService, AttachmentService>();
 
             if (JobTrackerConfig.CommonConfig.UseDashboard)
             {

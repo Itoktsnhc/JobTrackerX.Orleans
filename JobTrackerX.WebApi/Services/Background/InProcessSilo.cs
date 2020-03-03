@@ -23,7 +23,7 @@ namespace JobTrackerX.WebApi.Services.Background
             IndexStorageAccountWrapper accountWrapper, IMapper mapper)
         {
             var siloConfig = jobTrackerConfigOptions.Value.SiloConfig;
-            var jobEntityStorageOptions = new Action<AzureTableStorageOptions>(options =>
+            var tableStorageOption = new Action<AzureTableStorageOptions>(options =>
             {
                 options.ConnectionString = siloConfig.JobEntityPersistConfig.ConnStr;
                 if (!string.IsNullOrEmpty(siloConfig.JobEntityPersistConfig.TableName))
@@ -33,7 +33,7 @@ namespace JobTrackerX.WebApi.Services.Background
                 }
             });
 
-            var readOnlyJobIndexStorageOptions = new Action<AzureBlobStorageOptions>(options =>
+            var blobStorageOption = new Action<AzureBlobStorageOptions>(options =>
             {
                 options.ConnectionString = siloConfig.ReadOnlyJobIndexPersistConfig.ConnStr;
                 if (!string.IsNullOrEmpty(siloConfig.ReadOnlyJobIndexPersistConfig.ContainerName))
@@ -47,11 +47,12 @@ namespace JobTrackerX.WebApi.Services.Background
                 .UseLocalhostClustering(11111, 30000, null, siloConfig.ServiceId, siloConfig.ClusterId)
                 .ConfigureApplicationParts(parts =>
                     parts.AddApplicationPart(typeof(JobGrain).Assembly).WithReferences().WithCodeGeneration())
-                .AddAzureTableGrainStorage(Constants.JobEntityStoreName, jobEntityStorageOptions)
-                .AddAzureTableGrainStorage(Constants.JobRefStoreName, jobEntityStorageOptions)
-                .AddAzureTableGrainStorage(Constants.JobIdStoreName, jobEntityStorageOptions)
-                .AddAzureTableGrainStorage(Constants.JobIdOffsetStoreName, jobEntityStorageOptions)
-                .AddAzureBlobGrainStorage(Constants.ReadOnlyJobIndexStoreName, readOnlyJobIndexStorageOptions)
+                .AddAzureTableGrainStorage(Constants.JobEntityStoreName, tableStorageOption)
+                .AddAzureTableGrainStorage(Constants.JobRefStoreName, tableStorageOption)
+                .AddAzureTableGrainStorage(Constants.JobIdStoreName, tableStorageOption)
+                .AddAzureTableGrainStorage(Constants.JobIdOffsetStoreName, tableStorageOption)
+                .AddAzureBlobGrainStorage(Constants.ReadOnlyJobIndexStoreName, blobStorageOption)
+                .AddAzureBlobGrainStorage(Constants.AttachmentStoreName, blobStorageOption)
                 .ConfigureServices(services =>
                 {
                     services.AddSingleton(_ => jobTrackerConfigOptions);
