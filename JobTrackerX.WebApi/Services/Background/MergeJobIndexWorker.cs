@@ -42,7 +42,7 @@ namespace JobTrackerX.WebApi.Services.Background
                 try
                 {
                     var current = DateTimeOffset.Now;
-                    var deleteAction = new ActionBlock<TableEntity>(
+                    var deleteAction = new ActionBlock<ITableEntity>(
                         entity => Client.GetTableReference(_tableName).ExecuteAsync(TableOperation.Delete(entity)),
                         Helper.GetOutOfGrainExecutionOptions());
                     var timeIndexSeq =

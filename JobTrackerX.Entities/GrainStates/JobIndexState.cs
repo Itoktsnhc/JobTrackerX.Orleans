@@ -20,7 +20,7 @@ namespace JobTrackerX.Entities.GrainStates
         public byte[] DataArray { get; set; }
     }
 
-    public class JobIndexInternal : TableEntity
+    public class JobIndexInternal : ITableEntity
     {
         public JobIndexInternal()
         {
@@ -39,21 +39,25 @@ namespace JobTrackerX.Entities.GrainStates
         public string CreatedBy { get; set; }
         public List<string> Tags { get; set; }
 
-        public DateTimeOffset IndexTime { get; set; } = DateTimeOffset.Now;
+        public DateTimeOffset? IndexTime { get; set; } = DateTimeOffset.Now;
+        public string PartitionKey { get; set; }
+        public string RowKey { get; set; }
+        public DateTimeOffset Timestamp { get; set; }
+        public string ETag { get; set; }
 
-        public override void ReadEntity(IDictionary<string, EntityProperty> properties,
+        public void ReadEntity(IDictionary<string, EntityProperty> properties,
             OperationContext operationContext)
         {
-            base.ReadEntity(properties, operationContext);
+            TableEntity.ReadUserObject(this, properties, operationContext);
             if (properties.ContainsKey(nameof(Tags)))
             {
                 Tags = JsonConvert.DeserializeObject<List<string>>(properties[nameof(Tags)].StringValue);
             }
         }
 
-        public override IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
+        public IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
         {
-            var s = base.WriteEntity(operationContext);
+            var s = TableEntity.WriteUserObject(this, operationContext);
             s[nameof(Tags)] = new EntityProperty(JsonConvert.SerializeObject(Tags));
             return s;
         }
