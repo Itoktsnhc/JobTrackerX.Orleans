@@ -19,17 +19,18 @@ steps:
     echo See https://aka.ms/yaml
   displayName: 'Run a multi-line script'
 
-- task: DotNetCoreCLI@2
+- task: NuGetCommand@2
+  inputs:
+    command: 'restore'
+    restoreSolution: '**/*.sln'
+    feedsToUse: 'select'
+    vstsFeed: '692a6321-f2d4-4db5-8ee2-45cd6dacd5cf'
+- task: NuGetCommand@2
   inputs:
     command: 'pack'
     packagesToPack: '**/JobTrackerX.Client.csproj'
     versioningScheme: 'off'
-
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'pack'
-    packagesToPack: '**/JobTrackerX.SharedLibs.csproj'
-    versioningScheme: 'off'
+    includeReferencedProjects: true
 
 - task: NuGetCommand@2
   inputs:
