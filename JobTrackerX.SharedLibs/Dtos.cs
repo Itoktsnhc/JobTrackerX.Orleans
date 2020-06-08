@@ -116,4 +116,12 @@ namespace JobTrackerX.SharedLibs
         public long JobId { get; set; }
         public JobState JobState { get; set; }
     }
+    public class AppendLogDto
+    {
+        public AppendLogDto(string content)
+        {
+            Content = content;
+        }
+        public string Content { get; set; }
+    }
 }

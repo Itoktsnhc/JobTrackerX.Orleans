@@ -134,6 +134,16 @@ namespace JobTrackerX.Client
             throw new Exception($"{nameof(GetChildrenAsync)} failed {resp.Msg}");
         }
 
+        public async Task<bool> AppendToJobLogAsync(long jobId, AppendLogDto dto)
+        {
+            var resp = await SendRequestAsync<string, AppendLogDto>(HttpMethod.Put, $"api/jobTracker/AppendLog/{jobId}", dto);
+            if (resp.Result)
+            {
+                return resp.Result;
+            }
+            throw new Exception($"{nameof(AppendToJobLogAsync)} failed {resp.Msg}");
+        }
+
         private async Task<ReturnDto<TData>> SendRequestAsync<TData, TRequestBody>(HttpMethod method, string uri,
             TRequestBody body = default)
         {

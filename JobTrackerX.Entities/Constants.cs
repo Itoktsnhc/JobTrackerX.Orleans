@@ -3,6 +3,7 @@
     public static class Constants
     {
         public const string JobEntityStoreName = "JobStore";
+        public const string AppendStoreName = "JobAppendStore";
         public const string JobRefStoreName = "JobRefStore";
         public const string ReadOnlyJobIndexStoreName = "ReadOnlyJobIndexStore";
         public const string AttachmentStoreName = "AttachmentStore";

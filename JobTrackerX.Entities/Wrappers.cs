@@ -41,9 +41,17 @@ namespace JobTrackerX.Entities
         public ManagementClient ManagementClient { get; }
     }
 
-    public class IndexStorageAccountWrapper
+    public class StorageAccountWrapper
     {
         public CloudStorageAccount Account { get; set; }
         public Microsoft.Azure.Cosmos.Table.CloudStorageAccount TableAccount { get; set; }
+    }
+
+    public class IndexStorageAccountWrapper : StorageAccountWrapper
+    {
+    }
+
+    public class LogStorageAccountWrapper : StorageAccountWrapper
+    {
     }
 }

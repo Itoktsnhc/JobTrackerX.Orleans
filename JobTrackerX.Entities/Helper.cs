@@ -216,7 +216,7 @@ namespace JobTrackerX.Entities
         }
 
         public static TReturn GetWrapperStorageAccount<TReturn>(string connStr)
-            where TReturn : IndexStorageAccountWrapper, new()
+            where TReturn : StorageAccountWrapper, new()
         {
             if (!Microsoft.Azure.Storage.CloudStorageAccount.TryParse(connStr, out var account))
             {

@@ -89,5 +89,23 @@ namespace JobTrackerX.WebApi.Services.JobTracker
                 .UpdateJobOptionsAsync(dto);
             return "success";
         }
+
+        public async Task AppendToJobLogAsync(long id, AppendLogDto dto)
+        {
+            var logger = _client.GetGrain<IJobLoggerGrain>(id);
+            await logger.AppendToJobLogAsync(dto);
+        }
+
+        public async Task<string> GetJobLogAsync(long id)
+        {
+            var logger = _client.GetGrain<IJobLoggerGrain>(id);
+            return await logger.GetJobLogAsync();
+        }
+
+        public async Task<string> GetJobLogUrlAsync(long id)
+        {
+            var logger = _client.GetGrain<IJobLoggerGrain>(id);
+            return await logger.GetJobLogUrlAsync();
+        }
     }
 }

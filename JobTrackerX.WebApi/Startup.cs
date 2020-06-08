@@ -58,12 +58,9 @@ namespace JobTrackerX.WebApi
 
             #region BackgroundServices
 
-            services.AddSingleton<IHostedService>(c => c.GetRequiredService<InProcessSilo>());
             services.AddHostedService<IdGenerator>();
             services.AddHostedService<ActionHandlerService>();
-#if !DEBUG
             services.AddHostedService<MergeJobIndexWorker>();
-#endif
 
             #endregion
 
@@ -72,13 +69,13 @@ namespace JobTrackerX.WebApi
             services.AddHttpClient();
             services.AddBlazoredToast();
             services.AddSingleton<ActionHandlerPool>();
-            services.AddSingleton<InProcessSilo>();
-            services.AddSingleton(c => c.GetRequiredService<InProcessSilo>().Client);
-            services.AddSingleton<IGrainFactory>(c => c.GetRequiredService<IClusterClient>());
             services.AddSingleton<ServiceBusWrapper>();
             services.AddSingleton(_ =>
                 Helper.GetWrapperStorageAccount<IndexStorageAccountWrapper>(
                     JobTrackerConfig.JobIndexConfig.ConnStr));
+            services.AddSingleton(_ =>
+                Helper.GetWrapperStorageAccount<LogStorageAccountWrapper>(
+                    JobTrackerConfig.JobLogConfig.ConnStr));
 
             services.AddScoped<IQueryIndexService, QueryIndexService>();
             services.AddScoped<IJobTrackerService, JobTrackerService>();

@@ -99,5 +99,40 @@ namespace JobTrackerX.WebApi.Controllers
         {
             return new ReturnDto<string>(await _service.UpdateJobOptionsAsync(id, dto));
         }
+
+        /// <summary>
+        /// 追加任务日志
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="dto"></param>
+        /// <returns></returns>
+        [HttpPut("appendLog/{id}")]
+        public async Task<ReturnDto<string>> AppendToJobLogAsync([FromRoute] long id, [FromBody][Required] AppendLogDto dto)
+        {
+            await _service.AppendToJobLogAsync(id, dto);
+            return new ReturnDto<string>("OK");
+        }
+
+        /// <summary>
+        /// 获取任务日志文件地址
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet("logUrl/{id}")]
+        public async Task<ReturnDto<string>> GetJobLogUrlAsync([FromRoute] long id)
+        {
+            return new ReturnDto<string>(await _service.GetJobLogUrlAsync(id));
+        }
+
+        /// <summary>
+        /// 获取任务日志文件的内容
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet("log/{id}")]
+        public async Task<string> GetJobLogAsync([FromRoute] long id)
+        {
+            return await _service.GetJobLogAsync(id);
+        }
     }
 }

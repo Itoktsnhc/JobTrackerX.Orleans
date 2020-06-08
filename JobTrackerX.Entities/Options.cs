@@ -10,6 +10,7 @@ namespace JobTrackerX.Entities
         public IdGeneratorConfig IdGeneratorConfig { get; set; }
         public IndexConfig JobIndexConfig { get; set; }
         public WebUIConfig WebUIConfig { get; set; }
+        public JobLogConfig JobLogConfig { get; set; }
     }
 
     public class IdGeneratorConfig
@@ -61,6 +62,12 @@ namespace JobTrackerX.Entities
         public TimeSpan NotificationHideTime { get; set; }
         public TimeSpan UIRefreshInterval { get; set; }
         public TimeSpan FirstUIRefreshDelay { get; set; }
+    }
+
+    public class JobLogConfig
+    {
+        public string ConnStr { get; set; }
+        public string ContainerName { get; set; }
     }
 
     public class EmailConfig

@@ -15,7 +15,7 @@ namespace JobTrackerX.Test
     [TestClass]
     public class JobTrackerClientTest
     {
-        private const string _baseUrlStr = "http://localhost:55382/";
+        private const string _baseUrlStr = "http://localhost:55625/";
         private readonly IJobTrackerClient _client;
 
         public JobTrackerClientTest()
@@ -209,6 +209,16 @@ namespace JobTrackerX.Test
             });
             await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.Running));
             await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
+        }
+
+        [TestMethod]
+        public async Task TestJobLogAsync()
+        {
+            var job = await _client.CreateNewJobAsync(new AddJobDto("balabla"));
+            await _client.AppendToJobLogAsync(job.JobId, new AppendLogDto("123456"));
+            await _client.AppendToJobLogAsync(job.JobId, new AppendLogDto("123456"));
+            await _client.AppendToJobLogAsync(job.JobId, new AppendLogDto("123456"));
+            await _client.AppendToJobLogAsync(job.JobId, new AppendLogDto("123456"));
         }
     }
 }
