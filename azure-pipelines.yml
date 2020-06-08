@@ -17,7 +17,7 @@ steps:
 - script: |
     echo Add other tasks to build, test, and deploy your project.
     echo See https://aka.ms/yaml
-  displayName: 'PublishToClient'
+  displayName: 'PublishToNuget'
 
 - task: NuGetCommand@2
   inputs:
@@ -32,7 +32,6 @@ steps:
     packagesToPack: '**/JobTrackerX.Client.csproj'
     versioningScheme: 'off'
     includeReferencedProjects: true
-    packDestination: '$(Build.ArtifactStagingDirectory)'
 
 # - task: NuGetCommand@2
 #   inputs:
@@ -41,9 +40,9 @@ steps:
 #     nuGetFeedType: 'external'
 #     publishFeedCredentials: 'itok.nuget.org'
 
-- task: DotNetCoreCLI@2
+- task: NuGetCommand@2
   inputs:
     command: 'push'
-    packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
+    packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
     nuGetFeedType: 'external'
     publishFeedCredentials: 'itok.nuget.org'
