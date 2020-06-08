@@ -17,7 +17,7 @@ steps:
 - script: |
     echo Add other tasks to build, test, and deploy your project.
     echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+  displayName: 'PublishToClient'
 
 - task: NuGetCommand@2
   inputs:
@@ -25,6 +25,7 @@ steps:
     restoreSolution: '**/*.sln'
     feedsToUse: 'select'
     vstsFeed: '692a6321-f2d4-4db5-8ee2-45cd6dacd5cf'
+
 - task: NuGetCommand@2
   inputs:
     command: 'pack'
@@ -32,9 +33,16 @@ steps:
     versioningScheme: 'off'
     includeReferencedProjects: true
 
-- task: NuGetCommand@2
+# - task: NuGetCommand@2
+#   inputs:
+#     command: 'push'
+#     packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
+#     nuGetFeedType: 'external'
+#     publishFeedCredentials: 'itok.nuget.org'
+
+- task: DotNetCoreCLI@2
   inputs:
     command: 'push'
-    packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
+    packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
     nuGetFeedType: 'external'
     publishFeedCredentials: 'itok.nuget.org'
