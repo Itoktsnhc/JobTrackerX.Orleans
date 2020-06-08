@@ -32,6 +32,7 @@ steps:
     packagesToPack: '**/JobTrackerX.Client.csproj'
     versioningScheme: 'off'
     includeReferencedProjects: true
+    packDestination: '$(Build.ArtifactStagingDirectory)'
 
 # - task: NuGetCommand@2
 #   inputs:
