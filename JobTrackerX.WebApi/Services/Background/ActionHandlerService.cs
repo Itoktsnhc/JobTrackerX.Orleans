@@ -3,6 +3,7 @@ using JobTrackerX.WebApi.Services.ActionHandler;
 using Microsoft.Azure.ServiceBus;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System;
 using System.Text;
@@ -16,12 +17,14 @@ namespace JobTrackerX.WebApi.Services.Background
         private readonly ServiceBusWrapper _wrapper;
         private readonly ILogger<ActionHandlerService> _logger;
         private readonly ActionHandlerPool _handlerPool;
+        private readonly IOptions<JobTrackerConfig> _jobTrackerConfig;
 
-        public ActionHandlerService(ServiceBusWrapper wrapper, ActionHandlerPool handlerPool, ILogger<ActionHandlerService> logger)
+        public ActionHandlerService(IOptions<JobTrackerConfig> jobTrackerConfig, ServiceBusWrapper wrapper, ActionHandlerPool handlerPool, ILogger<ActionHandlerService> logger)
         {
             _wrapper = wrapper;
             _logger = logger;
             _handlerPool = handlerPool;
+            _jobTrackerConfig = jobTrackerConfig;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -34,7 +37,8 @@ namespace JobTrackerX.WebApi.Services.Background
                 var messageHandleOption = new MessageHandlerOptions(OnException)
                 {
                     AutoComplete = false,
-                    MaxAutoRenewDuration = TimeSpan.FromMinutes(60)
+                    MaxAutoRenewDuration = TimeSpan.FromMinutes(60),
+                    MaxConcurrentCalls = _jobTrackerConfig.Value.ActionHandlerConfig.ActionHandlerConcurrent
                 };
                 actionQueueClient.RegisterMessageHandler(
                     async (message, _) => await OnMessage(message, actionQueueClient),

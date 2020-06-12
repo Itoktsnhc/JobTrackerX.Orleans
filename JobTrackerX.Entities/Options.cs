@@ -11,18 +11,25 @@ namespace JobTrackerX.Entities
         public IndexConfig JobIndexConfig { get; set; }
         public WebUIConfig WebUIConfig { get; set; }
         public JobLogConfig JobLogConfig { get; set; }
+        public ActionHandlerConfig ActionHandlerConfig { get; set; }
     }
 
     public class IdGeneratorConfig
     {
         public string ConnStr { get; set; }
         public string IdQueueEntityPath { get; set; }
-        public IList<string> ActionQueues { get; set; }
         public int ScaleSize { get; set; }
         public int CrashDistance { get; set; }
         public int MinMessageCountLeft { get; set; }
         public int MaxMessageCountLeft { get; set; }
         public TimeSpan CheckInterval { get; set; }
+    }
+
+    public class ActionHandlerConfig
+    {
+        public int ActionHandlerConcurrent { get; set; } = 10;
+        public IList<string> ActionQueues { get; set; }
+        public string ConnStr { get; set; }
     }
 
     public class CommonConfig

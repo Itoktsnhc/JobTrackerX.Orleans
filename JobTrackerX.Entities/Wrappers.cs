@@ -16,6 +16,7 @@ namespace JobTrackerX.Entities
         public ServiceBusWrapper(IOptions<JobTrackerConfig> options)
         {
             var idGeneratorConfig = options.Value.IdGeneratorConfig;
+            var actionHandlerConfig = options.Value.ActionHandlerConfig;
             ScaleSize = idGeneratorConfig.ScaleSize;
             CrashDistance = idGeneratorConfig.CrashDistance;
             IdQueueReceiver = new MessageReceiver(idGeneratorConfig.ConnStr, idGeneratorConfig.IdQueueEntityPath,
@@ -23,8 +24,8 @@ namespace JobTrackerX.Entities
             IdQueueSender = new MessageSender(idGeneratorConfig.ConnStr, idGeneratorConfig.IdQueueEntityPath);
             ManagementClient = new ManagementClient(idGeneratorConfig.ConnStr);
             ActionQueues =
-                idGeneratorConfig.ActionQueues
-                .Select(name => new QueueClient(idGeneratorConfig.ConnStr, name)).ToList();
+                actionHandlerConfig.ActionQueues
+                .Select(name => new QueueClient(actionHandlerConfig.ConnStr, name)).ToList();
         }
 
         public IQueueClient GetRandomActionQueueClient()
