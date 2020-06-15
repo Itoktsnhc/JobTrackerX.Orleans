@@ -45,7 +45,9 @@ namespace JobTrackerX.WebApi.Services.ActionHandler
             var flag = false;
             if (msg.ActionConfig.ActionWrapper.EmailConfig != null)
             {
-                flag = await SendEmailAsync(msg);
+                flag = await Policy.Handle<Exception>()
+                     .WaitAndRetryAsync(Constants.GlobalRetryWaitSec, _ => TimeSpan.FromSeconds(Constants.GlobalRetryWaitSec))
+                     .ExecuteAsync(async () => await SendEmailAsync(msg));
                 if (!flag)
                 {
                     return false;
@@ -54,7 +56,9 @@ namespace JobTrackerX.WebApi.Services.ActionHandler
 
             if (msg.ActionConfig.ActionWrapper.HttpConfig != null)
             {
-                flag = await SendPostRequestAsync(msg);
+                flag = await Policy.Handle<Exception>()
+                    .WaitAndRetryAsync(Constants.GlobalRetryWaitSec, _ => TimeSpan.FromSeconds(Constants.GlobalRetryWaitSec))
+                    .ExecuteAsync(async () => await SendPostRequestAsync(msg));
                 if (!flag)
                 {
                     return false;
@@ -89,9 +93,7 @@ namespace JobTrackerX.WebApi.Services.ActionHandler
                     Payload = dto.Payload
                 };
                 req.Content = new StringContent(JsonConvert.SerializeObject(body, _serializerSettings), Encoding.UTF8, "application/json");
-                await Policy.Handle<Exception>()
-                     .WaitAndRetryAsync(Constants.GlobalRetryWaitSec, _ => TimeSpan.FromSeconds(Constants.GlobalRetryWaitSec))
-                     .ExecuteAsync(async () => await client.SendAsync(req));
+                await client.SendAsync(req);
             }
             catch (Exception ex)
             {
@@ -117,9 +119,7 @@ namespace JobTrackerX.WebApi.Services.ActionHandler
             message.Body = $"[{Constants.BrandName}]-{config.JobId}-{config.JobState}";
             try
             {
-                await Policy.Handle<Exception>()
-                      .WaitAndRetryAsync(Constants.GlobalRetryWaitSec, _ => TimeSpan.FromSeconds(Constants.GlobalRetryWaitSec))
-                      .ExecuteAsync(async () => await _smtpClient.SendMailAsync(message));
+                await _smtpClient.SendMailAsync(message);
             }
             catch (Exception ex)
             {
