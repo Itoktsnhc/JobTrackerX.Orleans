@@ -23,6 +23,7 @@ namespace JobTrackerX.SharedLibs
         public string JobName { get; set; }
         public string SourceLink { get; set; }
         public List<ActionConfig> ActionConfigs { get; set; }
+        public List<StateCheckConfig> StateCheckConfigs { get; set; }
     }
 
     public class UpdateJobStateDto
@@ -116,6 +117,12 @@ namespace JobTrackerX.SharedLibs
         public long JobId { get; set; }
         public JobState JobState { get; set; }
     }
+
+    public class StateCheckActionBody : HttpActionBody
+    {
+        public List<JobState> TargetJobStateList { get; set; }
+    }
+
     public class AppendLogDto
     {
         public AppendLogDto(string content)

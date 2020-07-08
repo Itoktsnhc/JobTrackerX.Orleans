@@ -15,16 +15,17 @@ using System.Threading.Tasks.Dataflow;
 
 namespace JobTrackerX.WebApi.Services.Background
 {
-    public class MergeJobIndexWorker : BackgroundService
+    public class MergeJobIndexWorker : CoordinatedBackgroundService
     {
-        private readonly Microsoft.Azure.Cosmos.Table.CloudStorageAccount _account;
+        private readonly CloudStorageAccount _account;
         private readonly IClusterClient _client;
         private readonly IndexConfig _indexConfig;
         private readonly ILogger<MergeJobIndexWorker> _logger;
         private readonly string _tableName;
 
-        public MergeJobIndexWorker(IClusterClient client, ILogger<MergeJobIndexWorker> logger,
-            IOptions<JobTrackerConfig> config, IndexStorageAccountWrapper wrapper)
+        public MergeJobIndexWorker(IHostApplicationLifetime appLifetime, IClusterClient client,
+            ILogger<MergeJobIndexWorker> logger,
+            IOptions<JobTrackerConfig> config, IndexStorageAccountWrapper wrapper) : base(appLifetime)
         {
             _client = client;
             _account = wrapper.TableAccount;
@@ -43,7 +44,9 @@ namespace JobTrackerX.WebApi.Services.Background
                 {
                     var current = DateTimeOffset.Now;
                     var deleteAction = new ActionBlock<ITableEntity>(
-                        entity => Client.GetTableReference(_tableName).ExecuteAsync(TableOperation.Delete(entity)),
+                        async entity => await Client.GetTableReference(_tableName).ExecuteAsync(
+                            TableOperation.Delete(entity),
+                            stoppingToken),
                         Helper.GetOutOfGrainExecutionOptions());
                     var timeIndexSeq =
                         Helper.GetTimeIndexRange(current.AddHours(-_indexConfig.TrackTimeIndexCount),
@@ -63,10 +66,12 @@ namespace JobTrackerX.WebApi.Services.Background
                                 indexResults.AddRange(result.Results);
                             }
                         }
+
                         if (indexResults.Count > 0)
                         {
                             await aggregator.MergeIntoIndicesAsync(indexResults);
                         }
+
                         foreach (var entity in indexResults)
                         {
                             await deleteAction.PostToBlockUntilSuccessAsync(
@@ -84,6 +89,7 @@ namespace JobTrackerX.WebApi.Services.Background
                 {
                     _logger.LogError(e, $"Error in {nameof(MergeJobIndexWorker)}");
                 }
+
                 SharedData.LastMergeTimePoint = DateTimeOffset.Now;
                 await Task.Delay(_indexConfig.IndexMergeInterval, stoppingToken);
             }

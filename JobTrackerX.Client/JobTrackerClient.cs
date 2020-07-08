@@ -1,7 +1,6 @@
 ﻿using JobTrackerX.SharedLibs;
 using Newtonsoft.Json;
 using Polly;
-using Polly.Retry;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,7 +41,8 @@ namespace JobTrackerX.Client
         /// </summary>
         /// <param name="client">httpClient</param>
         /// <param name="requestProcessor">modify request</param>
-        /// <param name="retryPolicy">retryPolicy</param>
+        /// <param name="retryCount">retryPolicy</param>
+        /// <param name="retryInterval"></param>
         public JobTrackerClient(HttpClient client,
             Func<HttpRequestMessage, Task> requestProcessor = null,
             int? retryCount = null,

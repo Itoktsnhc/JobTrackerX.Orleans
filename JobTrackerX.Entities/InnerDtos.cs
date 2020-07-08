@@ -5,6 +5,9 @@ namespace JobTrackerX.Entities
 {
     public class AddJobDtoInternal
     {
+        public AddJobDtoInternal()
+        {
+        }
         public AddJobDtoInternal(AddJobDto dto)
         {
             JobName = dto.JobName;
@@ -14,10 +17,7 @@ namespace JobTrackerX.Entities
             Options = dto.Options;
             SourceLink = dto.SourceLink;
             ActionConfigs = dto.ActionConfigs;
-        }
-
-        public AddJobDtoInternal()
-        {
+            StateCheckConfigs = dto.StateCheckConfigs;
         }
 
         public string CreatedBy { get; set; }
@@ -27,6 +27,7 @@ namespace JobTrackerX.Entities
         public string JobName { get; set; }
         public string SourceLink { get; set; }
         public List<ActionConfig> ActionConfigs { get; set; }
+        public List<StateCheckConfig> StateCheckConfigs { get; set; }
     }
 
     public class UpdateJobStateDtoInternal
@@ -34,7 +35,6 @@ namespace JobTrackerX.Entities
         public UpdateJobStateDtoInternal()
         {
         }
-
         public UpdateJobStateDtoInternal(UpdateJobStateDto dto)
         {
             AdditionMsg = dto.Message;
@@ -62,5 +62,11 @@ namespace JobTrackerX.Entities
         public long JobId { get; set; }
         public JobState JobState { get; set; }
         public ActionConfig ActionConfig { get; set; }
+    }
+
+    public class StateCheckMessageDto
+    {
+        public StateCheckConfig StateCheckConfig { get; set; }
+        public long JobId { get; set; }
     }
 }

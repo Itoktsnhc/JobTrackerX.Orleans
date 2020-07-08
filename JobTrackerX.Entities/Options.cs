@@ -9,7 +9,7 @@ namespace JobTrackerX.Entities
         public CommonConfig CommonConfig { get; set; }
         public IdGeneratorConfig IdGeneratorConfig { get; set; }
         public IndexConfig JobIndexConfig { get; set; }
-        public WebUIConfig WebUIConfig { get; set; }
+        public WebUiConfig WebUiConfig { get; set; }
         public JobLogConfig JobLogConfig { get; set; }
         public ActionHandlerConfig ActionHandlerConfig { get; set; }
     }
@@ -28,8 +28,10 @@ namespace JobTrackerX.Entities
     public class ActionHandlerConfig
     {
         public int ActionHandlerConcurrent { get; set; } = 10;
+        public int StateCheckConcurrent { get; set; } = 10;
         public IList<string> ActionQueues { get; set; }
         public string ConnStr { get; set; }
+        public List<string> StateCheckQueues { get; set; }
     }
 
     public class CommonConfig
@@ -63,12 +65,12 @@ namespace JobTrackerX.Entities
         public string ContainerName { get; set; }
     }
 
-    public class WebUIConfig
+    public class WebUiConfig
     {
         public bool EnabledRefresh { get; set; }
         public TimeSpan NotificationHideTime { get; set; }
-        public TimeSpan UIRefreshInterval { get; set; }
-        public TimeSpan FirstUIRefreshDelay { get; set; }
+        public TimeSpan UiRefreshInterval { get; set; }
+        public TimeSpan FirstUiRefreshDelay { get; set; }
     }
 
     public class JobLogConfig

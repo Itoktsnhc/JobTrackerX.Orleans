@@ -17,6 +17,7 @@
         public const int DefaultDegreeOfParallelism = 100;
 
         public const string TokenAuthKey = "x-jobtracker-token";
+        public const string StateCheckerHeaderKey = "x-jobtracker-statecheck";
 
         public const int GlobalRetryTimes = 3;
         public const int GlobalRetryWaitSec = 1;
@@ -26,9 +27,9 @@
         public const string PercentageFormat = "P";
         public const string DecimalFormat = "0.##";
         public const string TagClassStr = "badge badge-dark";
-        public const string WebUIInputDateTimeFormat = "yyyy-MM-dd HH";
-        public const string WebUIShowDateTimeFormat = "yyyy-MM-dd HH:mm:ss";
-        public const string WebUIShowTimeSpanFormat = "d'd 'h'h 'm'm 's's'";
+        public const string WebUiInputDateTimeFormat = "yyyy-MM-dd HH";
+        public const string WebUiShowDateTimeFormat = "yyyy-MM-dd HH:mm:ss";
+        public const string WebUiShowTimeSpanFormat = "d'd 'h'h 'm'm 's's'";
 #if DEBUG
 
         public const string EnvName = "Dev";

@@ -8,6 +8,7 @@ using Orleans;
 using Orleans.Providers;
 using Polly;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -58,10 +59,12 @@ namespace JobTrackerX.Grains
 
             var ancestorRefGrain = GrainFactory.GetGrain<IDescendantsRefGrain>(State.AncestorJobId);
             await ancestorRefGrain.AttachToChildrenAsync(jobId);
-            State.StateChanges.Add(new StateChangeDto(state));
             State.JobName = addJobDto.JobName;
             State.SourceLink = addJobDto.SourceLink;
             State.ActionConfigs = addJobDto.ActionConfigs;
+            State.StateCheckConfigs = addJobDto.StateCheckConfigs;
+            await ScheduleStateCheckMessageAsync(State.StateCheckConfigs, State.JobId);
+            State.StateChanges.Add(new StateChangeDto(state));
             if (!State.ParentJobId.HasValue)
             {
                 var indexGrain = GrainFactory.GetGrain<IShardJobIndexGrain>(Helper.GetTimeIndex());
@@ -168,6 +171,26 @@ namespace JobTrackerX.Grains
                     await Policy.Handle<Exception>()
                         .WaitAndRetryAsync(Constants.GlobalRetryTimes, _ => TimeSpan.FromSeconds(Constants.GlobalRetryWaitSec))
                         .ExecuteAsync(async () => await _wrapper.GetRandomActionQueueClient().SendAsync(msg));
+                }
+            }
+        }
+
+        private async Task ScheduleStateCheckMessageAsync(List<StateCheckConfig> configs, long jobId)
+        {
+            if (configs?.Any() == true)
+            {
+                foreach (var config in configs)
+                {
+                    var stateCheckDto = new StateCheckMessageDto()
+                    {
+                        StateCheckConfig = config,
+                        JobId = jobId
+                    };
+                    var msg = new Message(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(stateCheckDto)));
+                    await Policy.Handle<Exception>()
+                        .WaitAndRetryAsync(Constants.GlobalRetryTimes, _ => TimeSpan.FromSeconds(Constants.GlobalRetryWaitSec))
+                        .ExecuteAsync(async () =>
+                            await _wrapper.GetRandomStateCheckQueueClient().ScheduleMessageAsync(msg, config.CheckTime));
                 }
             }
         }

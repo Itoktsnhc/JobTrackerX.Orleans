@@ -57,24 +57,20 @@ namespace JobTrackerX.WebApi
                     var jobTrackerConfig =
                        context.Configuration.GetSection(nameof(JobTrackerConfig)).Get<JobTrackerConfig>();
                     var siloConfig = jobTrackerConfig.SiloConfig;
-                    var tableStorageOption = new Action<AzureTableStorageOptions>(options =>
+                    var tableStorageOption = new Action<AzureTableStorageOptions>(tableStorageOptions =>
                     {
-                        options.ConnectionString = siloConfig.JobEntityPersistConfig.ConnStr;
-                        if (!string.IsNullOrEmpty(siloConfig.JobEntityPersistConfig.TableName))
-                        {
-                            options.TableName = siloConfig.JobEntityPersistConfig.TableName;
-                            options.UseJson = true;
-                        }
+                        tableStorageOptions.ConnectionString = siloConfig.JobEntityPersistConfig.ConnStr;
+                        if (string.IsNullOrEmpty(siloConfig.JobEntityPersistConfig.TableName)) return;
+                        tableStorageOptions.TableName = siloConfig.JobEntityPersistConfig.TableName;
+                        tableStorageOptions.UseJson = true;
                     });
 
-                    var blobStorageOption = new Action<AzureBlobStorageOptions>(options =>
+                    var blobStorageOption = new Action<AzureBlobStorageOptions>(blobStorageOptions =>
                     {
-                        options.ConnectionString = siloConfig.ReadOnlyJobIndexPersistConfig.ConnStr;
-                        if (!string.IsNullOrEmpty(siloConfig.ReadOnlyJobIndexPersistConfig.ContainerName))
-                        {
-                            options.ContainerName = siloConfig.ReadOnlyJobIndexPersistConfig.ContainerName;
-                            options.UseJson = true;
-                        }
+                        blobStorageOptions.ConnectionString = siloConfig.ReadOnlyJobIndexPersistConfig.ConnStr;
+                        if (string.IsNullOrEmpty(siloConfig.ReadOnlyJobIndexPersistConfig.ContainerName)) return;
+                        blobStorageOptions.ContainerName = siloConfig.ReadOnlyJobIndexPersistConfig.ContainerName;
+                        blobStorageOptions.UseJson = true;
                     });
 
                     options.UseLocalhostClustering(serviceId: siloConfig.ServiceId, clusterId: siloConfig.ClusterId)
@@ -86,12 +82,12 @@ namespace JobTrackerX.WebApi
                         .AddAzureBlobGrainStorage(Constants.ReadOnlyJobIndexStoreName, blobStorageOption)
                         .AddAzureBlobGrainStorage(Constants.AttachmentStoreName, blobStorageOption)
                         .AddAzureBlobGrainStorage(Constants.AppendStoreName, blobStorageOption)
-                       .Configure<GrainCollectionOptions>(options =>
+                       .Configure<GrainCollectionOptions>(grainCollectionOptions =>
                        {
-                           options.CollectionAge = siloConfig.GrainCollectionAge ?? TimeSpan.FromMinutes(10);
-                           options.ClassSpecificCollectionAge[typeof(AggregateJobIndexGrain).FullName ?? throw new
+                           grainCollectionOptions.CollectionAge = siloConfig.GrainCollectionAge ?? TimeSpan.FromMinutes(10);
+                           grainCollectionOptions.ClassSpecificCollectionAge[typeof(AggregateJobIndexGrain).FullName ?? throw new
                                                                   InvalidOperationException()] = TimeSpan.FromMinutes(5);
-                           options.ClassSpecificCollectionAge[typeof(RollingJobIndexGrain).FullName ?? throw new
+                           grainCollectionOptions.ClassSpecificCollectionAge[typeof(RollingJobIndexGrain).FullName ?? throw new
                                                                   InvalidOperationException()] = TimeSpan.FromMinutes(5);
                        });
 

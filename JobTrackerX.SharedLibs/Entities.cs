@@ -24,6 +24,7 @@ namespace JobTrackerX.SharedLibs
         public Dictionary<long, JobStateCategory> ChildrenStatesDic { get; set; }
         public string SourceLink { get; set; }
         public List<ActionConfig> ActionConfigs { get; set; }
+        public List<StateCheckConfig> StateCheckConfigs { get; set; }
     }
 
     public class JobIndex
@@ -47,6 +48,14 @@ namespace JobTrackerX.SharedLibs
         public DateTimeOffset IndexTime { get; set; }
     }
 
+    public class StateCheckConfig
+    {
+        public List<JobState> TargetStateList { get; set; }
+        public ActionConfigWrapper FailedAction { get; set; }
+        public ActionConfigWrapper SuccessfulAction { get; set; }
+        public DateTimeOffset CheckTime { get; set; }
+    }
+
     public class ActionConfig
     {
         public List<JobState> JobStateFilters { get; set; }
@@ -56,6 +65,8 @@ namespace JobTrackerX.SharedLibs
     public class EmailActionConfig
     {
         public IList<string> Recipients { get; set; }
+        public IList<string> Ccs { get; set; }
+        public string Subject { get; set; }
     }
 
     public class HttpActionConfig

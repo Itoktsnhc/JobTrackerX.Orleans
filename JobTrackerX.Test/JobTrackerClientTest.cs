@@ -2,10 +2,8 @@ using JobTrackerX.Client;
 using JobTrackerX.Entities;
 using JobTrackerX.SharedLibs;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Polly;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -15,14 +13,14 @@ namespace JobTrackerX.Test
     [TestClass]
     public class JobTrackerClientTest
     {
-        private const string _baseUrlStr = "http://localhost:55625/";
+        private const string BaseUrlStr = "http://localhost:55625/";
         private readonly IJobTrackerClient _client;
 
         public JobTrackerClientTest()
         {
             _client = new JobTrackerClient(new HttpClient()
             {
-                BaseAddress = new Uri(_baseUrlStr)
+                BaseAddress = new Uri(BaseUrlStr)
             },
             retryCount: 3, retryInterval: _ => TimeSpan.FromSeconds(3));
         }
@@ -219,6 +217,34 @@ namespace JobTrackerX.Test
             await _client.AppendToJobLogAsync(job.JobId, new AppendLogDto("123456"));
             await _client.AppendToJobLogAsync(job.JobId, new AppendLogDto("123456"));
             await _client.AppendToJobLogAsync(job.JobId, new AppendLogDto("123456"));
+        }
+
+        [TestMethod]
+        public async Task TestStateCheckAsync()
+        {
+            var failedJob = await _client.CreateNewJobAsync(new AddJobDto()
+            {
+                JobName = nameof(TestStateCheckAsync),
+                StateCheckConfigs = new List<StateCheckConfig>()
+                {
+                    new StateCheckConfig()
+                    {
+                        CheckTime =DateTimeOffset.Now.AddSeconds(30),
+                        FailedAction = new ActionConfigWrapper()
+                        {
+                            EmailConfig = new EmailActionConfig()
+                            {
+                                Recipients = new List<string>(){ "foo@bar.com"}
+                            }
+                        },
+                        TargetStateList = new List<JobState>()
+                        {
+                            JobState.Faulted,
+                            JobState.RanToCompletion
+                        }
+                    }
+                }
+            });
         }
     }
 }

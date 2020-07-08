@@ -11,12 +11,9 @@ using JobTrackerX.WebApi.Services.Background;
 using JobTrackerX.WebApi.Services.JobTracker;
 using JobTrackerX.WebApi.Services.Query;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Orleans;
 using OrleansDashboard;
@@ -39,7 +36,7 @@ namespace JobTrackerX.WebApi
 
             services.AddOptions();
             services.Configure<JobTrackerConfig>(Configuration.GetSection(nameof(JobTrackerConfig)));
-            services.Configure<WebUIConfig>(Configuration.GetSection(nameof(WebUIConfig)));
+            services.Configure<WebUiConfig>(Configuration.GetSection(nameof(WebUiConfig)));
             services.Configure<EmailConfig>(Configuration.GetSection(nameof(EmailConfig)));
             services.AddSwaggerGen(c =>
             {
@@ -50,9 +47,7 @@ namespace JobTrackerX.WebApi
                 });
                 c.IncludeXmlComments("./JobTrackerX.Web.xml");
             });
-            JobTrackerConfig = services
-                .BuildServiceProvider()
-                .GetRequiredService<IOptions<JobTrackerConfig>>().Value;
+            JobTrackerConfig = Configuration.GetSection(nameof(JobTrackerConfig)).Get<JobTrackerConfig>();
 
             #endregion
 
@@ -61,6 +56,7 @@ namespace JobTrackerX.WebApi
             services.AddHostedService<IdGenerator>();
             services.AddHostedService<ActionHandlerService>();
             services.AddHostedService<MergeJobIndexWorker>();
+            services.AddHostedService<StateChecker>();
 
             #endregion
 
@@ -90,7 +86,7 @@ namespace JobTrackerX.WebApi
             services.AddServerSideBlazor()
                 .AddCircuitOptions(options => options.DetailedErrors = true);
             services.AddControllers(options =>
-            options.Filters.Add(new TypeFilterAttribute(typeof(GlobalExceptionFilter)))).AddNewtonsoftJson();
+                options.Filters.Add(new TypeFilterAttribute(typeof(GlobalExceptionFilter)))).AddNewtonsoftJson();
 
             #endregion
 
@@ -107,7 +103,7 @@ namespace JobTrackerX.WebApi
         {
             if (JobTrackerConfig.CommonConfig.UseDashboard)
             {
-                app.UseOrleansDashboard(new DashboardOptions { BasePath = "/dashboard" });
+                app.UseOrleansDashboard(new DashboardOptions {BasePath = "/dashboard"});
             }
 
             app.UseStaticFiles();

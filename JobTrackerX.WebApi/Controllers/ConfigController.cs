@@ -1,9 +1,7 @@
 ﻿using JobTrackerX.Entities;
 using JobTrackerX.GrainInterfaces;
 using JobTrackerX.SharedLibs;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using Orleans;
 using System;
 using System.ComponentModel.DataAnnotations;
@@ -16,12 +14,10 @@ namespace JobTrackerX.WebApi.Controllers
     public class ConfigController : ControllerBase
     {
         private readonly IClusterClient _client;
-        private readonly JobTrackerConfig _config;
 
-        public ConfigController(IClusterClient client, IOptions<JobTrackerConfig> options)
+        public ConfigController(IClusterClient client)
         {
             _client = client;
-            _config = options.Value;
         }
 
         [HttpGet("offset")]

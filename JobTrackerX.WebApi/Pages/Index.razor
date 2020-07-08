@@ -4,7 +4,7 @@
 @inject IJobTrackerService _trackService
 @inject IMapper _mapper
 @inject IToastService _toastService
-@inject IOptions<WebUIConfig> _options
+@inject IOptions<WebUiConfig> _options
 @implements IDisposable
 <h1>
     任务列表
@@ -13,13 +13,13 @@
 @if (SharedData.LastMergeTimePoint != null)
 {
     <span class="small" style="line-height: 38px;">
-        更新时间：@SharedData.LastMergeTimePoint.Value.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUIShowDateTimeFormat) 条数：@totalCount
+        更新时间：@SharedData.LastMergeTimePoint.Value.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUiShowDateTimeFormat) 条数：@totalCount
     </span>
 }
 <div class="float-right">
     <div class="input-group">
         <div class="input-group-prepend">
-            <span class="input-group-text">时间范围(@Constants.WebUIInputDateTimeFormat)</span>
+            <span class="input-group-text">时间范围(@Constants.WebUiInputDateTimeFormat)</span>
         </div>
         <input type="text" @bind-value="@setStartTimeStr" placeholder="开始" class="form-control" />
         <input type="text" @bind-value="@setEndTimeStr" placeholder="结束" class="form-control" />
@@ -59,7 +59,7 @@
                         <td>
                             <span class="@Helper.GetStateBadgeColor(jobIndex.JobEntity.CurrentJobState)">@jobIndex.JobEntity.CurrentJobState</span>
                         </td>
-                        <td>@jobIndex.IndexTime.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUIShowDateTimeFormat)</td>
+                        <td>@jobIndex.IndexTime.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUiShowDateTimeFormat)</td>
                         <td>@jobIndex.CreatedBy</td>
                         <td>
                             @if (jobIndex.Tags?.Any() == true)
@@ -163,8 +163,8 @@ else
         var current = DateTimeOffset.Now.ToOffset(TimeSpan.FromHours(8)).DateTime;
         StartTime = current.AddHours(-1);
         EndTime = current;
-        startTimeStr = StartTime.ToString(Constants.WebUIInputDateTimeFormat);
-        endTimeStr = EndTime.ToString(Constants.WebUIInputDateTimeFormat);
+        startTimeStr = StartTime.ToString(Constants.WebUiInputDateTimeFormat);
+        endTimeStr = EndTime.ToString(Constants.WebUiInputDateTimeFormat);
         setStartTimeStr = startTimeStr;
         setEndTimeStr = endTimeStr;
         await QueryIndicesAsync();
@@ -176,15 +176,15 @@ else
         try
         {
             await _semaphore.WaitAsync();
-            if (!DateTime.TryParseExact(startTimeStr, Constants.WebUIInputDateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _)
-            || !DateTime.TryParseExact(endTimeStr, Constants.WebUIInputDateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _))
+            if (!DateTime.TryParseExact(startTimeStr, Constants.WebUiInputDateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _)
+            || !DateTime.TryParseExact(endTimeStr, Constants.WebUiInputDateTimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var _))
             {
                 _toastService.ShowError("时间范围格式错误");
                 return;
             }
 
-            StartTime = DateTime.ParseExact(startTimeStr, Constants.WebUIInputDateTimeFormat, CultureInfo.InvariantCulture);
-            EndTime = DateTime.ParseExact(endTimeStr, Constants.WebUIInputDateTimeFormat, CultureInfo.InvariantCulture);
+            StartTime = DateTime.ParseExact(startTimeStr, Constants.WebUiInputDateTimeFormat, CultureInfo.InvariantCulture);
+            EndTime = DateTime.ParseExact(endTimeStr, Constants.WebUiInputDateTimeFormat, CultureInfo.InvariantCulture);
 
             if (EndTime < StartTime)
             {
@@ -316,7 +316,7 @@ else
         {
             try
             {
-                await Task.Delay(_options.Value.FirstUIRefreshDelay, _cancelRefreshSource.Token);
+                await Task.Delay(_options.Value.FirstUiRefreshDelay, _cancelRefreshSource.Token);
 
                 while (!_cancelRefreshSource.Token.IsCancellationRequested)
                 {
@@ -333,7 +333,7 @@ else
                     {
                         _semaphore.Release();
                     }
-                    await Task.Delay(_options.Value.UIRefreshInterval, _cancelRefreshSource.Token);
+                    await Task.Delay(_options.Value.UiRefreshInterval, _cancelRefreshSource.Token);
                 }
             }
             catch (TaskCanceledException)

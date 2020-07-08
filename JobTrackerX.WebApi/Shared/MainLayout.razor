@@ -1,6 +1,6 @@
 ﻿@using Blazored.Toast.Configuration
 @inherits LayoutComponentBase
-@inject IOptions<WebUIConfig> _options
+@inject IOptions<WebUiConfig> _options
 
 <nav class="navbar navbar-expand-sm bg-dark">
     <ul class="navbar-nav mr-auto">
@@ -18,8 +18,9 @@
 <BlazoredToasts Position="ToastPosition.TopRight"
                 Timeout="@((int)_options.Value.NotificationHideTime.TotalSeconds)"
                 SuccessClass="success-toast-override"
-                SuccessIconClass="fa fa-thumbs-up"
-                ErrorIconClass="fa fa-bug" />
+                IconType="IconType.FontAwesome"
+                SuccessIcon="fa fa-thumbs-up"
+                ErrorClass="fa fa-bug" />
 <br />
 <div class="container" style="max-width:4096px">
     @Body

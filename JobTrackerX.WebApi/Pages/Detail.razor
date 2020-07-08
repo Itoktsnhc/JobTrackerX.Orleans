@@ -2,7 +2,7 @@
 @inject IJobTrackerService _service
 @inject IMapper _mapper
 @inject IToastService _toastService
-@inject IOptions<WebUIConfig> _options
+@inject IOptions<WebUiConfig> _options
 @implements IDisposable
 
 @if (_jobEntity == null)
@@ -56,11 +56,11 @@ else
                 </tr>
                 <tr>
                     <td>开始时间 (@nameof(_jobEntity.StartTime)): </td>
-                    <td>@(_jobEntity.StartTime.HasValue ? _jobEntity.StartTime.Value.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUIShowDateTimeFormat) : Constants.NotAvailableStr)</td>
+                    <td>@(_jobEntity.StartTime.HasValue ? _jobEntity.StartTime.Value.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat) : Constants.NotAvailableStr)</td>
                 </tr>
                 <tr>
                     <td>结束时间 (@nameof(_jobEntity.EndTime)): </td>
-                    <td>@(_jobEntity.EndTime.HasValue ? _jobEntity.EndTime.Value.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUIShowDateTimeFormat) : Constants.NotAvailableStr)</td>
+                    <td>@(_jobEntity.EndTime.HasValue ? _jobEntity.EndTime.Value.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat) : Constants.NotAvailableStr)</td>
                 </tr>
                 <tr>
                     <td>执行耗时 (ExecutionTime): </td>
@@ -80,7 +80,7 @@ else
                             @foreach (var stateChange in _jobEntity.StateChanges.OrderBy(s => s.TimePoint))
                             {
                                 <li class="list-group-item">
-                                    <span> @stateChange.TimePoint.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUIShowDateTimeFormat) - </span>
+                                    <span> @stateChange.TimePoint.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat) - </span>
                                     <span class="@Helper.GetStateBadgeColor(stateChange.State)">@stateChange.State</span>
                                     @if (!string.IsNullOrEmpty(stateChange.AdditionMsg))
                                     {
@@ -213,9 +213,9 @@ else
                                         @child.CurrentJobState
                                     </span>
                                 </td>
-                                <td>@(child.CreateTime?.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUIShowDateTimeFormat) ?? Constants.NotAvailableStr)</td>
-                                <td>@(child.StartTime?.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUIShowDateTimeFormat) ?? Constants.NotAvailableStr)</td>
-                                <td>@(child.EndTime?.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUIShowDateTimeFormat) ?? Constants.NotAvailableStr)</td>
+                                <td>@(child.CreateTime?.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUiShowDateTimeFormat) ?? Constants.NotAvailableStr)</td>
+                                <td>@(child.StartTime?.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUiShowDateTimeFormat) ?? Constants.NotAvailableStr)</td>
+                                <td>@(child.EndTime?.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUiShowDateTimeFormat) ?? Constants.NotAvailableStr)</td>
                                 <td>@(GetTimeSpanStr(child.StartTime, child.EndTime))</td>
                                 <td>
                                     @if (child.Tags?.Any() == true)
@@ -476,7 +476,7 @@ else
         {
             try
             {
-                await Task.Delay(_options.Value.FirstUIRefreshDelay, _cancelRefreshSource.Token);
+                await Task.Delay(_options.Value.FirstUiRefreshDelay, _cancelRefreshSource.Token);
 
                 while (!_cancelRefreshSource.Token.IsCancellationRequested)
                 {
@@ -488,7 +488,7 @@ else
                     {
                         _toastService.ShowError(ex.Message, nameof(RefreshCurrentDataAsync));
                     }
-                    await Task.Delay(_options.Value.UIRefreshInterval, _cancelRefreshSource.Token);
+                    await Task.Delay(_options.Value.UiRefreshInterval, _cancelRefreshSource.Token);
                 }
             }
             catch (TaskCanceledException)

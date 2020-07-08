@@ -1,15 +1,11 @@
 using DynamicExpresso;
 using JobTrackerX.Entities.GrainStates;
 using JobTrackerX.SharedLibs;
-using Microsoft.Azure.Cosmos.Table;
-using Microsoft.Azure.Storage;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -243,16 +239,14 @@ namespace JobTrackerX.Entities
             }
 
             var buffer = encoding.GetBytes(input);
-            using (var memory = new MemoryStream())
+            using var memory = new MemoryStream();
+            using (var gzip = new GZipStream(memory,
+                CompressionMode.Compress, true))
             {
-                using (var gzip = new GZipStream(memory,
-                    CompressionMode.Compress, true))
-                {
-                    gzip.Write(buffer, 0, buffer.Length);
-                }
-
-                return Convert.ToBase64String(memory.ToArray());
+                gzip.Write(buffer, 0, buffer.Length);
             }
+
+            return Convert.ToBase64String(memory.ToArray());
         }
 
         public static string DecompressGZipString(string input, Encoding encoding = null)
@@ -263,26 +257,22 @@ namespace JobTrackerX.Entities
             }
 
             var gZipBuffer = Convert.FromBase64String(input);
-            using (var stream = new GZipStream(new MemoryStream(gZipBuffer),
-                CompressionMode.Decompress))
+            using var stream = new GZipStream(new MemoryStream(gZipBuffer),
+                CompressionMode.Decompress);
+            const int size = 4096;
+            var buffer = new byte[size];
+            using var memory = new MemoryStream();
+            int count;
+            do
             {
-                const int size = 4096;
-                var buffer = new byte[size];
-                using (var memory = new MemoryStream())
+                count = stream.Read(buffer, 0, size);
+                if (count > 0)
                 {
-                    int count;
-                    do
-                    {
-                        count = stream.Read(buffer, 0, size);
-                        if (count > 0)
-                        {
-                            memory.Write(buffer, 0, count);
-                        }
-                    } while (count > 0);
-
-                    return encoding.GetString(memory.ToArray());
+                    memory.Write(buffer, 0, count);
                 }
-            }
+            } while (count > 0);
+
+            return encoding.GetString(memory.ToArray());
         }
     }
 
