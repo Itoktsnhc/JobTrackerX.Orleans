@@ -11,5 +11,9 @@ namespace JobTrackerX.SharedLibs
         public JobNotFoundException(string message, Exception innerException) : base(message, innerException)
         {
         }
+
+        public JobNotFoundException() : base()
+        {
+        }
     }
 }
