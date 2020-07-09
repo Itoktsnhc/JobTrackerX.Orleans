@@ -13,6 +13,14 @@ pool:
 steps:
 - script: echo Hello, world!
   displayName: 'echo Hello, world!'
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    projects: |
+      **/JobTrackerX.SharedLibs.csproj
+      **/JobTrackerX.Client.csproj
+
+
 
 - task: DotNetCoreCLI@2
   inputs:
