@@ -23,19 +23,6 @@ steps:
   inputs:
     command: 'build'
     configuration: 'Release'
-- task: NuGetCommand@2
-  inputs:
-    command: 'pack'
-    packagesToPack: '**/JobTrackerX.Client.csproj'
-    versioningScheme: 'off'
-    includeReferencedProjects: true
-
-# - task: NuGetCommand@2
-#   inputs:
-#     command: 'push'
-#     packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
-#     nuGetFeedType: 'external'
-#     publishFeedCredentials: 'itok.nuget.org'
 
 - task: NuGetCommand@2
   inputs:

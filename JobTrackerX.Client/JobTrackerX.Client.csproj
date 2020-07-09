@@ -10,6 +10,7 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/Itoktsnhc/JobTrackerX.Orleans</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Itoktsnhc/JobTrackerX.Orleans</RepositoryUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Description>JobTrackerX.Client</Description>
   </PropertyGroup>
 
