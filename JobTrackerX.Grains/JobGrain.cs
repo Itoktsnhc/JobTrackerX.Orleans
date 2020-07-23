@@ -12,6 +12,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace JobTrackerX.Grains
 {
@@ -19,10 +21,14 @@ namespace JobTrackerX.Grains
     public class JobGrain : Grain<JobEntityState>, IJobGrain
     {
         private readonly ServiceBusWrapper _wrapper;
+        private readonly ILogger<JobGrain> _logger;
+        private readonly IOptions<JobTrackerConfig> _options;
 
-        public JobGrain(ServiceBusWrapper wrapper)
+        public JobGrain(ServiceBusWrapper wrapper, IOptions<JobTrackerConfig> options, ILogger<JobGrain> logger)
         {
             _wrapper = wrapper;
+            _logger = logger;
+            _options = options;
         }
 
         public async Task<JobEntityState> AddJobAsync(AddJobDto dto)
@@ -55,6 +61,7 @@ namespace JobTrackerX.Grains
             else
             {
                 State.AncestorJobId = jobId;
+                State.StateChanges.Add(new StateChangeDto(state));
             }
 
             var ancestorRefGrain = GrainFactory.GetGrain<IDescendantsRefGrain>(State.AncestorJobId);
@@ -64,7 +71,6 @@ namespace JobTrackerX.Grains
             State.ActionConfigs = addJobDto.ActionConfigs;
             State.StateCheckConfigs = addJobDto.StateCheckConfigs;
             await ScheduleStateCheckMessageAsync(State.StateCheckConfigs, State.JobId);
-            State.StateChanges.Add(new StateChangeDto(state));
             if (!State.ParentJobId.HasValue)
             {
                 var indexGrain = GrainFactory.GetGrain<IShardJobIndexGrain>(Helper.GetTimeIndex());
@@ -87,9 +93,14 @@ namespace JobTrackerX.Grains
             }
 
             var jobStateDto = new UpdateJobStateDtoInternal(dto);
+            if (_options.Value.CommonConfig.BlockStateUpdateAfterFinished
+                && Helper.FinishedOrFaultedJobStates.Contains(State.CurrentJobState))
+            {
+                _logger.LogWarning($"{this.GetPrimaryKeyLong()} append {dto.JobState} {dto.Message} with {State.CurrentJobState} blocked");
+                return;
+            }
             State.StateChanges
                 .Add(new StateChangeDto(jobStateDto.JobState, jobStateDto.AdditionMsg));
-
             if (State.ParentJobId.HasValue)
             {
                 var summaryStateCategory = Helper.GetJobStateCategory(State.CurrentJobState);

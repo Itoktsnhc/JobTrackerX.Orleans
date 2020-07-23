@@ -37,6 +37,7 @@ namespace JobTrackerX.Entities
     public class CommonConfig
     {
         public bool UseDashboard { get; set; }
+        public bool BlockStateUpdateAfterFinished { get; set; }
     }
 
     public class IndexConfig

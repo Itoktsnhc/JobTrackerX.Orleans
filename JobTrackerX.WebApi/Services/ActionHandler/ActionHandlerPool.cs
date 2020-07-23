@@ -41,7 +41,7 @@ namespace JobTrackerX.WebApi.Services.ActionHandler
             if (msg.ActionConfig.ActionWrapper.EmailConfig != null)
             {
                 flag = await Policy.Handle<Exception>()
-                     .WaitAndRetryAsync(Constants.GlobalRetryWaitSec, _ => TimeSpan.FromSeconds(Constants.GlobalRetryWaitSec))
+                     .WaitAndRetryAsync(Constants.GlobalRetryTimes, _ => TimeSpan.FromSeconds(Constants.GlobalRetryWaitSec))
                      .ExecuteAsync(async () => await SendEmailAsync(msg));
                 if (!flag)
                 {
@@ -52,7 +52,7 @@ namespace JobTrackerX.WebApi.Services.ActionHandler
             if (msg.ActionConfig.ActionWrapper.HttpConfig != null)
             {
                 flag = await Policy.Handle<Exception>()
-                    .WaitAndRetryAsync(Constants.GlobalRetryWaitSec, _ => TimeSpan.FromSeconds(Constants.GlobalRetryWaitSec))
+                    .WaitAndRetryAsync(Constants.GlobalRetryTimes, _ => TimeSpan.FromSeconds(Constants.GlobalRetryWaitSec))
                     .ExecuteAsync(async () => await SendPostRequestAsync(msg));
                 if (!flag)
                 {
@@ -89,12 +89,13 @@ namespace JobTrackerX.WebApi.Services.ActionHandler
                     Payload = dto.Payload
                 };
                 req.Content = new StringContent(JsonConvert.SerializeObject(body, _serializerSettings), Encoding.UTF8, "application/json");
-                await client.SendAsync(req);
+                var resp = await client.SendAsync(req);
+                resp.EnsureSuccessStatusCode();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"exception in {nameof(SendPostRequestAsync)}");
-                return false;
+                throw;
             }
             return true;
         }
@@ -134,7 +135,7 @@ namespace JobTrackerX.WebApi.Services.ActionHandler
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"exception in {nameof(SendEmailAsync)}");
-                return false;
+                throw;
             }
             return true;
         }
@@ -149,7 +150,7 @@ namespace JobTrackerX.WebApi.Services.ActionHandler
             if (actionWrapper.EmailConfig != null)
             {
                 flag = await Policy.Handle<Exception>()
-                     .WaitAndRetryAsync(Constants.GlobalRetryWaitSec, _ => TimeSpan.FromSeconds(Constants.GlobalRetryWaitSec))
+                     .WaitAndRetryAsync(Constants.GlobalRetryTimes, _ => TimeSpan.FromSeconds(Constants.GlobalRetryWaitSec))
                      .ExecuteAsync(async () => await SendStateCheckEmailAsync(actionWrapper, msg, jobEntity));
                 if (!flag)
                 {
@@ -160,7 +161,7 @@ namespace JobTrackerX.WebApi.Services.ActionHandler
             if (actionWrapper.HttpConfig != null)
             {
                 flag = await Policy.Handle<Exception>()
-                    .WaitAndRetryAsync(Constants.GlobalRetryWaitSec, _ => TimeSpan.FromSeconds(Constants.GlobalRetryWaitSec))
+                    .WaitAndRetryAsync(Constants.GlobalRetryTimes, _ => TimeSpan.FromSeconds(Constants.GlobalRetryWaitSec))
                     .ExecuteAsync(async () => await SendStateCheckPostRequestAsync(actionWrapper, msg, jobEntity));
                 if (!flag)
                 {
@@ -199,12 +200,13 @@ namespace JobTrackerX.WebApi.Services.ActionHandler
                     TargetJobStateList = msg.StateCheckConfig.TargetStateList
                 };
                 req.Content = new StringContent(JsonConvert.SerializeObject(body, _serializerSettings), Encoding.UTF8, "application/json");
-                await client.SendAsync(req);
+                var resp = await client.SendAsync(req);
+                resp.EnsureSuccessStatusCode();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"exception in {nameof(SendStateCheckPostRequestAsync)}");
-                return false;
+                throw;
             }
             return true;
         }
@@ -249,7 +251,7 @@ Success: {msg.StateCheckConfig.TargetStateList.Contains(jobEntity.CurrentJobStat
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"exception in {nameof(SendStateCheckEmailAsync)}");
-                return false;
+                throw;
             }
             return true;
         }
