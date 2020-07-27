@@ -8,6 +8,8 @@ namespace JobTrackerX.WebApi.Services.JobTracker
     {
         Task<JobEntity> GetJobByIdAsync(long id);
 
+        Task<JobTreeStatistics> GetJobStatisticsByIdAsync(long id);
+
         Task<List<JobEntity>> GetDescendantEntitiesAsync(long id);
 
         Task<IList<long>> GetDescendantIdsAsync(long id);

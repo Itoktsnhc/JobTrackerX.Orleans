@@ -11,6 +11,8 @@ namespace JobTrackerX.GrainInterfaces
 
         Task<JobEntityState> GetJobAsync(bool ignoreNotExist = false);
 
+        Task<JobState> GetCurrentJobStateAsync();
+
         Task UpdateJobStateAsync(UpdateJobStateDto jobStateDto, bool outerCall = true);
 
         Task OnChildStateChangeAsync(long childJobId, JobStateCategory state);

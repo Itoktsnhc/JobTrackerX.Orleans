@@ -81,4 +81,18 @@ namespace JobTrackerX.SharedLibs
         public EmailActionConfig EmailConfig { get; set; }
         public HttpActionConfig HttpConfig { get; set; }
     }
+
+    public class JobTreeStatistics
+    {
+        public long JobId { get; set; }
+        public JobTreeStateItem TreeStart { get; set; }
+        public JobTreeStateItem TreeEnd { get; set; }
+        public TimeSpan? ExecutionTime { get; set; }
+    }
+
+    public class JobTreeStateItem
+    {
+        public long SourceJobId { get; set; }
+        public DateTimeOffset TimePoint { get; set; }
+    }
 }

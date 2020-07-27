@@ -3,7 +3,7 @@
     /// <summary>
     ///     任务状态：
     ///     0类： WaitingForActivation 初始状态，仅有该状态仅可被激活。
-    ///     1类： WaitingToRun, Running, Waring->都为Pending状态，不存在状态变化
+    ///     1类： WaitingToRun, Running, Warning
     ///     2类： RanToCompletion, Faulted ->都为结束状态。
     /// </summary>
     public enum JobState

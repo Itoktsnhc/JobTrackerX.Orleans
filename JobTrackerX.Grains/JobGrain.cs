@@ -108,21 +108,18 @@ namespace JobTrackerX.Grains
                 await parentGrain.OnChildStateChangeAsync(State.JobId, summaryStateCategory);
             }
 
+            await TryTriggerActionAsync();
+
             if (outerCall)
             {
+                await UpdateJobTreeStatisticsAsync();
                 await WriteStateAsync();
             }
-            await TryTriggerActionAsync();
         }
 
         public async Task OnChildStateChangeAsync(long childJobId, JobStateCategory state)
         {
             State.ChildrenStatesDic[childJobId] = state;
-            if (Helper.FinishedOrFaultedJobStates.Contains(State.CurrentJobState))
-            {
-                State.StateChanges
-                    .Add(new StateChangeDto(JobState.RanToCompletion, $"(sys: raised by child {childJobId})"));
-            }
 
             if (State.ParentJobId.HasValue)
             {
@@ -204,6 +201,30 @@ namespace JobTrackerX.Grains
                             await _wrapper.GetRandomStateCheckQueueClient().ScheduleMessageAsync(msg, config.CheckTime));
                 }
             }
+        }
+
+        private async Task UpdateJobTreeStatisticsAsync()
+        {
+            var currentJobState = State.CurrentJobState;
+            if (currentJobState == JobState.Running || Helper.FinishedOrFaultedJobStates.Contains(currentJobState))
+            {
+                var statisticsGrain = GrainFactory.GetGrain<IJobTreeStatisticsGrain>(State.AncestorJobId);
+                if (currentJobState == JobState.Running)
+                {
+                    await statisticsGrain.SetStartAsync(State.JobId, State.StartTime);
+                    return;
+                }
+                if (Helper.FinishedOrFaultedJobStates.Contains(currentJobState))
+                {
+                    await statisticsGrain.SetEndAsync(State.JobId, State.EndTime);
+                    return;
+                }
+            }
+        }
+
+        public Task<JobState> GetCurrentJobStateAsync()
+        {
+            return Task.FromResult(State.CurrentJobState);
         }
     }
 }

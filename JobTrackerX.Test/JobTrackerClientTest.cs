@@ -246,5 +246,41 @@ namespace JobTrackerX.Test
                 }
             });
         }
+
+        [TestMethod]
+        public async Task TestEndTimeDelayAsync()
+        {
+            var root = await _client.CreateNewJobAsync(new AddJobDto("TestEndTimeDelayAsync")
+            {
+                SourceLink = "https://www.cnblogs.com/"
+            });
+            var child1 = await _client.CreateNewJobAsync(new AddJobDto("TestEndTimeDelayAsync'child1", root.JobId));
+            var child1child = await _client.CreateNewJobAsync(new AddJobDto("TestEndTimeDelayAsync'child1'child", child1.JobId));
+            await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.Running));
+            await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
+            await _client.UpdateJobStatesAsync(child1.JobId, new UpdateJobStateDto(JobState.Running));
+            root = await _client.GetJobEntityAsync(root.JobId);
+            Assert.AreEqual(JobState.WaitingForChildrenToComplete, root.CurrentJobState);
+            await _client.UpdateJobStatesAsync(child1.JobId, new UpdateJobStateDto(JobState.Faulted));
+            root = await _client.GetJobEntityAsync(root.JobId);
+            Assert.AreEqual(JobState.WaitingForChildrenToComplete, root.CurrentJobState);
+            child1 = await _client.GetJobEntityAsync(child1.JobId);
+            Assert.AreEqual(JobState.WaitingForChildrenToComplete, child1.CurrentJobState);
+            root = await _client.GetJobEntityAsync(root.JobId);
+            var ts = TimeSpan.FromSeconds(5);
+            await Task.Delay(ts);
+            await _client.UpdateJobStatesAsync(child1child.JobId, new UpdateJobStateDto(JobState.Running));
+            await _client.UpdateJobStatesAsync(child1child.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
+            root = await _client.GetJobEntityAsync(root.JobId);
+            child1 = await _client.GetJobEntityAsync(child1.JobId);
+            child1child = await _client.GetJobEntityAsync(child1child.JobId);
+            Assert.AreEqual(JobState.Faulted, root.CurrentJobState);
+            Assert.AreEqual(JobState.Faulted, child1.CurrentJobState);
+            Assert.AreEqual(JobState.RanToCompletion, child1child.CurrentJobState);
+            var tree = await _client.GetJobTreeStatisticsAsync(root.JobId);
+            var span = tree.ExecutionTime;
+            Assert.IsNotNull(span);
+            Assert.AreEqual(true, span >= ts);
+        }
     }
 }

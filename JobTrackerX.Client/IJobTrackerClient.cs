@@ -21,6 +21,9 @@ namespace JobTrackerX.Client
         Task<List<JobEntity>> GetChildrenAsync(long jobId);
 
         Task<List<long>> GetDescendantIdsAsync(long jobId);
+
         Task<bool> AppendToJobLogAsync(long jobId, AppendLogDto dto);
+
+        Task<JobTreeStatistics> GetJobTreeStatisticsAsync(long jobId);
     }
 }

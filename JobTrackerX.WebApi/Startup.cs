@@ -127,6 +127,8 @@ namespace JobTrackerX.WebApi
                 CreateMap<JobIndexInternal, JobIndex>();
                 CreateMap<JobIndex, JobIndexViewModel>();
                 CreateMap<JobEntity, JobEntityViewModel>();
+                CreateMap<JobTreeStatisticsState, JobTreeStatistics>();
+                CreateMap<JobTreeStateItemInternal, JobTreeStateItem>();
             }
         }
     }

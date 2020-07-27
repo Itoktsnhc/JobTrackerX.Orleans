@@ -155,7 +155,55 @@ else
 
                     </td>
                 </tr>
+                <tr>
+                    <td>任务日志 (JobLogs): </td>
+                    <td>
+                        @if (string.IsNullOrWhiteSpace(jobLogUrl))
+                        {
+                            <span>@Constants.NotAvailableStr</span>
+                        }
+                        else
+                        {
+                            <a target="_blank" href="@jobLogUrl">下载任务日志</a>
+                        }
+                    </td>
+                </tr>
+                <tr>
+                    <td>概览 (JobStatistics): </td>
+                    <td>
+                        @if (_jobTreeStatistics != null)
+                        {
+                            <ul class="list-group small list-group-flush">
+                                <li class="list-group-item">
+                                    <span>
+                                        开始: @(_jobTreeStatistics.TreeStart == null?
+                                                Constants.NotAvailableStr:
+                                                $"{_jobTreeStatistics.TreeStart.TimePoint.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat)} by {_jobTreeStatistics.TreeStart.SourceJobId}")
+                                    </span>
+                                </li>
+                                <li class="list-group-item">
+                                    <span>
+                                        结束: @(_jobTreeStatistics.TreeEnd == null ?
+                                                Constants.NotAvailableStr :
+                                                $"{_jobTreeStatistics.TreeEnd.TimePoint.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat)} by {_jobTreeStatistics.TreeEnd.SourceJobId}")
+                                    </span>
+                                </li>
+                                <li class="list-group-item">
+                                    <span>
+                                        执行耗时: @(_jobTreeStatistics.ExecutionTime==null?
+                                                Constants.NotAvailableStr :
+                                                $"{GetTimeSpanStr(_jobTreeStatistics.ExecutionTime)}")
+                                    </span>
+                                </li>
 
+                            </ul>
+                        }
+                        else
+                        {
+                            <span>@Constants.NotAvailableStr</span>
+                        }
+                    </td>
+                </tr>
             </tbody>
         </table>
         <br />
@@ -299,11 +347,13 @@ else
     private List<JobEntityViewModel>
         ChildrenInternal = new List<JobEntityViewModel>();
     private JobEntityViewModel _jobEntity;
+    private JobTreeStatistics _jobTreeStatistics;
     private Task _refresher;
     private CancellationTokenSource _cancelRefreshSource = new CancellationTokenSource();
     private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
     private bool _isJobEntityLoadFinish = false;
     private bool _isJobChildrenLoadFinish = false;
+    private string jobLogUrl = null;
 
     protected override void OnInitialized()
     {
@@ -353,6 +403,11 @@ else
         try
         {
             _jobEntity = _mapper.Map<JobEntityViewModel>(await _service.GetJobByIdAsync(JobId));
+            if (_jobEntity.AncestorJobId == _jobEntity.JobId)
+            {
+                _jobTreeStatistics = await _service.GetJobStatisticsByIdAsync(JobId);
+            }
+            jobLogUrl = await _service.GetJobLogUrlAsync(JobId);
         }
         catch (Exception ex)
         {

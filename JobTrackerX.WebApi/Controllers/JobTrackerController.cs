@@ -134,5 +134,11 @@ namespace JobTrackerX.WebApi.Controllers
         {
             return await _service.GetJobLogAsync(id);
         }
+
+        [HttpGet("jobTreeStatistics/{id}")]
+        public async Task<ReturnDto<JobTreeStatistics>> GetJobTreeStatisticsAsync([FromRoute] long id)
+        {
+            return new ReturnDto<JobTreeStatistics>(await _service.GetJobStatisticsByIdAsync(id));
+        }
     }
 }

@@ -107,5 +107,11 @@ namespace JobTrackerX.WebApi.Services.JobTracker
             var logger = _client.GetGrain<IJobLoggerGrain>(id);
             return await logger.GetJobLogUrlAsync();
         }
+
+        public async Task<JobTreeStatistics> GetJobStatisticsByIdAsync(long id)
+        {
+            var statisticsGrain = _client.GetGrain<IJobTreeStatisticsGrain>(id);
+            return _mapper.Map<JobTreeStatistics>(await statisticsGrain.GetStatisticsAsync());
+        }
     }
 }

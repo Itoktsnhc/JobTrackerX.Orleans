@@ -144,6 +144,16 @@ namespace JobTrackerX.Client
             throw new Exception($"{nameof(AppendToJobLogAsync)} failed {resp.Msg}");
         }
 
+        public async Task<JobTreeStatistics> GetJobTreeStatisticsAsync(long jobId)
+        {
+            var resp = await SendRequestAsync<JobTreeStatistics, object>(HttpMethod.Get, $"api/jobTracker/jobTreeStatistics/{jobId}");
+            if (resp.Result)
+            {
+                return resp.Data;
+            }
+            throw new Exception($"{nameof(AppendToJobLogAsync)} failed {resp.Msg}");
+        }
+
         private async Task<ReturnDto<TData>> SendRequestAsync<TData, TRequestBody>(HttpMethod method, string uri,
             TRequestBody body = default)
         {

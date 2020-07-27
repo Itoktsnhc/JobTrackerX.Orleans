@@ -64,8 +64,7 @@ namespace JobTrackerX.Entities.GrainStates
             {
                 if (Helper.FinishedOrFaultedJobStates.Contains(CurrentJobState))
                 {
-                    var stateCollection = TotalChildrenCount > 0 ? Helper.FinishedOrFaultedJobStates : Helper.FinishedOrWaitingForChildrenOrFaultedJobStates;
-                    return StateChanges.LastOrDefault(s => stateCollection.Contains(s.State))?.TimePoint;
+                    return StateChanges.LastOrDefault(s => Helper.FinishedOrWaitingForChildrenOrFaultedJobStates.Contains(s.State))?.TimePoint;
                 }
                 return null;
             }
