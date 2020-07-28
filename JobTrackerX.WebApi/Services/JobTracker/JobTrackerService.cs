@@ -113,5 +113,21 @@ namespace JobTrackerX.WebApi.Services.JobTracker
             var statisticsGrain = _client.GetGrain<IJobTreeStatisticsGrain>(id);
             return _mapper.Map<JobTreeStatistics>(await statisticsGrain.GetStatisticsAsync());
         }
+        public async Task<Dictionary<long, JobTreeStatistics>> GetJobStatisticsListByIdsAsync(IEnumerable<long> ids)
+        {
+            var statisticsContainer = new ConcurrentBag<JobTreeStatistics>();
+            var getStatisticsProcessor = new ActionBlock<long>(async jobId =>
+            {
+                var statistics = await GetJobStatisticsByIdAsync(jobId);
+                statisticsContainer.Add(statistics);
+            }, Helper.GetOutOfGrainExecutionOptions());
+            foreach (var id in ids)
+            {
+                await getStatisticsProcessor.PostToBlockUntilSuccessAsync(id);
+            }
+            getStatisticsProcessor.Complete();
+            await getStatisticsProcessor.Completion;
+            return statisticsContainer.ToDictionary(s => s.JobId, s => s);
+        }
     }
 }

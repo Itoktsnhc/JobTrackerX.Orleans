@@ -15,7 +15,7 @@ namespace JobTrackerX.GrainInterfaces
 
         Task UpdateJobStateAsync(UpdateJobStateDto jobStateDto, bool outerCall = true);
 
-        Task OnChildStateChangeAsync(long childJobId, JobStateCategory state);
+        Task OnChildStateChangeAsync(long childJobId, JobState childState);
 
         Task UpdateJobOptionsAsync(UpdateJobOptionsDto dto);
     }

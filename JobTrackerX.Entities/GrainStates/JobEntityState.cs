@@ -62,11 +62,7 @@ namespace JobTrackerX.Entities.GrainStates
         {
             get
             {
-                if (Helper.FinishedOrFaultedJobStates.Contains(CurrentJobState))
-                {
-                    return StateChanges.LastOrDefault(s => Helper.FinishedOrWaitingForChildrenOrFaultedJobStates.Contains(s.State))?.TimePoint;
-                }
-                return null;
+                return StateChanges.LastOrDefault(s => Helper.FinishedOrWaitingForChildrenOrFaultedJobStates.Contains(s.State))?.TimePoint;
             }
         }
 

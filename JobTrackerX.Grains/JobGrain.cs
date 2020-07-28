@@ -101,35 +101,34 @@ namespace JobTrackerX.Grains
             }
             State.StateChanges
                 .Add(new StateChangeDto(jobStateDto.JobState, jobStateDto.AdditionMsg));
+            await UpdateJobStatisticsAsync();
             if (State.ParentJobId.HasValue)
             {
-                var summaryStateCategory = Helper.GetJobStateCategory(State.CurrentJobState);
                 var parentGrain = GrainFactory.GetGrain<IJobGrain>(State.ParentJobId.Value);
-                await parentGrain.OnChildStateChangeAsync(State.JobId, summaryStateCategory);
+                await parentGrain.OnChildStateChangeAsync(State.JobId, State.CurrentJobState);
             }
 
             await TryTriggerActionAsync();
 
             if (outerCall)
             {
-                await UpdateJobTreeStatisticsAsync();
                 await WriteStateAsync();
             }
         }
 
-        public async Task OnChildStateChangeAsync(long childJobId, JobStateCategory state)
+        public async Task OnChildStateChangeAsync(long childJobId, JobState childJobState)
         {
-            State.ChildrenStatesDic[childJobId] = state;
+            State.ChildrenStatesDic[childJobId] = Helper.GetJobStateCategory(childJobState);
 
             if (State.ParentJobId.HasValue)
             {
                 var parentGrain = GrainFactory.GetGrain<IJobGrain>(State.ParentJobId.Value);
-                var category = Helper.GetJobStateCategory(State.CurrentJobState);
-                await parentGrain.OnChildStateChangeAsync(State.JobId, category);
+                await parentGrain.OnChildStateChangeAsync(State.JobId, State.CurrentJobState);
             }
 
             await WriteStateAsync();
             await TryTriggerActionAsync();
+            await UpdateJobStatisticsAsync(childJobId, childJobState);
         }
 
         public async Task UpdateJobOptionsAsync(UpdateJobOptionsDto dto)
@@ -203,20 +202,33 @@ namespace JobTrackerX.Grains
             }
         }
 
-        private async Task UpdateJobTreeStatisticsAsync()
+        private async Task UpdateJobStatisticsAsync(long? sourceJobId = null, JobState? sourceJobState = null)
         {
-            var currentJobState = State.CurrentJobState;
-            if (currentJobState == JobState.Running || Helper.FinishedOrFaultedJobStates.Contains(currentJobState))
+            JobState currentJobState;
+            if (sourceJobId.HasValue && sourceJobState.HasValue)
             {
-                var statisticsGrain = GrainFactory.GetGrain<IJobTreeStatisticsGrain>(State.AncestorJobId);
-                if (currentJobState == JobState.Running)
+                currentJobState = sourceJobState.Value;
+            }
+            else
+            {
+                currentJobState = State.CurrentJobState;
+            }
+            await UpdateJobStatisticsImplAsync(State.JobId, currentJobState, sourceJobId);
+        }
+
+        private async Task UpdateJobStatisticsImplAsync(long targetJobId, JobState jobState, long? sourceJobId = null)
+        {
+            if (jobState == JobState.Running || Helper.FinishedOrFaultedJobStates.Contains(jobState))
+            {
+                var statisticsGrain = GrainFactory.GetGrain<IJobTreeStatisticsGrain>(targetJobId);
+                if (jobState == JobState.Running)
                 {
-                    await statisticsGrain.SetStartAsync(State.JobId, State.StartTime);
+                    await statisticsGrain.SetStartAsync(targetJobId, sourceJobId);
                     return;
                 }
-                if (Helper.FinishedOrFaultedJobStates.Contains(currentJobState))
+                if (Helper.FinishedOrFaultedJobStates.Contains(jobState))
                 {
-                    await statisticsGrain.SetEndAsync(State.JobId, State.EndTime);
+                    await statisticsGrain.SetEndAsync(targetJobId, sourceJobId);
                     return;
                 }
             }

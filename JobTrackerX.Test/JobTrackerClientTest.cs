@@ -282,5 +282,99 @@ namespace JobTrackerX.Test
             Assert.IsNotNull(span);
             Assert.AreEqual(true, span >= ts);
         }
+
+        [TestMethod]
+        public async Task TestJobStatisticsAsync1()
+        {
+            var root = await _client.CreateNewJobAsync(new AddJobDto("JobStatisticsTestRoot1"));
+            var sub1 = await _client.CreateNewJobAsync(new AddJobDto("child1", root.JobId));
+            var sub2 = await _client.CreateNewJobAsync(new AddJobDto("child2", root.JobId));
+            var subsub1 = await _client.CreateNewJobAsync(new AddJobDto("child1child1", sub1.JobId));
+            await _client.UpdateJobStatesAsync(subsub1.JobId, new UpdateJobStateDto(JobState.Running));
+            await _client.UpdateJobStatesAsync(subsub1.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
+            await _client.UpdateJobStatesAsync(sub1.JobId, new UpdateJobStateDto(JobState.Running));
+            await _client.UpdateJobStatesAsync(sub1.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
+            await _client.UpdateJobStatesAsync(sub2.JobId, new UpdateJobStateDto(JobState.Running));
+            await _client.UpdateJobStatesAsync(sub2.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
+            await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.Running));
+            await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
+
+            var rootS = await _client.GetJobTreeStatisticsAsync(root.JobId);
+            Assert.IsNotNull(rootS.ExecutionTime);
+            Assert.IsNotNull(rootS.TreeEnd);
+            Assert.IsNotNull(rootS.TreeStart);
+            Assert.AreEqual(rootS.TreeStart.SourceJobId, sub1.JobId);
+            Assert.AreEqual(rootS.TreeEnd.SourceJobId, root.JobId);
+
+            var sub1S = await _client.GetJobTreeStatisticsAsync(sub1.JobId);
+            Assert.IsNotNull(sub1S.ExecutionTime);
+            Assert.IsNotNull(sub1S.TreeEnd);
+            Assert.IsNotNull(sub1S.TreeStart);
+            Assert.AreEqual(sub1S.TreeStart.SourceJobId, subsub1.JobId);
+            Assert.AreEqual(sub1S.TreeEnd.SourceJobId, sub1.JobId);
+        }
+
+        [TestMethod]
+        public async Task TestJobStatisticsAsync2()
+        {
+            var root = await _client.CreateNewJobAsync(new AddJobDto("JobStatisticsTestRoot2"));
+            var sub1 = await _client.CreateNewJobAsync(new AddJobDto("child1", root.JobId));
+            var sub2 = await _client.CreateNewJobAsync(new AddJobDto("child2", root.JobId));
+            await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.Running));
+            await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
+            var subsub1 = await _client.CreateNewJobAsync(new AddJobDto("child1child1", sub1.JobId));
+            await _client.UpdateJobStatesAsync(sub1.JobId, new UpdateJobStateDto(JobState.Running));
+            await _client.UpdateJobStatesAsync(sub1.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
+            await _client.UpdateJobStatesAsync(subsub1.JobId, new UpdateJobStateDto(JobState.Running));
+            await _client.UpdateJobStatesAsync(subsub1.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
+            await _client.UpdateJobStatesAsync(sub2.JobId, new UpdateJobStateDto(JobState.Running));
+            await _client.UpdateJobStatesAsync(sub2.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
+
+            var rootS = await _client.GetJobTreeStatisticsAsync(root.JobId);
+            Assert.IsNotNull(rootS.ExecutionTime);
+            Assert.IsNotNull(rootS.TreeEnd);
+            Assert.IsNotNull(rootS.TreeStart);
+            Assert.AreEqual(rootS.TreeStart.SourceJobId, root.JobId);
+            Assert.AreEqual(rootS.TreeEnd.SourceJobId, sub2.JobId);
+
+            var sub1S = await _client.GetJobTreeStatisticsAsync(sub1.JobId);
+            Assert.IsNotNull(sub1S.ExecutionTime);
+            Assert.IsNotNull(sub1S.TreeEnd);
+            Assert.IsNotNull(sub1S.TreeStart);
+            Assert.AreEqual(sub1S.TreeStart.SourceJobId, sub1.JobId);
+            Assert.AreEqual(sub1S.TreeEnd.SourceJobId, subsub1.JobId);
+        }
+
+        [TestMethod]
+        public async Task TestJobStatisticsAsync3()
+        {
+            var root = await _client.CreateNewJobAsync(new AddJobDto("JobStatisticsTestRoot3"));
+            var sub1 = await _client.CreateNewJobAsync(new AddJobDto("child1", root.JobId));
+            var sub2 = await _client.CreateNewJobAsync(new AddJobDto("child2", root.JobId));
+            await Task.Delay(1000);
+            await _client.UpdateJobStatesAsync(sub2.JobId, new UpdateJobStateDto(JobState.Running));
+            await _client.UpdateJobStatesAsync(sub2.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
+            await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.Running));
+            await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
+            var subsub1 = await _client.CreateNewJobAsync(new AddJobDto("child1child1", sub1.JobId));
+            await _client.UpdateJobStatesAsync(subsub1.JobId, new UpdateJobStateDto(JobState.Running));
+            await _client.UpdateJobStatesAsync(subsub1.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
+            await _client.UpdateJobStatesAsync(sub1.JobId, new UpdateJobStateDto(JobState.Running));
+            await _client.UpdateJobStatesAsync(sub1.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
+
+            var rootS = await _client.GetJobTreeStatisticsAsync(root.JobId);
+            Assert.IsNotNull(rootS.ExecutionTime);
+            Assert.IsNotNull(rootS.TreeEnd);
+            Assert.IsNotNull(rootS.TreeStart);
+            Assert.AreEqual(rootS.TreeStart.SourceJobId, sub2.JobId);
+            Assert.AreEqual(rootS.TreeEnd.SourceJobId, sub1.JobId);
+
+            var sub1S = await _client.GetJobTreeStatisticsAsync(sub1.JobId);
+            Assert.IsNotNull(sub1S.ExecutionTime);
+            Assert.IsNotNull(sub1S.TreeEnd);
+            Assert.IsNotNull(sub1S.TreeStart);
+            Assert.AreEqual(sub1S.TreeStart.SourceJobId, subsub1.JobId);
+            Assert.AreEqual(sub1S.TreeEnd.SourceJobId, sub1.JobId);
+        }
     }
 }

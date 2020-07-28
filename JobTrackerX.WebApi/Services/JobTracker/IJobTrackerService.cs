@@ -29,5 +29,6 @@ namespace JobTrackerX.WebApi.Services.JobTracker
         Task<string> GetJobLogAsync(long id);
 
         Task<string> GetJobLogUrlAsync(long id);
+        Task<Dictionary<long, JobTreeStatistics>> GetJobStatisticsListByIdsAsync(IEnumerable<long> ids);
     }
 }

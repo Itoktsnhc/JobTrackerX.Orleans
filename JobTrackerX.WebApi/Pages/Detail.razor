@@ -55,16 +55,22 @@ else
                     <td>@_jobEntity.JobName</td>
                 </tr>
                 <tr>
-                    <td>开始时间 (@nameof(_jobEntity.StartTime)): </td>
-                    <td>@(_jobEntity.StartTime.HasValue ? _jobEntity.StartTime.Value.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat) : Constants.NotAvailableStr)</td>
-                </tr>
-                <tr>
-                    <td>结束时间 (@nameof(_jobEntity.EndTime)): </td>
-                    <td>@(_jobEntity.EndTime.HasValue ? _jobEntity.EndTime.Value.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat) : Constants.NotAvailableStr)</td>
-                </tr>
-                <tr>
                     <td>执行耗时 (ExecutionTime): </td>
-                    <td>@(GetTimeSpanStr(_jobEntity.StartTime, _jobEntity.EndTime))</td>
+                    <td>
+                        @if (!_jobEntity.StartTime.HasValue && !_jobEntity.EndTime.HasValue)
+                        {
+                            <span>@Constants.NotAvailableStr</span>
+                        }
+                        else
+                        {
+                            <span>
+                                @(_jobEntity.StartTime.HasValue ? _jobEntity.StartTime.Value.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat) : Constants.NotAvailableStr)
+                                ->
+                                @(_jobEntity.EndTime.HasValue ? _jobEntity.EndTime.Value.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat) : Constants.NotAvailableStr)
+                                : [@(GetTimeSpanStr(_jobEntity.StartTime, _jobEntity.EndTime))]
+                            </span>
+                        }
+                    </td>
                 </tr>
                 <tr>
                     <td>状态 (@nameof(_jobEntity.CurrentJobState)): </td>
@@ -171,32 +177,18 @@ else
                 <tr>
                     <td>概览 (JobStatistics): </td>
                     <td>
-                        @if (_jobTreeStatistics != null)
+                        @if (_jobTreeStatistics?.TreeStart != null || _jobTreeStatistics?.TreeEnd != null)
                         {
-                            <ul class="list-group small list-group-flush">
-                                <li class="list-group-item">
-                                    <span>
-                                        开始: @(_jobTreeStatistics.TreeStart == null?
+                            <span>
+                                @(_jobTreeStatistics.TreeStart == null?
                                                 Constants.NotAvailableStr:
-                                                $"{_jobTreeStatistics.TreeStart.TimePoint.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat)} by {_jobTreeStatistics.TreeStart.SourceJobId}")
-                                    </span>
-                                </li>
-                                <li class="list-group-item">
-                                    <span>
-                                        结束: @(_jobTreeStatistics.TreeEnd == null ?
+                                                $"{_jobTreeStatistics.TreeStart.TimePoint.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat)}({_jobTreeStatistics.TreeStart.SourceJobId})")
+                                ->
+                                @(_jobTreeStatistics.TreeEnd == null ?
                                                 Constants.NotAvailableStr :
-                                                $"{_jobTreeStatistics.TreeEnd.TimePoint.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat)} by {_jobTreeStatistics.TreeEnd.SourceJobId}")
-                                    </span>
-                                </li>
-                                <li class="list-group-item">
-                                    <span>
-                                        执行耗时: @(_jobTreeStatistics.ExecutionTime==null?
-                                                Constants.NotAvailableStr :
-                                                $"{GetTimeSpanStr(_jobTreeStatistics.ExecutionTime)}")
-                                    </span>
-                                </li>
-
-                            </ul>
+                                                $"{_jobTreeStatistics.TreeEnd.TimePoint.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat)} ({_jobTreeStatistics.TreeEnd.SourceJobId})")
+                                : [@(GetTimeSpanStr(_jobTreeStatistics?.TreeStart?.TimePoint,_jobTreeStatistics?.TreeEnd?.TimePoint))]
+                            </span>
                         }
                         else
                         {
@@ -437,6 +429,19 @@ else
                 var targetCollection = ChildrenInternal.Where(s => s.CurrentJobState == status).ToList();
                 totalCount = targetCollection.Count;
                 Children = targetCollection.Skip(skip).Take(pageSize).ToList();
+            }
+            var statisticsResult = await _service.GetJobStatisticsListByIdsAsync(Children.Select(s => s.JobId));
+            foreach (var child in Children)
+            {
+                statisticsResult.TryGetValue(child.JobId, out var statistics);
+                if (statistics?.TreeStart == null && statistics?.TreeEnd == null)
+                {
+                    child.ExecutionTimeStr = GetTimeSpanStr(child.StartTime, child.EndTime);
+                }
+                else
+                {
+                    child.ExecutionTimeStr = GetTimeSpanStr(statistics?.TreeStart?.TimePoint, statistics?.TreeEnd?.TimePoint);
+                }
             }
         }
         catch (Exception ex)

@@ -22,7 +22,7 @@ namespace JobTrackerX.Grains
             return Task.FromResult(State);
         }
 
-        public async Task SetEndAsync(long sourceJobId, DateTimeOffset? timePoint = null)
+        public async Task SetEndAsync(long targetJobId, long? sourceJobId = null)
         {
             if (State.TreeEnd == null)
             {
@@ -30,24 +30,31 @@ namespace JobTrackerX.Grains
                 var jobState = await jobGrain.GetCurrentJobStateAsync();
                 if (Helper.FinishedOrFaultedJobStates.Contains(jobState))
                 {
-                    State.TreeEnd = new JobTreeStateItemInternal(sourceJobId);
-                    if (timePoint.HasValue)
+                    if (sourceJobId.HasValue)
                     {
-                        State.TreeEnd.TimePoint = timePoint.Value;
+                        State.TreeEnd = new JobTreeStateItemInternal(sourceJobId.Value);
                     }
+                    else
+                    {
+                        State.TreeEnd = new JobTreeStateItemInternal(targetJobId);
+                    }
+
                     await WriteStateAsync();
                 }
             }
         }
 
-        public async Task SetStartAsync(long sourceJobId, DateTimeOffset? timePoint = null)
+        public async Task SetStartAsync(long targetJobId, long? sourceJobId = null)
         {
             if (State.TreeStart == null)
             {
-                State.TreeStart = new JobTreeStateItemInternal(sourceJobId);
-                if (timePoint.HasValue)
+                if (sourceJobId.HasValue)
                 {
-                    State.TreeStart.TimePoint = timePoint.Value;
+                    State.TreeStart = new JobTreeStateItemInternal(sourceJobId.Value);
+                }
+                else
+                {
+                    State.TreeStart = new JobTreeStateItemInternal(targetJobId);
                 }
                 await WriteStateAsync();
             }
