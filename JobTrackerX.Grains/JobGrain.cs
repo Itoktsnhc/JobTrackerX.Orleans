@@ -31,14 +31,13 @@ namespace JobTrackerX.Grains
             _options = options;
         }
 
-        public async Task<JobEntityState> AddJobAsync(AddJobDto dto)
+        public async Task<JobEntityState> AddJobAsync(AddJobDto addJobDto)
         {
             if (State.CurrentJobState != JobState.WaitingForActivation)
             {
                 throw new InvalidOperationException($"job id duplicate: {this.GetPrimaryKeyLong()}");
             }
 
-            var addJobDto = new AddJobDtoInternal(dto);
             const JobState state = JobState.WaitingToRun;
             var jobId = this.GetPrimaryKeyLong();
             State.JobId = jobId;
@@ -77,6 +76,7 @@ namespace JobTrackerX.Grains
                 await indexGrain.AddToIndexAsync(new JobIndexInternal(State.JobId, State.JobName, State.CreatedBy,
                     State.Tags));
             }
+
             await WriteStateAsync();
             return State;
         }
@@ -85,22 +85,25 @@ namespace JobTrackerX.Grains
         {
             if (dto.JobState == JobState.WaitingForActivation)
             {
-                throw new Exception($"cannot set {this.GetPrimaryKeyLong()}'s state to {JobState.WaitingForActivation}");
+                throw new Exception(
+                    $"cannot set {this.GetPrimaryKeyLong()}'s state to {JobState.WaitingForActivation}");
             }
+
             if (outerCall && State.CurrentJobState == JobState.WaitingForActivation)
             {
                 throw new JobNotFoundException($"job Id not exist: {this.GetPrimaryKeyLong()}");
             }
 
-            var jobStateDto = new UpdateJobStateDtoInternal(dto);
             if (_options.Value.CommonConfig.BlockStateUpdateAfterFinished
                 && Helper.FinishedOrFaultedJobStates.Contains(State.CurrentJobState))
             {
-                _logger.LogWarning($"{this.GetPrimaryKeyLong()} append {dto.JobState} {dto.Message} with {State.CurrentJobState} blocked");
+                _logger.LogWarning(
+                    $"{this.GetPrimaryKeyLong()} append {dto.JobState} {dto.Message} with {State.CurrentJobState} blocked");
                 return;
             }
+
             State.StateChanges
-                .Add(new StateChangeDto(jobStateDto.JobState, jobStateDto.AdditionMsg));
+                .Add(new StateChangeDto(dto.JobState, dto.Message));
             await UpdateJobStatisticsAsync();
             if (State.ParentJobId.HasValue)
             {
@@ -137,6 +140,7 @@ namespace JobTrackerX.Grains
             {
                 throw new JobNotFoundException($"job Id not exist: {this.GetPrimaryKeyLong()}");
             }
+
             State.Options = dto.Options;
             await WriteStateAsync();
         }
@@ -154,6 +158,7 @@ namespace JobTrackerX.Grains
                     throw new JobNotFoundException($"job Id not exist: {this.GetPrimaryKeyLong()}");
                 }
             }
+
             return await Task.FromResult(State);
         }
 
@@ -164,8 +169,8 @@ namespace JobTrackerX.Grains
                 var state = State.CurrentJobState;
                 var targets = State.ActionConfigs.Where(
                     s => s.JobStateFilters?.Any() == true
-                    && s.JobStateFilters.Contains(state)
-                    && s.ActionWrapper != null);
+                         && s.JobStateFilters.Contains(state)
+                         && s.ActionWrapper != null);
                 foreach (var target in targets)
                 {
                     var actionDto = new ActionMessageDto()
@@ -176,7 +181,8 @@ namespace JobTrackerX.Grains
                     };
                     var msg = new Message(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(actionDto)));
                     await Policy.Handle<Exception>()
-                        .WaitAndRetryAsync(Constants.GlobalRetryTimes, _ => TimeSpan.FromSeconds(Constants.GlobalRetryWaitSec))
+                        .WaitAndRetryAsync(Constants.GlobalRetryTimes,
+                            _ => TimeSpan.FromSeconds(Constants.GlobalRetryWaitSec))
                         .ExecuteAsync(async () => await _wrapper.GetRandomActionQueueClient().SendAsync(msg));
                 }
             }
@@ -195,9 +201,11 @@ namespace JobTrackerX.Grains
                     };
                     var msg = new Message(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(stateCheckDto)));
                     await Policy.Handle<Exception>()
-                        .WaitAndRetryAsync(Constants.GlobalRetryTimes, _ => TimeSpan.FromSeconds(Constants.GlobalRetryWaitSec))
+                        .WaitAndRetryAsync(Constants.GlobalRetryTimes,
+                            _ => TimeSpan.FromSeconds(Constants.GlobalRetryWaitSec))
                         .ExecuteAsync(async () =>
-                            await _wrapper.GetRandomStateCheckQueueClient().ScheduleMessageAsync(msg, config.CheckTime));
+                            await _wrapper.GetRandomStateCheckQueueClient()
+                                .ScheduleMessageAsync(msg, config.CheckTime));
                 }
             }
         }
@@ -213,6 +221,7 @@ namespace JobTrackerX.Grains
             {
                 currentJobState = State.CurrentJobState;
             }
+
             await UpdateJobStatisticsImplAsync(State.JobId, currentJobState, sourceJobId);
         }
 
@@ -226,10 +235,10 @@ namespace JobTrackerX.Grains
                     await statisticsGrain.SetStartAsync(targetJobId, sourceJobId);
                     return;
                 }
+
                 if (Helper.FinishedOrFaultedJobStates.Contains(jobState))
                 {
                     await statisticsGrain.SetEndAsync(targetJobId, sourceJobId);
-                    return;
                 }
             }
         }
@@ -237,6 +246,18 @@ namespace JobTrackerX.Grains
         public Task<JobState> GetCurrentJobStateAsync()
         {
             return Task.FromResult(State.CurrentJobState);
+        }
+        
+        public async Task SetStateAsync(JobEntityState state)
+        {
+            State = state;
+            await WriteStateAsync();
+            if (!State.ParentJobId.HasValue)
+            {
+                var indexGrain = GrainFactory.GetGrain<IShardJobIndexGrain>(Helper.GetTimeIndex());
+                await indexGrain.AddToIndexAsync(new JobIndexInternal(State.JobId, State.JobName, State.CreatedBy,
+                    State.Tags));
+            }
         }
     }
 }

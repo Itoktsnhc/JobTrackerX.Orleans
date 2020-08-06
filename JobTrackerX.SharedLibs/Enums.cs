@@ -30,4 +30,10 @@
         ByHour = 0,
         ByDay = 1
     }
+    public enum BufferedGrainInterfaceType
+    {
+        JobGrain = 0,
+        DescendantsRefGrain = 1,
+        JobTreeStatisticsGrain = 4
+    }
 }

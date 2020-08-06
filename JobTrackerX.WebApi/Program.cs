@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Orleans;
 using Orleans.Hosting;
 using JobTrackerX.Grains;
+using JobTrackerX.Grains.InMem;
 
 namespace JobTrackerX.WebApi
 {
@@ -75,6 +76,7 @@ namespace JobTrackerX.WebApi
 
                     options.UseLocalhostClustering(serviceId: siloConfig.ServiceId, clusterId: siloConfig.ClusterId)
                         .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(JobGrain).Assembly).WithReferences().WithCodeGeneration())
+                        .AddIncomingGrainCallFilter<BufferFilter>()
                         .AddAzureTableGrainStorage(Constants.JobEntityStoreName, tableStorageOption)
                         .AddAzureTableGrainStorage(Constants.JobRefStoreName, tableStorageOption)
                         .AddAzureTableGrainStorage(Constants.JobIdStoreName, tableStorageOption)

@@ -8,6 +8,7 @@ using JobTrackerX.WebApi.Misc;
 using JobTrackerX.WebApi.Services.ActionHandler;
 using JobTrackerX.WebApi.Services.Attachment;
 using JobTrackerX.WebApi.Services.Background;
+using JobTrackerX.WebApi.Services.BufferManager;
 using JobTrackerX.WebApi.Services.JobTracker;
 using JobTrackerX.WebApi.Services.Query;
 using Microsoft.AspNetCore.Builder;
@@ -76,6 +77,7 @@ namespace JobTrackerX.WebApi
             services.AddScoped<IQueryIndexService, QueryIndexService>();
             services.AddScoped<IJobTrackerService, JobTrackerService>();
             services.AddScoped<IAttachmentService, AttachmentService>();
+            services.AddScoped<IBufferManagerService, BufferManagerService>();
 
             if (JobTrackerConfig.CommonConfig.UseDashboard)
             {
@@ -129,6 +131,7 @@ namespace JobTrackerX.WebApi
                 CreateMap<JobEntity, JobEntityViewModel>();
                 CreateMap<JobTreeStatisticsState, JobTreeStatistics>();
                 CreateMap<JobTreeStateItemInternal, JobTreeStateItem>();
+                CreateMap<AddToBufferDto, BufferedContent>();
             }
         }
     }

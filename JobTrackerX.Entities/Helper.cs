@@ -31,13 +31,14 @@ namespace JobTrackerX.Entities
             };
 
         public static readonly List<JobState> FinishedOrWaitingForChildrenJobStates =
-           new List<JobState>
-           {
+            new List<JobState>
+            {
                 JobState.WaitingForChildrenToComplete,
                 JobState.RanToCompletion
-           };
+            };
 
         public static readonly Interpreter Interpreter;
+
         private delegate bool RegexMatch(string str, string pattern);
 
         static Helper()
@@ -218,12 +219,13 @@ namespace JobTrackerX.Entities
             {
                 throw new Exception("Cannot create Storage Account");
             }
+
             if (!Microsoft.Azure.Cosmos.Table.CloudStorageAccount.TryParse(connStr, out var tableAccount))
             {
                 throw new Exception("Cannot create Storage Account");
             }
 
-            return new TReturn { Account = account, TableAccount = tableAccount };
+            return new TReturn {Account = account, TableAccount = tableAccount};
         }
 
         public static string GetRollingIndexId(string prefix, int indexCount)
@@ -284,6 +286,29 @@ namespace JobTrackerX.Entities
             {
                 await Task.Delay(10);
             }
+        }
+    }
+    
+    public class AddToBufferDtoEqualityComparer : IEqualityComparer<AddToBufferDto>
+    {
+        public bool Equals(AddToBufferDto x, AddToBufferDto y)
+        {
+            if (x == null && y == null)
+            {
+                return true;
+            }
+
+            if ((x != null && y == null) || x == null)
+            {
+                return false;
+            }
+
+            return x.GrainType == y.GrainType && x.GrainIntId == y.GrainIntId;
+        }
+
+        public int GetHashCode(AddToBufferDto obj)
+        {
+            return obj.GetHashCode();
         }
     }
 }

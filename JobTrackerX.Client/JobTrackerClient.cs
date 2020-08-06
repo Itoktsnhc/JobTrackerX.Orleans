@@ -32,7 +32,7 @@ namespace JobTrackerX.Client
             _httpClient = new HttpClient(handler)
             {
                 BaseAddress =
-                new Uri(baseAddress.EndsWith("/") ? baseAddress : baseAddress + "/", UriKind.Absolute)
+                    new Uri(baseAddress.EndsWith("/") ? baseAddress : baseAddress + "/", UriKind.Absolute)
             };
         }
 
@@ -54,7 +54,7 @@ namespace JobTrackerX.Client
             _getRetryInterval = retryInterval;
         }
 
-        public async Task<JobEntity> CreateNewJobAsync(AddJobDto dto)
+        public override async Task<JobEntity> CreateNewJobAsync(AddJobDto dto)
         {
             var resp = await SendRequestAsync<JobEntity, AddJobDto>(HttpMethod.Post,
                 "api/jobTracker/new", dto);
@@ -62,10 +62,11 @@ namespace JobTrackerX.Client
             {
                 return resp.Data;
             }
+
             throw new Exception($"{nameof(CreateNewJobAsync)} failed {resp.Msg}");
         }
 
-        public async Task UpdateJobStatesAsync(long id, UpdateJobStateDto dto)
+        public override async Task UpdateJobStatesAsync(long id, UpdateJobStateDto dto)
         {
             var resp = await SendRequestAsync<string, UpdateJobStateDto>(HttpMethod.Put,
                 $"api/jobTracker/update/{id}", dto);
@@ -75,7 +76,7 @@ namespace JobTrackerX.Client
             }
         }
 
-        public async Task UpdateJobOptionsAsync(long id, UpdateJobOptionsDto dto)
+        public override async Task UpdateJobOptionsAsync(long id, UpdateJobOptionsDto dto)
         {
             var resp = await SendRequestAsync<string, UpdateJobOptionsDto>(HttpMethod.Put,
                 $"api/jobTracker/updateOptions/{id}", dto);
@@ -85,14 +86,14 @@ namespace JobTrackerX.Client
             }
         }
 
-        public async Task<JobEntity> GetJobEntityAsync(long jobId)
+        public override async Task<JobEntity> GetJobEntityAsync(long jobId)
         {
             var resp = await SendRequestAsync<JobEntity, object>(HttpMethod.Get,
                 $"api/jobTracker/{jobId}");
             return resp.Data;
         }
 
-        public async Task<ReturnQueryIndexDto> QueryJobIndexAsync(QueryJobIndexDto dto)
+        public override async Task<ReturnQueryIndexDto> QueryJobIndexAsync(QueryJobIndexDto dto)
         {
             var resp = await SendRequestAsync<ReturnQueryIndexDto, QueryJobIndexDto>(HttpMethod.Post,
                 "api/QueryIndex",
@@ -101,58 +102,139 @@ namespace JobTrackerX.Client
             {
                 return resp.Data;
             }
+
             throw new Exception($"{nameof(QueryJobIndexAsync)} failed {resp.Msg}");
         }
 
-        public async Task<List<JobEntity>> GetDescendantsAsync(long jobId)
+        public override async Task<List<JobEntity>> GetDescendantsAsync(long jobId)
         {
-            var resp = await SendRequestAsync<List<JobEntity>, object>(HttpMethod.Get, $"api/jobTracker/{jobId}/descendants/detail");
+            var resp = await SendRequestAsync<List<JobEntity>, object>(HttpMethod.Get,
+                $"api/jobTracker/{jobId}/descendants/detail");
             if (resp.Result)
             {
                 return resp.Data;
             }
+
             throw new Exception($"{nameof(GetDescendantsAsync)} failed {resp.Msg}");
         }
 
-        public async Task<List<long>> GetDescendantIdsAsync(long jobId)
+        public override async Task<List<long>> GetDescendantIdsAsync(long jobId)
         {
-            var resp = await SendRequestAsync<List<long>, object>(HttpMethod.Get, $"api/jobTracker/{jobId}/descendants");
+            var resp = await SendRequestAsync<List<long>, object>(HttpMethod.Get,
+                $"api/jobTracker/{jobId}/descendants");
             if (resp.Result)
             {
                 return resp.Data;
             }
+
             throw new Exception($"{nameof(GetDescendantIdsAsync)} failed {resp.Msg}");
         }
 
-        public async Task<List<JobEntity>> GetChildrenAsync(long jobId)
+        public override async Task<List<JobEntity>> GetChildrenAsync(long jobId)
         {
-            var resp = await SendRequestAsync<List<JobEntity>, object>(HttpMethod.Get, $"api/jobTracker/{jobId}/children/detail");
+            var resp = await SendRequestAsync<List<JobEntity>, object>(HttpMethod.Get,
+                $"api/jobTracker/{jobId}/children/detail");
             if (resp.Result)
             {
                 return resp.Data;
             }
+
             throw new Exception($"{nameof(GetChildrenAsync)} failed {resp.Msg}");
         }
 
-        public async Task<bool> AppendToJobLogAsync(long jobId, AppendLogDto dto)
+        public override async Task<bool> AppendToJobLogAsync(long jobId, AppendLogDto dto)
         {
-            var resp = await SendRequestAsync<string, AppendLogDto>(HttpMethod.Put, $"api/jobTracker/AppendLog/{jobId}", dto);
+            var resp = await SendRequestAsync<string, AppendLogDto>(HttpMethod.Put, $"api/jobTracker/AppendLog/{jobId}",
+                dto);
             if (resp.Result)
             {
                 return resp.Result;
             }
+
             throw new Exception($"{nameof(AppendToJobLogAsync)} failed {resp.Msg}");
         }
 
-        public async Task<JobTreeStatistics> GetJobTreeStatisticsAsync(long jobId)
+        public override async Task<JobTreeStatistics> GetJobTreeStatisticsAsync(long jobId)
         {
-            var resp = await SendRequestAsync<JobTreeStatistics, object>(HttpMethod.Get, $"api/jobTracker/jobTreeStatistics/{jobId}");
+            var resp = await SendRequestAsync<JobTreeStatistics, object>(HttpMethod.Get,
+                $"api/jobTracker/jobTreeStatistics/{jobId}");
             if (resp.Result)
             {
                 return resp.Data;
             }
+
             throw new Exception($"{nameof(AppendToJobLogAsync)} failed {resp.Msg}");
         }
+
+        #region WithBuffer
+
+        internal override async Task<JobEntity> CreateNewJobWithBufferAsync(AddJobDto dto, Guid bufferId)
+        {
+            var resp = await SendRequestAsync<JobEntity, AddJobDto>(HttpMethod.Post,
+                $"api/bufferManager/{bufferId}/job/new", dto);
+            if (resp.Result)
+            {
+                return resp.Data;
+            }
+
+            throw new Exception($"{nameof(CreateNewJobWithBufferAsync)} failed {resp.Msg}");
+        }
+
+        internal override async Task UpdateJobStatesWithBufferAsync(long id, UpdateJobStateDto dto, Guid bufferId)
+        {
+            var resp = await SendRequestAsync<string, UpdateJobStateDto>(HttpMethod.Put,
+                $"api/bufferManager/{bufferId}/job/update/{id}", dto);
+            if (!resp.Result)
+            {
+                throw new Exception($"{nameof(UpdateJobStatesWithBufferAsync)} failed {resp.Msg}");
+            }
+        }
+
+        internal override async Task UpdateJobOptionsWithBufferAsync(long id, UpdateJobOptionsDto dto, Guid bufferId)
+        {
+            var resp = await SendRequestAsync<string, UpdateJobOptionsDto>(HttpMethod.Put,
+                $"api/bufferManager/{bufferId}/job/updateOptions/{id}", dto);
+            if (!resp.Result)
+            {
+                throw new Exception($"{nameof(UpdateJobOptionsWithBufferAsync)} failed {resp.Msg}");
+            }
+        }
+
+        internal override async Task<JobEntity> GetJobEntityWithBufferAsync(long jobId, Guid bufferId)
+        {
+            var resp = await SendRequestAsync<JobEntity, object>(HttpMethod.Get,
+                $"api/bufferManager/{bufferId}/job/{jobId}");
+            return resp.Data;
+        }
+
+        internal override async Task<List<BufferedContent>> GetBufferedContentAsync(Guid bufferId)
+        {
+            var resp = await SendRequestAsync<List<BufferedContent>, object>(HttpMethod.Get,
+                $"api/bufferManager/{bufferId}");
+            return resp.Data;
+        }
+
+        internal override async Task FlushBufferedContentAsync(Guid bufferId)
+        {
+            var resp = await SendRequestAsync<string, object>(HttpMethod.Post,
+                $"api/bufferManager/{bufferId}");
+            if (!resp.Result)
+            {
+                throw new Exception($"{nameof(FlushBufferedContentAsync)} failed {resp.Msg}");
+            }
+        }
+
+        internal override async Task DiscardBufferedContentAsync(Guid bufferId)
+        {
+            var resp = await SendRequestAsync<string, object>(HttpMethod.Delete,
+                $"api/bufferManager/{bufferId}");
+            if (!resp.Result)
+            {
+                throw new Exception($"{nameof(FlushBufferedContentAsync)} failed {resp.Msg}");
+            }
+        }
+
+        #endregion
 
         private async Task<ReturnDto<TData>> SendRequestAsync<TData, TRequestBody>(HttpMethod method, string uri,
             TRequestBody body = default)
@@ -163,6 +245,7 @@ namespace JobTrackerX.Client
                     .WaitAndRetryAsync(_retryCount.Value, _getRetryInterval)
                     .ExecuteAsync(async () => await SendRequestImplAsync<TData, TRequestBody>(method, uri, body));
             }
+
             return await SendRequestImplAsync<TData, TRequestBody>(method, uri, body);
         }
 
@@ -174,19 +257,22 @@ namespace JobTrackerX.Client
             {
                 req.Content = new StringContent(JsonConvert.SerializeObject(body), Encoding.UTF8, "application/json");
             }
+
             var task = _requestProcessor?.Invoke(req);
             if (task != null)
             {
                 await task;
             }
+
             var resp = await _httpClient.SendAsync(req).ConfigureAwait(false);
             var content = await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
             if (!resp.Headers.TryGetValues(nameof(JobNotFoundException), out var notFound)
                 || !notFound.Any()
-                || notFound.First() != "true")//not JobNotFoundException, must be success
+                || notFound.First() != "true") //not JobNotFoundException, must be success
             {
                 resp.EnsureSuccessStatusCode();
             }
+
             return JsonConvert.DeserializeObject<ReturnDto<TData>>(content);
         }
     }

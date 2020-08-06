@@ -10,7 +10,12 @@
     <RepositoryUrl>https://github.com/Itoktsnhc/JobTrackerX.Orleans</RepositoryUrl>
     <Version>1.0.11</Version>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Description>https://github.com/Itoktsnhc/JobTrackerX.Orleans</Description>
+    <Description>jobtracker context support</Description>
+    <PackageVersion>1.0.12</PackageVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.11.1" />
+  </ItemGroup>
 
 </Project>

@@ -12,4 +12,8 @@
       <PackageReference Include="Microsoft.Orleans.Core.Abstractions" Version="3.2.2" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="InMem" />
+    </ItemGroup>
+
 </Project>

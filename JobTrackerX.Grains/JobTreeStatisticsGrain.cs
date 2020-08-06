@@ -3,7 +3,6 @@ using JobTrackerX.Entities.GrainStates;
 using JobTrackerX.GrainInterfaces;
 using Orleans;
 using Orleans.Providers;
-using System;
 using System.Threading.Tasks;
 
 namespace JobTrackerX.Grains
@@ -58,6 +57,12 @@ namespace JobTrackerX.Grains
                 }
                 await WriteStateAsync();
             }
+        }
+        
+        public async Task SetStateAsync(JobTreeStatisticsState state)
+        {
+            State = state;
+            await WriteStateAsync();
         }
     }
 }

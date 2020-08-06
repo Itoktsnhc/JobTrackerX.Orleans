@@ -11,7 +11,8 @@
     <PackageProjectUrl>https://github.com/Itoktsnhc/JobTrackerX.Orleans</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Itoktsnhc/JobTrackerX.Orleans</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Description>JobTrackerX.Client</Description>
+    <Description>jobtracker context support</Description>
+    <PackageVersion>1.0.21</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>

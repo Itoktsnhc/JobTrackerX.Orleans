@@ -11,12 +11,12 @@ using System.Threading.Tasks.Dataflow;
 namespace JobTrackerX.Test
 {
     [TestClass]
-    public class JobTrackerClientTest
+    public class Tests
     {
-        private const string BaseUrlStr = "http://localhost:55625/";
+        private const string BaseUrlStr = "http://localhost:45001/";
         private readonly IJobTrackerClient _client;
 
-        public JobTrackerClientTest()
+        public Tests()
         {
             _client = new JobTrackerClient(new HttpClient()
             {
@@ -175,7 +175,7 @@ namespace JobTrackerX.Test
                         JobStateFilters = new List<JobState>(){ JobState.RanToCompletion, JobState.Running},
                         ActionWrapper= new ActionConfigWrapper(){
                         EmailConfig=new EmailActionConfig(){
-                        Recipients=new List<string>(){ /*"xx@xxx.com"*/} } }
+                        Recipients=new List<string>() } } /*"xx@xxx.com"*/
                     }
                 }
             });
@@ -222,7 +222,7 @@ namespace JobTrackerX.Test
         [TestMethod]
         public async Task TestStateCheckAsync()
         {
-            var failedJob = await _client.CreateNewJobAsync(new AddJobDto()
+            await _client.CreateNewJobAsync(new AddJobDto()
             {
                 JobName = nameof(TestStateCheckAsync),
                 StateCheckConfigs = new List<StateCheckConfig>()
@@ -255,7 +255,7 @@ namespace JobTrackerX.Test
                 SourceLink = "https://www.cnblogs.com/"
             });
             var child1 = await _client.CreateNewJobAsync(new AddJobDto("TestEndTimeDelayAsync'child1", root.JobId));
-            var child1child = await _client.CreateNewJobAsync(new AddJobDto("TestEndTimeDelayAsync'child1'child", child1.JobId));
+            var child1Child = await _client.CreateNewJobAsync(new AddJobDto("TestEndTimeDelayAsync'child1'child", child1.JobId));
             await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.Running));
             await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
             await _client.UpdateJobStatesAsync(child1.JobId, new UpdateJobStateDto(JobState.Running));
@@ -269,14 +269,14 @@ namespace JobTrackerX.Test
             root = await _client.GetJobEntityAsync(root.JobId);
             var ts = TimeSpan.FromSeconds(5);
             await Task.Delay(ts);
-            await _client.UpdateJobStatesAsync(child1child.JobId, new UpdateJobStateDto(JobState.Running));
-            await _client.UpdateJobStatesAsync(child1child.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
+            await _client.UpdateJobStatesAsync(child1Child.JobId, new UpdateJobStateDto(JobState.Running));
+            await _client.UpdateJobStatesAsync(child1Child.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
             root = await _client.GetJobEntityAsync(root.JobId);
             child1 = await _client.GetJobEntityAsync(child1.JobId);
-            child1child = await _client.GetJobEntityAsync(child1child.JobId);
+            child1Child = await _client.GetJobEntityAsync(child1Child.JobId);
             Assert.AreEqual(JobState.Faulted, root.CurrentJobState);
             Assert.AreEqual(JobState.Faulted, child1.CurrentJobState);
-            Assert.AreEqual(JobState.RanToCompletion, child1child.CurrentJobState);
+            Assert.AreEqual(JobState.RanToCompletion, child1Child.CurrentJobState);
             var tree = await _client.GetJobTreeStatisticsAsync(root.JobId);
             var span = tree.ExecutionTime;
             Assert.IsNotNull(span);

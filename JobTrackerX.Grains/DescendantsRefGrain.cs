@@ -27,5 +27,11 @@ namespace JobTrackerX.Grains
 
             return await Task.FromResult(State.DescendantJobs.ToList());
         }
+        
+        public async Task SetStateAsync(DescendantsRefState state)
+        {
+            State = state;
+            await WriteStateAsync();
+        }
     }
 }

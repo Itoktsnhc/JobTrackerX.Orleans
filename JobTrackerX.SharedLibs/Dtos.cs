@@ -131,4 +131,10 @@ namespace JobTrackerX.SharedLibs
         }
         public string Content { get; set; }
     }
+    
+    public class BufferedContent
+    {
+        public long GrainIntId { get; set; }
+        public BufferedGrainInterfaceType GrainType { get; set; }
+    }
 }

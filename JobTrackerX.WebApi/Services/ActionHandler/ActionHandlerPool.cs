@@ -233,7 +233,6 @@ namespace JobTrackerX.WebApi.Services.ActionHandler
             message.Subject =
                 string.IsNullOrWhiteSpace(dto.Subject)
                 ? $"[{Constants.BrandName}]: {jobEntity.JobId}'s State Check Notification" : dto.Subject;
-            var bodySb = new StringBuilder();
             message.Body = @$"
 JobId:   {jobEntity.JobId}
 Expect:  [{string.Join(',', msg.StateCheckConfig.TargetStateList.Select(s => s.ToString()))}]

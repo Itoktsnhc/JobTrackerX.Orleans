@@ -1,29 +1,45 @@
-﻿using JobTrackerX.SharedLibs;
+﻿using System;
+using JobTrackerX.SharedLibs;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace JobTrackerX.Client
 {
-    public interface IJobTrackerClient
+    // ReSharper disable once InconsistentNaming
+    public abstract class IJobTrackerClient
     {
-        Task<JobEntity> CreateNewJobAsync(AddJobDto dto);
+        public abstract Task<JobEntity> CreateNewJobAsync(AddJobDto dto);
 
-        Task UpdateJobStatesAsync(long id, UpdateJobStateDto dto);
+        public abstract Task UpdateJobStatesAsync(long id, UpdateJobStateDto dto);
 
-        Task UpdateJobOptionsAsync(long id, UpdateJobOptionsDto dto);
+        public abstract Task UpdateJobOptionsAsync(long id, UpdateJobOptionsDto dto);
 
-        Task<JobEntity> GetJobEntityAsync(long jobId);
+        public abstract Task<JobEntity> GetJobEntityAsync(long jobId);
 
-        Task<ReturnQueryIndexDto> QueryJobIndexAsync(QueryJobIndexDto dto);
+        public abstract Task<ReturnQueryIndexDto> QueryJobIndexAsync(QueryJobIndexDto dto);
 
-        Task<List<JobEntity>> GetDescendantsAsync(long jobId);
+        public abstract Task<List<JobEntity>> GetDescendantsAsync(long jobId);
 
-        Task<List<JobEntity>> GetChildrenAsync(long jobId);
+        public abstract Task<List<JobEntity>> GetChildrenAsync(long jobId);
 
-        Task<List<long>> GetDescendantIdsAsync(long jobId);
+        public abstract Task<List<long>> GetDescendantIdsAsync(long jobId);
 
-        Task<bool> AppendToJobLogAsync(long jobId, AppendLogDto dto);
+        public abstract Task<bool> AppendToJobLogAsync(long jobId, AppendLogDto dto);
 
-        Task<JobTreeStatistics> GetJobTreeStatisticsAsync(long jobId);
+        public abstract Task<JobTreeStatistics> GetJobTreeStatisticsAsync(long jobId);
+
+        internal abstract Task<JobEntity> CreateNewJobWithBufferAsync(AddJobDto dto, Guid bufferId);
+
+        internal abstract Task UpdateJobStatesWithBufferAsync(long id, UpdateJobStateDto dto, Guid bufferId);
+
+        internal abstract Task UpdateJobOptionsWithBufferAsync(long id, UpdateJobOptionsDto dto, Guid bufferId);
+
+        internal abstract Task<JobEntity> GetJobEntityWithBufferAsync(long jobId, Guid bufferId);
+
+        internal abstract Task<List<BufferedContent>> GetBufferedContentAsync(Guid bufferId);
+
+        internal abstract Task FlushBufferedContentAsync(Guid bufferId);
+
+        internal abstract Task DiscardBufferedContentAsync(Guid bufferId);
     }
 }

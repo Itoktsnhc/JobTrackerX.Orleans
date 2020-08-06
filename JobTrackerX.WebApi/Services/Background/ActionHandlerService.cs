@@ -6,21 +6,27 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using JobTrackerX.GrainInterfaces;
+using Orleans;
 
 namespace JobTrackerX.WebApi.Services.Background
 {
     public class ActionHandlerService : BackgroundService
     {
+        private readonly IClusterClient _orleansClient;
         private readonly ServiceBusWrapper _wrapper;
         private readonly ILogger<ActionHandlerService> _logger;
         private readonly ActionHandlerPool _handlerPool;
         private readonly IOptions<JobTrackerConfig> _jobTrackerConfig;
 
-        public ActionHandlerService(IOptions<JobTrackerConfig> jobTrackerConfig, ServiceBusWrapper wrapper, ActionHandlerPool handlerPool, ILogger<ActionHandlerService> logger)
+        public ActionHandlerService(IClusterClient orleansClient, IOptions<JobTrackerConfig> jobTrackerConfig,
+            ServiceBusWrapper wrapper, ActionHandlerPool handlerPool, ILogger<ActionHandlerService> logger)
         {
+            _orleansClient = orleansClient;
             _wrapper = wrapper;
             _logger = logger;
             _handlerPool = handlerPool;
@@ -60,9 +66,19 @@ namespace JobTrackerX.WebApi.Services.Background
             var processResult = false;
             try
             {
-                processResult =
-                    await _handlerPool.HandleMessageAsync(
-                        JsonConvert.DeserializeObject<ActionMessageDto>(Encoding.UTF8.GetString(message.Body)));
+                var msgDto = JsonConvert.DeserializeObject<ActionMessageDto>(Encoding.UTF8.GetString(message.Body));
+                var grain = _orleansClient.GetGrain<IJobGrain>(msgDto.JobId);
+                var relatedJob = await grain.GetJobAsync(true);
+                if (relatedJob == null)
+                {
+                    await client.AbandonAsync(message.SystemProperties.LockToken, new Dictionary<string, object>()
+                    {
+                        {"dl_reason", $"Grain {msgDto.JobId} No Exist"}
+                    });
+                    return;
+                }
+
+                processResult = await _handlerPool.HandleMessageAsync(msgDto);
             }
             catch (Exception ex)
             {

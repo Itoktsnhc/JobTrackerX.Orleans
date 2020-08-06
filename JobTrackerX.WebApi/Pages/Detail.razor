@@ -254,9 +254,9 @@ else
                                     </span>
                                 </td>
                                 <td>@(child.CreateTime?.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUiShowDateTimeFormat) ?? Constants.NotAvailableStr)</td>
-                                <td>@(child.StartTime?.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUiShowDateTimeFormat) ?? Constants.NotAvailableStr)</td>
-                                <td>@(child.EndTime?.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUiShowDateTimeFormat) ?? Constants.NotAvailableStr)</td>
-                                <td>@(GetTimeSpanStr(child.StartTime, child.EndTime))</td>
+                                <td>@(child.CalculatedStartTimeStr)</td>
+                                <td>@(child.CalculatedEndTimeStr)</td>
+                                <td>@(child.CalculatedExecutionTimeStr)</td>
                                 <td>
                                     @if (child.Tags?.Any() == true)
                                     {
@@ -395,10 +395,7 @@ else
         try
         {
             _jobEntity = _mapper.Map<JobEntityViewModel>(await _service.GetJobByIdAsync(JobId));
-            if (_jobEntity.AncestorJobId == _jobEntity.JobId)
-            {
-                _jobTreeStatistics = await _service.GetJobStatisticsByIdAsync(JobId);
-            }
+            _jobTreeStatistics = await _service.GetJobStatisticsByIdAsync(JobId);
             jobLogUrl = await _service.GetJobLogUrlAsync(JobId);
         }
         catch (Exception ex)
@@ -436,11 +433,15 @@ else
                 statisticsResult.TryGetValue(child.JobId, out var statistics);
                 if (statistics?.TreeStart == null && statistics?.TreeEnd == null)
                 {
-                    child.ExecutionTimeStr = GetTimeSpanStr(child.StartTime, child.EndTime);
+                    child.CalculatedExecutionTimeStr = GetTimeSpanStr(child.StartTime, child.EndTime);
+                    child.CalculatedEndTimeStr = child.EndTime?.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUiShowDateTimeFormat) ?? Constants.NotAvailableStr;
+                    child.CalculatedStartTimeStr = child.StartTime?.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUiShowDateTimeFormat) ?? Constants.NotAvailableStr;
                 }
                 else
                 {
-                    child.ExecutionTimeStr = GetTimeSpanStr(statistics?.TreeStart?.TimePoint, statistics?.TreeEnd?.TimePoint);
+                    child.CalculatedExecutionTimeStr = GetTimeSpanStr(statistics?.TreeStart?.TimePoint, statistics?.TreeEnd?.TimePoint);
+                    child.CalculatedEndTimeStr = statistics.TreeEnd?.TimePoint.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUiShowDateTimeFormat) ?? Constants.NotAvailableStr;
+                    child.CalculatedStartTimeStr = statistics.TreeStart?.TimePoint.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUiShowDateTimeFormat) ?? Constants.NotAvailableStr;
                 }
             }
         }

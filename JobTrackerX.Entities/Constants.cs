@@ -32,12 +32,13 @@
         public const string WebUiShowTimeSpanFormat = "d'd 'h'h 'm'm 's's'";
 #if DEBUG
 
-        public const string EnvName = "Dev";
+        public const string EnvName = "dev";
         public const string SelfDomain = "{YOURDOMAIN}";
 #else
-        public const string EnvName = "Prod";
+        public const string EnvName = "prod";
         public const string SelfDomain = "{YOURDOMAIN}";
 
 #endif
+        public const string BufferIdKey = "BufferIdKey";
     }
 }

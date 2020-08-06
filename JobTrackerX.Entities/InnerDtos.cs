@@ -1,62 +1,8 @@
+using System;
 using JobTrackerX.SharedLibs;
-using System.Collections.Generic;
 
 namespace JobTrackerX.Entities
 {
-    public class AddJobDtoInternal
-    {
-        public AddJobDtoInternal()
-        {
-        }
-        public AddJobDtoInternal(AddJobDto dto)
-        {
-            JobName = dto.JobName;
-            ParentJobId = dto.ParentJobId;
-            Tags = dto.Tags;
-            CreatedBy = dto.CreatedBy;
-            Options = dto.Options;
-            SourceLink = dto.SourceLink;
-            ActionConfigs = dto.ActionConfigs;
-            StateCheckConfigs = dto.StateCheckConfigs;
-        }
-
-        public string CreatedBy { get; set; }
-        public string Options { get; set; }
-        public List<string> Tags { get; set; }
-        public long? ParentJobId { get; set; }
-        public string JobName { get; set; }
-        public string SourceLink { get; set; }
-        public List<ActionConfig> ActionConfigs { get; set; }
-        public List<StateCheckConfig> StateCheckConfigs { get; set; }
-    }
-
-    public class UpdateJobStateDtoInternal
-    {
-        public UpdateJobStateDtoInternal()
-        {
-        }
-        public UpdateJobStateDtoInternal(UpdateJobStateDto dto)
-        {
-            AdditionMsg = dto.Message;
-            JobState = dto.JobState;
-        }
-
-        public string AdditionMsg { get; set; }
-        public JobState JobState { get; set; }
-    }
-
-    public class GetNewIdsDto
-    {
-        public GetNewIdsDto(int count, long offset)
-        {
-            Count = count;
-            Offset = offset;
-        }
-
-        public int Count { get; set; }
-        public long Offset { get; set; }
-    }
-
     public class ActionMessageDto
     {
         public long JobId { get; set; }
@@ -68,5 +14,37 @@ namespace JobTrackerX.Entities
     {
         public StateCheckConfig StateCheckConfig { get; set; }
         public long JobId { get; set; }
+    }
+    
+    public class BufferDto
+    {
+        public BufferDto(Guid bufferId)
+        {
+            BufferId = bufferId;
+        }
+
+        public Guid BufferId { get; set; }
+    }
+
+    public class AddToBufferDto
+    {
+        public AddToBufferDto(long grainId, BufferedGrainInterfaceType grainType)
+        {
+            GrainIntId = grainId;
+            GrainType = grainType;
+        }
+
+        public long GrainIntId { get; }
+        public BufferedGrainInterfaceType GrainType { get; }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(GrainIntId, GrainType);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return GetHashCode() == obj?.GetHashCode();
+        }
     }
 }

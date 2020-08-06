@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,21 +17,21 @@ namespace JobTrackerX.WebApi.Services.Background
 {
     public class StateChecker : CoordinatedBackgroundService
     {
-        private readonly IClusterClient _client;
+        private readonly IClusterClient _orleansClient;
         private readonly ServiceBusWrapper _wrapper;
         private readonly IOptions<JobTrackerConfig> _jobTrackerConfig;
         private readonly ILogger<StateChecker> _logger;
         private readonly ActionHandlerPool _handlerPool;
 
         public StateChecker(
-            IClusterClient client,
+            IClusterClient orleansClient,
             IOptions<JobTrackerConfig> jobTrackerConfig,
             ActionHandlerPool handlerPool,
             ServiceBusWrapper wrapper,
             ILogger<StateChecker> logger,
             IHostApplicationLifetime appLifetime) : base(appLifetime)
         {
-            _client = client;
+            _orleansClient = orleansClient;
             _wrapper = wrapper;
             _jobTrackerConfig = jobTrackerConfig;
             _logger = logger;
@@ -64,28 +65,37 @@ namespace JobTrackerX.WebApi.Services.Background
             _logger.LogError(arg.Exception, "Receive Msg Error");
             return Task.CompletedTask;
         }
+
         private async Task OnMessage(Message message, QueueClient client)
         {
             var processResult = false;
             try
             {
                 var dto = JsonConvert.DeserializeObject<StateCheckMessageDto>(Encoding.UTF8.GetString(message.Body));
-                var jobGrain = _client.GetGrain<IJobGrain>(dto.JobId);
+                var jobGrain = _orleansClient.GetGrain<IJobGrain>(dto.JobId);
                 var job = await jobGrain.GetJobAsync(true);
                 if (job != null)
                 {
                     if (dto.StateCheckConfig.TargetStateList.Contains(job.CurrentJobState))
                     {
-                        processResult = await _handlerPool.HandleStateCheckerMessageAsync(dto.StateCheckConfig.SuccessfulAction, dto, job);
+                        processResult =
+                            await _handlerPool.HandleStateCheckerMessageAsync(dto.StateCheckConfig.SuccessfulAction,
+                                dto, job);
                     }
                     else
                     {
-                        processResult = await _handlerPool.HandleStateCheckerMessageAsync(dto.StateCheckConfig.FailedAction, dto, job);
+                        processResult =
+                            await _handlerPool.HandleStateCheckerMessageAsync(dto.StateCheckConfig.FailedAction, dto,
+                                job);
                     }
                 }
                 else
                 {
-                    throw new Exception($"Target Job Is not valid: {dto.JobId}");
+                    await client.AbandonAsync(message.SystemProperties.LockToken, new Dictionary<string, object>()
+                    {
+                        {"dl_reason", $"Grain {dto.JobId} No Exist"}
+                    });
+                    return;
                 }
             }
             catch (Exception ex)

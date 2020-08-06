@@ -4,6 +4,54 @@
         <name>JobTrackerX.WebApi</name>
     </assembly>
     <members>
+        <member name="M:JobTrackerX.WebApi.Controllers.BufferManagerController.AddJobToBufferAsync(JobTrackerX.SharedLibs.AddJobDto,System.Guid)">
+            <summary>
+            AddNewJobToBuffer
+            </summary>
+            <param name="dto"></param>
+            <param name="bufferId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:JobTrackerX.WebApi.Controllers.BufferManagerController.UpdateJobStatusInBufferAsync(System.Guid,System.Int64,JobTrackerX.SharedLibs.UpdateJobStateDto)">
+            <summary>
+            UpdateJobStatusWithBuffer
+            </summary>
+            <param name="bufferId"></param>
+            <param name="id"></param>
+            <param name="dto"></param>
+            <returns></returns>
+        </member>
+        <member name="M:JobTrackerX.WebApi.Controllers.BufferManagerController.UpdateJobOptionsInBufferAsync(System.Int64,JobTrackerX.SharedLibs.UpdateJobOptionsDto,System.Guid)">
+            <summary>
+            更新Options
+            </summary>
+            <param name="id"></param>
+            <param name="dto"></param>
+            <param name="bufferId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:JobTrackerX.WebApi.Controllers.BufferManagerController.GetJobByIdFromBufferAsync(System.Int64,System.Guid)">
+            <summary>
+            GetJob
+            </summary>
+            <param name="id"></param>
+            <param name="bufferId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:JobTrackerX.WebApi.Controllers.BufferManagerController.FlushBufferAsync(System.Guid)">
+            <summary>
+            FlushBuffered
+            </summary>
+            <param name="bufferId"></param>
+            <returns></returns>
+        </member>
+        <member name="M:JobTrackerX.WebApi.Controllers.BufferManagerController.GetBufferedAsync(System.Guid)">
+            <summary>
+            GetBuffered
+            </summary>
+            <param name="bufferId"></param>
+            <returns></returns>
+        </member>
         <member name="M:JobTrackerX.WebApi.Controllers.JobTrackerController.GetJobByIdAsync(System.Int64)">
             <summary>
                 GetJobDetail
