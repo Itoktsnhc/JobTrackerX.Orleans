@@ -14,6 +14,7 @@ namespace JobTrackerX.Test
     [TestClass]
     public class TestsWithBuffer
     {
+        private const string BaseUrlStr = "http://localhost:45001/";
         private readonly IJobTrackerClient _rawClient;
 
         public TestsWithBuffer()
@@ -29,16 +30,13 @@ namespace JobTrackerX.Test
                     new Uri("http://localhost:45001/", UriKind.Absolute)
             };
 
-            _rawClient = new JobTrackerClient(httpClient,
-                AddTokenHeader, 3, _ => TimeSpan.FromSeconds(3));
+            _rawClient = new JobTrackerClient(new HttpClient()
+                {
+                    BaseAddress = new Uri(BaseUrlStr)
+                },
+                retryCount: 3, retryInterval: _ => TimeSpan.FromSeconds(3));
         }
-
-        private Task AddTokenHeader(HttpRequestMessage req)
-        {
-            req.Headers.TryAddWithoutValidation("x-jobtracker-token", "E37D3D5D924E4F739BE3774B44D49EF3");
-            return Task.CompletedTask;
-        }
-
+        
         [TestMethod]
         public void TestGetHashCode()
         {
