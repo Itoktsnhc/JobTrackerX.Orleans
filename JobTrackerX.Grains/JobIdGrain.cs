@@ -3,17 +3,20 @@ using JobTrackerX.GrainInterfaces;
 using Orleans;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using JobTrackerX.Entities.GrainStates;
+using Microsoft.Extensions.Options;
+using Orleans.Runtime;
 
 namespace JobTrackerX.Grains
 {
     #region ServceBusIdGenerator
 
-    public class ServiceBusJobIdGrain : Grain, IJobIdGrain
+    public class ServiceBusServiceBusJobIdGrain : Grain, IServiceBusJobIdGrain
     {
         private readonly ServiceBusWrapper _wrapper;
         private long _idRangeEnd;
 
-        public ServiceBusJobIdGrain(ServiceBusWrapper wrapper)
+        public ServiceBusServiceBusJobIdGrain(ServiceBusWrapper wrapper)
         {
             _wrapper = wrapper;
         }
@@ -25,25 +28,8 @@ namespace JobTrackerX.Grains
             var result = ++Current;
             await CheckAsync();
             return result + await GrainFactory
-                       .GetGrain<IJobIdOffsetGrain>(Constants.JobIdOffsetGrainDefaultName)
-                       .GetCurrentOffsetAsync();
-        }
-
-        public async Task<IEnumerable<long>> GetNewIdsAsync(int count)
-        {
-            var offset = await GrainFactory
                 .GetGrain<IJobIdOffsetGrain>(Constants.JobIdOffsetGrainDefaultName)
                 .GetCurrentOffsetAsync();
-            var res = new List<long>(count);
-            var last = Current;
-            Current += count;
-            for (var i = 0; i < count; i++)
-            {
-                res.Add(++last + offset);
-            }
-
-            await CheckAsync();
-            return res;
         }
 
         public override async Task OnActivateAsync()
@@ -62,6 +48,57 @@ namespace JobTrackerX.Grains
         private async Task CheckAsync()
         {
             if (Current + _wrapper.CrashDistance >= _idRangeEnd)
+            {
+                await AcquireNewIdRangeAsync();
+            }
+        }
+    }
+
+    #endregion
+
+    #region GrainIdGenerator
+
+    public class JobIdGrain : Grain, IJobIdGrain
+    {
+        private long _idRangeEnd;
+        private long Current { get; set; }
+        private readonly IPersistentState<JobIdState> _state;
+        private readonly IOptions<JobTrackerConfig> _options;
+
+        public JobIdGrain(
+            [PersistentState(nameof(JobIdGrain), Constants.JobIdStoreName)]
+            IPersistentState<JobIdState> state, IOptions<JobTrackerConfig> options)
+        {
+            _state = state;
+            _options = options;
+        }
+
+        public async Task<long> GetNewIdAsync()
+        {
+            var result = ++Current;
+            await CheckAsync();
+            return result + await GrainFactory
+                .GetGrain<IJobIdOffsetGrain>(Constants.JobIdOffsetGrainDefaultName)
+                .GetCurrentOffsetAsync();
+        }
+        
+        public override async Task OnActivateAsync()
+        {
+            await base.OnActivateAsync();
+            await AcquireNewIdRangeAsync();
+        }
+
+        private async Task AcquireNewIdRangeAsync()
+        {
+            _state.State.JobId++;
+            await _state.WriteStateAsync();
+            Current = _options.Value.IdGeneratorConfig.ScaleSize * (_state.State.JobId - 1);
+            _idRangeEnd = _options.Value.IdGeneratorConfig.ScaleSize * _state.State.JobId;
+        }
+
+        private async Task CheckAsync()
+        {
+            if (Current + _options.Value.IdGeneratorConfig.CrashDistance >= _idRangeEnd)
             {
                 await AcquireNewIdRangeAsync();
             }
