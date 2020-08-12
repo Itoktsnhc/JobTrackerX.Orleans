@@ -15,14 +15,7 @@ namespace JobTrackerX.Entities
 
         public ServiceBusWrapper(IOptions<JobTrackerConfig> options)
         {
-            var idGeneratorConfig = options.Value.IdGeneratorConfig;
             var actionHandlerConfig = options.Value.ActionHandlerConfig;
-            ScaleSize = idGeneratorConfig.ScaleSize;
-            CrashDistance = idGeneratorConfig.CrashDistance;
-            IdQueueReceiver = new MessageReceiver(idGeneratorConfig.ConnStr, idGeneratorConfig.IdQueueEntityPath,
-                ReceiveMode.ReceiveAndDelete);
-            IdQueueSender = new MessageSender(idGeneratorConfig.ConnStr, idGeneratorConfig.IdQueueEntityPath);
-            ManagementClient = new ManagementClient(idGeneratorConfig.ConnStr);
             ActionQueues =
                 actionHandlerConfig.ActionQueues
                 .Select(name => new QueueClient(actionHandlerConfig.ConnStr, name)).ToList();
@@ -46,9 +39,6 @@ namespace JobTrackerX.Entities
         public List<QueueClient> StateCheckQueues { get; set; } = new List<QueueClient>();
         public int ScaleSize { get; }
         public int CrashDistance { get; }
-        public IMessageReceiver IdQueueReceiver { get; }
-        public IMessageSender IdQueueSender { get; }
-        public ManagementClient ManagementClient { get; }
     }
 
     public class StorageAccountWrapper

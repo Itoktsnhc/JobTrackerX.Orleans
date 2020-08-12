@@ -16,13 +16,8 @@ namespace JobTrackerX.Entities
 
     public class IdGeneratorConfig
     {
-        public string ConnStr { get; set; }
-        public string IdQueueEntityPath { get; set; }
         public int ScaleSize { get; set; }
         public int CrashDistance { get; set; }
-        public int MinMessageCountLeft { get; set; }
-        public int MaxMessageCountLeft { get; set; }
-        public TimeSpan CheckInterval { get; set; }
     }
 
     public class ActionHandlerConfig
