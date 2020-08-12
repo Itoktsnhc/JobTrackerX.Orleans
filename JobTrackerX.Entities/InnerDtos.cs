@@ -47,4 +47,9 @@ namespace JobTrackerX.Entities
             return GetHashCode() == obj?.GetHashCode();
         }
     }
+    
+    public static class SharedData
+    {
+        public static DateTimeOffset? LastMergeTimePoint { get; set; }
+    }
 }

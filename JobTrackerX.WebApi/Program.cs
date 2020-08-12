@@ -8,10 +8,13 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using JobTrackerX.GrainInterfaces;
 using Orleans;
 using Orleans.Hosting;
 using JobTrackerX.Grains;
 using JobTrackerX.Grains.InMem;
+using Microsoft.Extensions.DependencyInjection;
+using Orleans.Reminders.AzureStorage;
 
 namespace JobTrackerX.WebApi
 {
@@ -56,7 +59,7 @@ namespace JobTrackerX.WebApi
                 .UseOrleans((context, options) =>
                 {
                     var jobTrackerConfig =
-                       context.Configuration.GetSection(nameof(JobTrackerConfig)).Get<JobTrackerConfig>();
+                        context.Configuration.GetSection(nameof(JobTrackerConfig)).Get<JobTrackerConfig>();
                     var siloConfig = jobTrackerConfig.SiloConfig;
                     var tableStorageOption = new Action<AzureTableStorageOptions>(tableStorageOptions =>
                     {
@@ -73,9 +76,15 @@ namespace JobTrackerX.WebApi
                         blobStorageOptions.ContainerName = siloConfig.ReadOnlyJobIndexPersistConfig.ContainerName;
                         blobStorageOptions.UseJson = true;
                     });
+                    var reminderStorageOptions = new Action<AzureTableReminderStorageOptions>(storageOptions =>
+                    {
+                        storageOptions.ConnectionString = siloConfig.ReminderPersistConfig.ConnStr;
+                        storageOptions.TableName = siloConfig.ReminderPersistConfig.TableName;
+                    });
 
                     options.UseLocalhostClustering(serviceId: siloConfig.ServiceId, clusterId: siloConfig.ClusterId)
-                        .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(JobGrain).Assembly).WithReferences().WithCodeGeneration())
+                        .ConfigureApplicationParts(parts =>
+                            parts.AddApplicationPart(typeof(JobGrain).Assembly).WithReferences().WithCodeGeneration())
                         .AddIncomingGrainCallFilter<BufferFilter>()
                         .AddAzureTableGrainStorage(Constants.JobEntityStoreName, tableStorageOption)
                         .AddAzureTableGrainStorage(Constants.JobRefStoreName, tableStorageOption)
@@ -84,14 +93,24 @@ namespace JobTrackerX.WebApi
                         .AddAzureBlobGrainStorage(Constants.ReadOnlyJobIndexStoreName, blobStorageOption)
                         .AddAzureBlobGrainStorage(Constants.AttachmentStoreName, blobStorageOption)
                         .AddAzureBlobGrainStorage(Constants.AppendStoreName, blobStorageOption)
-                       .Configure<GrainCollectionOptions>(grainCollectionOptions =>
-                       {
-                           grainCollectionOptions.CollectionAge = siloConfig.GrainCollectionAge ?? TimeSpan.FromMinutes(10);
-                           grainCollectionOptions.ClassSpecificCollectionAge[typeof(AggregateJobIndexGrain).FullName ?? throw new
-                                                                  InvalidOperationException()] = TimeSpan.FromMinutes(5);
-                           grainCollectionOptions.ClassSpecificCollectionAge[typeof(RollingJobIndexGrain).FullName ?? throw new
-                                                                  InvalidOperationException()] = TimeSpan.FromMinutes(5);
-                       });
+                        .UseAzureTableReminderService(reminderStorageOptions)
+                        .AddStartupTask(async (sp, token) =>
+                        {
+                            var factory = sp.GetRequiredService<IGrainFactory>();
+                            await factory.GetGrain<IMergeIndexReminder>(Constants.MergeIndexReminderDefaultGrainId)
+                                .ActiveAsync();
+                        })
+                        .Configure<GrainCollectionOptions>(grainCollectionOptions =>
+                        {
+                            grainCollectionOptions.CollectionAge =
+                                siloConfig.GrainCollectionAge ?? TimeSpan.FromMinutes(10);
+                            grainCollectionOptions.ClassSpecificCollectionAge[
+                                typeof(AggregateJobIndexGrain).FullName ?? throw new
+                                    InvalidOperationException()] = TimeSpan.FromMinutes(5);
+                            grainCollectionOptions.ClassSpecificCollectionAge[
+                                typeof(RollingJobIndexGrain).FullName ?? throw new
+                                    InvalidOperationException()] = TimeSpan.FromMinutes(5);
+                        });
 
                     if (jobTrackerConfig.CommonConfig.UseDashboard)
                     {

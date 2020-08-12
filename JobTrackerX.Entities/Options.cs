@@ -49,6 +49,7 @@ namespace JobTrackerX.Entities
     {
         public GrainPersistConfig JobEntityPersistConfig { get; set; }
         public GrainPersistConfig ReadOnlyJobIndexPersistConfig { get; set; }
+        public GrainPersistConfig ReminderPersistConfig { get; set; }
         public TimeSpan? GrainCollectionAge { get; set; }
         public string ServiceId { get; set; }
         public string ClusterId { get; set; }

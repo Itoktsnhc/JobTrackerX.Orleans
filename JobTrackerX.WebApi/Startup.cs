@@ -54,9 +54,7 @@ namespace JobTrackerX.WebApi
 
             #region BackgroundServices
 
-            // services.AddHostedService<IdGenerator>();
             services.AddHostedService<ActionHandlerService>();
-            services.AddHostedService<MergeJobIndexWorker>();
             services.AddHostedService<StateChecker>();
 
             #endregion

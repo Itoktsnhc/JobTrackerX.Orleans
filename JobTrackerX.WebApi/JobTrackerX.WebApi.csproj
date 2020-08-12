@@ -21,6 +21,7 @@
     <PackageReference Include="Microsoft.Orleans.OrleansCodeGenerator" Version="3.2.2" />
     <PackageReference Include="Microsoft.Orleans.OrleansGoogleUtils" Version="3.2.2" />
     <PackageReference Include="Microsoft.Orleans.Persistence.AzureStorage" Version="3.2.2" />
+    <PackageReference Include="Microsoft.Orleans.Reminders.AzureStorage" Version="3.2.2" />
     <PackageReference Include="Microsoft.Orleans.Server" Version="3.2.2" />
     <PackageReference Include="OrleansDashboard" Version="3.1.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="3.2.0" />

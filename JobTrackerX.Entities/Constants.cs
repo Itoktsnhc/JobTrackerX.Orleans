@@ -22,6 +22,7 @@
         public const int GlobalRetryTimes = 3;
         public const int GlobalRetryWaitSec = 1;
         public const string BrandName = "JobTrackerX";
+        public const string MergeIndexReminderDefaultGrainId = "MergeIndexReminder";
 
         public const string NotAvailableStr = "--";
         public const string PercentageFormat = "P";
