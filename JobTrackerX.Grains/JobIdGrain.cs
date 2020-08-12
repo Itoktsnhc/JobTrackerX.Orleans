@@ -1,8 +1,6 @@
-﻿using System;
-using JobTrackerX.Entities;
+﻿using JobTrackerX.Entities;
 using JobTrackerX.GrainInterfaces;
 using Orleans;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using JobTrackerX.Entities.GrainStates;
 using Microsoft.Extensions.Options;

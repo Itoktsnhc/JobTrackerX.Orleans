@@ -1,6 +1,4 @@
 ﻿using Microsoft.Azure.ServiceBus;
-using Microsoft.Azure.ServiceBus.Core;
-using Microsoft.Azure.ServiceBus.Management;
 using Microsoft.Extensions.Options;
 using Microsoft.Azure.Storage;
 using System;
@@ -37,8 +35,6 @@ namespace JobTrackerX.Entities
 
         public List<QueueClient> ActionQueues { get; set; } = new List<QueueClient>();
         public List<QueueClient> StateCheckQueues { get; set; } = new List<QueueClient>();
-        public int ScaleSize { get; }
-        public int CrashDistance { get; }
     }
 
     public class StorageAccountWrapper
