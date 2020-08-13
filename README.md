@@ -1,4 +1,6 @@
 # JobTrackerX.Orleans
+![Nuget](https://img.shields.io/nuget/dt/JobTrackerX.Client)
+
 项目基于[Orleans](https://github.com/dotnet/orleans)分布式框架+azure storage + azure service bus +blazor serverside实现了对于任务状态树的各种状态追踪.
 1. 项目组成
     1. 后端部分：JobTrackerX.WebApi
