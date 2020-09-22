@@ -38,43 +38,51 @@ namespace JobTrackerX.Grains
                 throw new InvalidOperationException($"job id duplicate: {this.GetPrimaryKeyLong()}");
             }
 
-            const JobState state = JobState.WaitingToRun;
-            var jobId = this.GetPrimaryKeyLong();
-            State.JobId = jobId;
-            State.ParentJobId = addJobDto.ParentJobId;
-            State.CreatedBy = addJobDto.CreatedBy;
-            State.Tags = addJobDto.Tags;
-            State.Options = addJobDto.Options;
-            if (addJobDto.ParentJobId.HasValue)
+            try
             {
-                var parentGrain = GrainFactory.GetGrain<IJobGrain>(addJobDto.ParentJobId.Value);
-                var parent = await parentGrain.GetJobAsync();
-                if (parent.CurrentJobState == JobState.WaitingForActivation)
+                const JobState state = JobState.WaitingToRun;
+                var jobId = this.GetPrimaryKeyLong();
+                State.JobId = jobId;
+                State.ParentJobId = addJobDto.ParentJobId;
+                State.CreatedBy = addJobDto.CreatedBy;
+                State.Tags = addJobDto.Tags;
+                State.Options = addJobDto.Options;
+                if (addJobDto.ParentJobId.HasValue)
                 {
-                    throw new JobNotFoundException($"parent job {addJobDto.ParentJobId} not exist");
+                    var parentGrain = GrainFactory.GetGrain<IJobGrain>(addJobDto.ParentJobId.Value);
+                    var parent = await parentGrain.GetJobAsync();
+                    if (parent.CurrentJobState == JobState.WaitingForActivation)
+                    {
+                        throw new JobNotFoundException($"parent job {addJobDto.ParentJobId} not exist");
+                    }
+
+                    State.AncestorJobId = parent.AncestorJobId;
+                    await UpdateJobStateAsync(new UpdateJobStateDto(JobState.WaitingToRun), false);
+                }
+                else
+                {
+                    State.AncestorJobId = jobId;
+                    State.StateChanges.Add(new StateChangeDto(state));
                 }
 
-                State.AncestorJobId = parent.AncestorJobId;
-                await UpdateJobStateAsync(new UpdateJobStateDto(JobState.WaitingToRun), false);
+                var ancestorRefGrain = GrainFactory.GetGrain<IDescendantsRefGrain>(State.AncestorJobId);
+                await ancestorRefGrain.AttachToChildrenAsync(jobId);
+                State.JobName = addJobDto.JobName;
+                State.SourceLink = addJobDto.SourceLink;
+                State.ActionConfigs = addJobDto.ActionConfigs;
+                State.StateCheckConfigs = addJobDto.StateCheckConfigs;
+                await ScheduleStateCheckMessageAsync(State.StateCheckConfigs, State.JobId);
+                if (!State.ParentJobId.HasValue)
+                {
+                    var indexGrain = GrainFactory.GetGrain<IShardJobIndexGrain>(Helper.GetTimeIndex());
+                    await indexGrain.AddToIndexAsync(new JobIndexInternal(State.JobId, State.JobName, State.CreatedBy,
+                        State.Tags));
+                }
             }
-            else
+            catch (Exception)
             {
-                State.AncestorJobId = jobId;
-                State.StateChanges.Add(new StateChangeDto(state));
-            }
-
-            var ancestorRefGrain = GrainFactory.GetGrain<IDescendantsRefGrain>(State.AncestorJobId);
-            await ancestorRefGrain.AttachToChildrenAsync(jobId);
-            State.JobName = addJobDto.JobName;
-            State.SourceLink = addJobDto.SourceLink;
-            State.ActionConfigs = addJobDto.ActionConfigs;
-            State.StateCheckConfigs = addJobDto.StateCheckConfigs;
-            await ScheduleStateCheckMessageAsync(State.StateCheckConfigs, State.JobId);
-            if (!State.ParentJobId.HasValue)
-            {
-                var indexGrain = GrainFactory.GetGrain<IShardJobIndexGrain>(Helper.GetTimeIndex());
-                await indexGrain.AddToIndexAsync(new JobIndexInternal(State.JobId, State.JobName, State.CreatedBy,
-                    State.Tags));
+                DeactivateOnIdle();
+                throw;
             }
 
             await WriteStateAsync();
@@ -102,16 +110,24 @@ namespace JobTrackerX.Grains
                 return;
             }
 
-            State.StateChanges
-                .Add(new StateChangeDto(dto.JobState, dto.Message));
-            await UpdateJobStatisticsAsync();
-            if (State.ParentJobId.HasValue)
+            try
             {
-                var parentGrain = GrainFactory.GetGrain<IJobGrain>(State.ParentJobId.Value);
-                await parentGrain.OnChildStateChangeAsync(State.JobId, State.CurrentJobState);
-            }
+                State.StateChanges
+                        .Add(new StateChangeDto(dto.JobState, dto.Message));
+                await UpdateJobStatisticsAsync();
+                if (State.ParentJobId.HasValue)
+                {
+                    var parentGrain = GrainFactory.GetGrain<IJobGrain>(State.ParentJobId.Value);
+                    await parentGrain.OnChildStateChangeAsync(State.JobId, State.CurrentJobState);
+                }
 
-            await TryTriggerActionAsync();
+                await TryTriggerActionAsync();
+            }
+            catch (Exception)
+            {
+                DeactivateOnIdle();
+                throw;
+            }
 
             if (outerCall)
             {
@@ -247,7 +263,7 @@ namespace JobTrackerX.Grains
         {
             return Task.FromResult(State.CurrentJobState);
         }
-        
+
         public async Task SetStateAsync(JobEntityState state)
         {
             State = state;

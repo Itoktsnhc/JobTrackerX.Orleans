@@ -56,6 +56,10 @@ namespace JobTrackerX.Client
 
         public override async Task<JobEntity> CreateNewJobAsync(AddJobDto dto)
         {
+            if (dto.JobId == null)
+            {
+                dto.JobId = await GetNextIdAsync();
+            }
             var resp = await SendRequestAsync<JobEntity, AddJobDto>(HttpMethod.Post,
                 "api/jobTracker/new", dto);
             if (resp.Result)
@@ -274,6 +278,16 @@ namespace JobTrackerX.Client
             }
 
             return JsonConvert.DeserializeObject<ReturnDto<TData>>(content);
+        }
+
+        public override async Task<long> GetNextIdAsync()
+        {
+            var resp = await SendRequestAsync<long, object>(HttpMethod.Get, "api/JobTracker/id");
+            if (resp.Result)
+            {
+                return resp.Data;
+            }
+            throw new Exception($"{nameof(GetNextIdAsync)} failed {resp.Msg}");
         }
     }
 }

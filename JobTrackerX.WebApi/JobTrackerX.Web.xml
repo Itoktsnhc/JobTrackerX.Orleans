@@ -52,6 +52,12 @@
             <param name="bufferId"></param>
             <returns></returns>
         </member>
+        <member name="M:JobTrackerX.WebApi.Controllers.JobTrackerController.GetNextIdAsync">
+            <summary>
+            GetNextId
+            </summary>
+            <returns></returns>
+        </member>
         <member name="M:JobTrackerX.WebApi.Controllers.JobTrackerController.GetJobByIdAsync(System.Int64)">
             <summary>
                 GetJobDetail

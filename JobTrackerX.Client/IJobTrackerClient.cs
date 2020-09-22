@@ -8,6 +8,8 @@ namespace JobTrackerX.Client
     // ReSharper disable once InconsistentNaming
     public abstract class IJobTrackerClient
     {
+        public abstract Task<long> GetNextIdAsync();
+
         public abstract Task<JobEntity> CreateNewJobAsync(AddJobDto dto);
 
         public abstract Task UpdateJobStatesAsync(long id, UpdateJobStateDto dto);

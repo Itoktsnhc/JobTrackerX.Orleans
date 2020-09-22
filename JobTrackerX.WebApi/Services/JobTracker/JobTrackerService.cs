@@ -23,6 +23,11 @@ namespace JobTrackerX.WebApi.Services.JobTracker
             _mapper = mapper;
         }
 
+        public async Task<long> GetNextIdAsync()
+        {
+            return await _client.GetGrain<IJobIdGrain>(Constants.JobIdGrainDefaultName).GetNewIdAsync();
+        }
+
         public async Task<JobEntity> GetJobByIdAsync(long id)
         {
             var jobGrain = _client.GetGrain<IJobGrain>(id);

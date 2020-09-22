@@ -19,6 +19,16 @@ namespace JobTrackerX.WebApi.Controllers
         }
 
         /// <summary>
+        /// GetNextId
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("id")]
+        public async Task<ReturnDto<long>> GetNextIdAsync()
+        {
+            return new ReturnDto<long>(await _service.GetNextIdAsync());
+        }
+
+        /// <summary>
         ///     GetJobDetail
         /// </summary>
         /// <param name="id"></param>

@@ -23,7 +23,7 @@ namespace JobTrackerX.WebApi.Services.JobTracker
         Task<List<JobEntity>> GetChildrenEntitiesAsync(long id);
 
         Task<List<JobEntity>> BatchGetJobEntitiesAsync(IEnumerable<long> jobIds);
-
+        Task<long> GetNextIdAsync();
         Task AppendToJobLogAsync(long id, AppendLogDto dto);
 
         Task<string> GetJobLogAsync(long id);
