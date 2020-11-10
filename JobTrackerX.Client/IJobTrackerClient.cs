@@ -2,6 +2,7 @@
 using JobTrackerX.SharedLibs;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 
 namespace JobTrackerX.Client
 {
@@ -29,6 +30,9 @@ namespace JobTrackerX.Client
         public abstract Task<bool> AppendToJobLogAsync(long jobId, AppendLogDto dto);
 
         public abstract Task<JobTreeStatistics> GetJobTreeStatisticsAsync(long jobId);
+        
+        public abstract Task<List<AddJobErrorResult>> BatchAddChildrenAsync(BatchAddJobDto dto,
+            ExecutionDataflowBlockOptions options = null);
 
         internal abstract Task<JobEntity> CreateNewJobWithBufferAsync(AddJobDto dto, Guid bufferId);
 

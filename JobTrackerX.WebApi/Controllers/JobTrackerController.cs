@@ -1,8 +1,10 @@
-﻿using JobTrackerX.SharedLibs;
+﻿using System;
+using JobTrackerX.SharedLibs;
 using JobTrackerX.WebApi.Services.JobTracker;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace JobTrackerX.WebApi.Controllers
@@ -149,6 +151,28 @@ namespace JobTrackerX.WebApi.Controllers
         public async Task<ReturnDto<JobTreeStatistics>> GetJobTreeStatisticsAsync([FromRoute] long id)
         {
             return new ReturnDto<JobTreeStatistics>(await _service.GetJobStatisticsByIdAsync(id));
+        }
+        
+        [HttpPost("newBatch/{parentJobId}")]
+        public async Task<ReturnDto<List<AddJobErrorResult>>> BatchAddNewJobsAsync(
+            [FromRoute] [Required] long? parentJobId,
+            [FromBody] [Required] List<AddJobDto> children)
+        {
+            if (!parentJobId.HasValue)
+            {
+                throw new Exception("batch add new sub job must set same parent jobId first");
+            }
+
+            if (!children.All(s => s.JobId.HasValue))
+            {
+                throw new Exception("Some child has no job id set");
+            }
+
+            return new ReturnDto<List<AddJobErrorResult>>(await _service.BatchAddJobAsync(new BatchAddJobDto()
+            {
+                Children = children,
+                ParentJobId = parentJobId.Value
+            }));
         }
     }
 }

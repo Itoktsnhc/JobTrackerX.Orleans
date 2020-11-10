@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 
 namespace JobTrackerX.Client
 {
@@ -60,6 +61,7 @@ namespace JobTrackerX.Client
             {
                 dto.JobId = await GetNextIdAsync();
             }
+
             var resp = await SendRequestAsync<JobEntity, AddJobDto>(HttpMethod.Post,
                 "api/jobTracker/new", dto);
             if (resp.Result)
@@ -168,6 +170,33 @@ namespace JobTrackerX.Client
             }
 
             throw new Exception($"{nameof(AppendToJobLogAsync)} failed {resp.Msg}");
+        }
+
+        public override async Task<List<AddJobErrorResult>> BatchAddChildrenAsync(BatchAddJobDto dto,
+            ExecutionDataflowBlockOptions options = null)
+        {
+            options ??= new ExecutionDataflowBlockOptions()
+            {
+                MaxDegreeOfParallelism = Environment.ProcessorCount
+            };
+            var assignNewJobIdBlock = new ActionBlock<AddJobDto>(
+                async child => child.JobId ??= await GetNextIdAsync(), options);
+            foreach (var child in dto.Children)
+            {
+                assignNewJobIdBlock.Post(child);
+            }
+
+            assignNewJobIdBlock.Complete();
+            await assignNewJobIdBlock.Completion;
+
+            var resp = await SendRequestAsync<List<AddJobErrorResult>, List<AddJobDto>>(HttpMethod.Post,
+                $"/api/JobTracker/newBatch/{dto.ParentJobId}", dto.Children);
+            if (resp.Result)
+            {
+                return resp.Data;
+            }
+
+            throw new Exception($"{nameof(BatchAddChildrenAsync)} failed {resp.Msg}");
         }
 
         #region WithBuffer
@@ -287,6 +316,7 @@ namespace JobTrackerX.Client
             {
                 return resp.Data;
             }
+
             throw new Exception($"{nameof(GetNextIdAsync)} failed {resp.Msg}");
         }
     }

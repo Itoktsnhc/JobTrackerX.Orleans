@@ -37,70 +37,20 @@ namespace JobTrackerX.Grains
                 TimeSpan.FromMinutes(3));
         }
 
-        public async Task MergeShardingIndexAsync()
-        {
-            try
-            {
-                var current = DateTimeOffset.Now;
-                var deleteAction = new ActionBlock<ITableEntity>(
-                    async entity => await Client.GetTableReference(_tableName)
-                        .ExecuteAsync(TableOperation.Delete(entity)),
-                    Helper.GetOutOfGrainExecutionOptions());
-                var timeIndexSeq =
-                    Helper.GetTimeIndexRange(current.AddHours(-_indexConfig.TrackTimeIndexCount),
-                        current);
-                foreach (var index in timeIndexSeq)
-                {
-                    var token = new TableContinuationToken();
-                    var shardGrain = GrainFactory.GetGrain<IShardJobIndexGrain>(index);
-                    var aggregator = GrainFactory.GetGrain<IAggregateJobIndexGrain>(index);
-                    var indexResults = new List<JobIndexInternal>();
-                    while (token != null && indexResults.Count < _indexConfig.MaxRoundSize)
-                    {
-                        var result = await shardGrain.FetchWithTokenAsync(token);
-                        token = result.ContinuationToken;
-                        if (result.Results?.Count > 0)
-                        {
-                            indexResults.AddRange(result.Results);
-                        }
-                    }
-
-                    if (indexResults.Count > 0)
-                    {
-                        await aggregator.MergeIntoIndicesAsync(indexResults);
-                    }
-
-                    foreach (var entity in indexResults)
-                    {
-                        await deleteAction.PostToBlockUntilSuccessAsync(
-                            new TableEntity(entity.PartitionKey, entity.RowKey)
-                            {
-                                ETag = "*"
-                            });
-                    }
-
-                    _logger.Info($"Merged index to {index}, count: {indexResults.Count}");
-                }
-
-                deleteAction.Complete();
-                await deleteAction.Completion;
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, $"Error in {nameof(MergeShardingIndexAsync)}");
-            }
-
-            SharedData.LastMergeTimePoint = DateTimeOffset.Now;
-        }
-
         public async Task ReceiveReminder(string reminderName, TickStatus status)
         {
-            await MergeShardingIndexAsync();
+            await KeepTimerAliveAsync();
         }
 
         public Task ActiveAsync()
         {
             return Task.CompletedTask;
+        }
+
+        private async Task KeepTimerAliveAsync()
+        {
+            var timer = GrainFactory.GetGrain<IMergeIndexTimer>(Constants.MergeIndexTimerDefaultGrainId);
+            await timer.KeepAliveAsync();
         }
     }
 }

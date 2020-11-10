@@ -91,6 +91,7 @@ namespace JobTrackerX.Grains
 
         public async Task UpdateJobStateAsync(UpdateJobStateDto dto, bool outerCall = true)
         {
+            var beforeCategory = Helper.GetJobStateCategory(State.CurrentJobState);
             if (dto.JobState == JobState.WaitingForActivation)
             {
                 throw new Exception(
@@ -113,12 +114,21 @@ namespace JobTrackerX.Grains
             try
             {
                 State.StateChanges
-                        .Add(new StateChangeDto(dto.JobState, dto.Message));
+                    .Add(new StateChangeDto(dto.JobState, dto.Message));
                 await UpdateJobStatisticsAsync();
+                var currentState = State.CurrentJobState;
+                var currentCategory = Helper.GetJobStateCategory(currentState);
                 if (State.ParentJobId.HasValue)
                 {
                     var parentGrain = GrainFactory.GetGrain<IJobGrain>(State.ParentJobId.Value);
-                    await parentGrain.OnChildStateChangeAsync(State.JobId, State.CurrentJobState);
+                    if (currentState == JobState.Running)
+                    {
+                        await parentGrain.OnChildRunningAsync(State.JobId);
+                    }
+                    if (beforeCategory != currentCategory)
+                    {
+                        await parentGrain.OnChildStateCategoryChangeAsync(State.JobId, currentCategory);
+                    }
                 }
 
                 await TryTriggerActionAsync();
@@ -135,19 +145,30 @@ namespace JobTrackerX.Grains
             }
         }
 
-        public async Task OnChildStateChangeAsync(long childJobId, JobState childJobState)
+        public async Task OnChildStateCategoryChangeAsync(long childJobId, JobStateCategory category)
         {
-            State.ChildrenStatesDic[childJobId] = Helper.GetJobStateCategory(childJobState);
+            var beforeCategory = Helper.GetJobStateCategory(State.CurrentJobState);
+            State.ChildrenStatesDic[childJobId] = category;
+            await WriteStateAsync();
 
+            var currentState = State.CurrentJobState;
+            var currentCategory = Helper.GetJobStateCategory(State.CurrentJobState);
             if (State.ParentJobId.HasValue)
             {
                 var parentGrain = GrainFactory.GetGrain<IJobGrain>(State.ParentJobId.Value);
-                await parentGrain.OnChildStateChangeAsync(State.JobId, State.CurrentJobState);
+                if (currentState == JobState.Running)
+                {
+                    await parentGrain.OnChildRunningAsync(State.JobId);
+                }
+                if (beforeCategory != currentCategory)
+                {
+                    await parentGrain.OnChildStateCategoryChangeAsync(State.JobId, currentCategory);
+                }
             }
 
-            await WriteStateAsync();
+
             await TryTriggerActionAsync();
-            await UpdateJobStatisticsAsync(childJobId, childJobState);
+            await UpdateJobStatisticsAsync(childJobId, currentState);
         }
 
         public async Task UpdateJobOptionsAsync(UpdateJobOptionsDto dto)
@@ -273,6 +294,70 @@ namespace JobTrackerX.Grains
                 var indexGrain = GrainFactory.GetGrain<IShardJobIndexGrain>(Helper.GetTimeIndex());
                 await indexGrain.AddToIndexAsync(new JobIndexInternal(State.JobId, State.JobName, State.CreatedBy,
                     State.Tags));
+            }
+        }
+
+        public async Task OnChildRunningAsync(long childJobId)
+        {
+            await UpdateJobStatisticsAsync(childJobId, JobState.Running);
+        }
+
+        public async Task<AddJobErrorResult> AddJobFromParentAsync(AddJobDto addJobDto, long ancestorJobId)
+        {
+            if (State.CurrentJobState != JobState.WaitingForActivation)
+            {
+                throw new InvalidOperationException($"job id duplicate: {this.GetPrimaryKeyLong()}");
+            }
+
+            try
+            {
+                const JobState state = JobState.WaitingToRun;
+                State.JobId = this.GetPrimaryKeyLong();
+                State.ParentJobId = addJobDto.ParentJobId;
+                State.CreatedBy = addJobDto.CreatedBy;
+                State.Tags = addJobDto.Tags;
+                State.Options = addJobDto.Options;
+                State.AncestorJobId = ancestorJobId;
+                State.StateChanges.Add(new StateChangeDto(state));
+                State.JobName = addJobDto.JobName;
+                State.SourceLink = addJobDto.SourceLink;
+                State.ActionConfigs = addJobDto.ActionConfigs;
+                State.StateCheckConfigs = addJobDto.StateCheckConfigs;
+                await ScheduleStateCheckMessageAsync(State.StateCheckConfigs, State.JobId);
+                await WriteStateAsync();
+            }
+            catch (Exception ex)
+            {
+                var res = new AddJobErrorResult {JobId = this.GetPrimaryKeyLong(), Error = ex.ToString()};
+
+                DeactivateOnIdle();
+                return res;
+            }
+
+            return null;
+        }
+
+        public async Task BatchInitChildrenAsync(List<long> childrenIdList)
+        {
+            try
+            {
+                var beforeCategory = Helper.GetJobStateCategory(State.CurrentJobState);
+                foreach (var child in childrenIdList)
+                {
+                    State.ChildrenStatesDic[child] = JobStateCategory.Pending;
+                }
+
+                var currentCategory = Helper.GetJobStateCategory(State.CurrentJobState);
+                if (State.ParentJobId.HasValue && beforeCategory != currentCategory)
+                {
+                    var parentGrain = GrainFactory.GetGrain<IJobGrain>(State.ParentJobId.Value);
+                    await parentGrain.OnChildStateCategoryChangeAsync(State.JobId, currentCategory);
+                }
+            }
+            catch (Exception)
+            {
+                DeactivateOnIdle();
+                throw;
             }
         }
     }

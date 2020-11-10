@@ -4,6 +4,7 @@ using JobTrackerX.SharedLibs;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -375,6 +376,47 @@ namespace JobTrackerX.Test
             Assert.IsNotNull(sub1S.TreeStart);
             Assert.AreEqual(sub1S.TreeStart.SourceJobId, subsub1.JobId);
             Assert.AreEqual(sub1S.TreeEnd.SourceJobId, sub1.JobId);
+        }
+
+        [TestMethod]
+        public async Task TestBatchAddSubJobsAsync()
+        {
+            var root = await _client.CreateNewJobAsync(new AddJobDto("root"));
+            var addSubDto = new BatchAddJobDto()
+            {
+                Children = Enumerable.Range(0, 500).Select(s => new AddJobDto(s.ToString())).ToList(),
+                ParentJobId = root.JobId
+            };
+            var errorRes = await _client.BatchAddChildrenAsync(addSubDto);
+            Assert.AreEqual(false, errorRes.Any());
+        }
+
+        [TestMethod]
+        public async Task TestBatchFlowSubJobsAsync()
+        {
+            var root = await _client.CreateNewJobAsync(new AddJobDto("root"));
+            var addSubDto = new BatchAddJobDto()
+            {
+                Children = Enumerable.Range(0, 1000).Select(s => new AddJobDto(s.ToString())).ToList(),
+                ParentJobId = root.JobId
+            };
+            var errorRes = await _client.BatchAddChildrenAsync(addSubDto);
+            Assert.AreEqual(false, errorRes.Any());
+            var updateJobBlock = new ActionBlock<long>(async jobId =>
+            {
+                await _client.UpdateJobStatesAsync(jobId, new UpdateJobStateDto(JobState.Running));
+                await _client.UpdateJobStatesAsync(jobId, new UpdateJobStateDto(JobState.RanToCompletion));
+            },
+                Helper.GetOutOfGrainExecutionOptions());
+            foreach (var child in addSubDto.Children)
+            {
+                await updateJobBlock.PostToBlockUntilSuccessAsync(child.JobId.Value);
+            }
+
+            updateJobBlock.Complete();
+            await updateJobBlock.Completion;
+            await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.Running));
+            await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
         }
     }
 }

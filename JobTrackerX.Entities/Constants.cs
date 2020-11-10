@@ -1,4 +1,6 @@
-﻿namespace JobTrackerX.Entities
+﻿using System;
+
+namespace JobTrackerX.Entities
 {
     public static class Constants
     {
@@ -23,6 +25,7 @@
         public const int GlobalRetryWaitSec = 1;
         public const string BrandName = "JobTrackerX";
         public const string MergeIndexReminderDefaultGrainId = "MergeIndexReminder";
+        public const string MergeIndexTimerDefaultGrainId = "MergeIndexTimer0";
 
         public const string NotAvailableStr = "--";
         public const string PercentageFormat = "P";
@@ -31,15 +34,26 @@
         public const string WebUiInputDateTimeFormat = "yyyy-MM-dd HH";
         public const string WebUiShowDateTimeFormat = "yyyy-MM-dd HH:mm:ss";
         public const string WebUiShowTimeSpanFormat = "d'd 'h'h 'm'm 's's'";
-#if DEBUG
+        #region Environment
 
-        public const string EnvName = "dev";
-        public const string SelfDomain = "{YOURDOMAIN}";
-#else
-        public const string EnvName = "prod";
-        public const string SelfDomain = "{YOURDOMAIN}";
+        public const string JobSysEnvKey = "JOBSYS_ENV";
+        public const string DevEnvValue = "dev";
+        public const string TestEnvValue = "test";
+        public const string ProdEnvValue = "prod";
 
-#endif
+        public static string GetEnv()
+        {
+            return Environment.GetEnvironmentVariable(JobSysEnvKey, EnvironmentVariableTarget.Process) switch
+            {
+                TestEnvValue => TestEnvValue,
+                ProdEnvValue => ProdEnvValue,
+                _ => DevEnvValue
+            };
+        }
+
+        public static bool IsDev => GetEnv() == DevEnvValue;
+
+        #endregion
         public const string BufferIdKey = "BufferIdKey";
     }
 }

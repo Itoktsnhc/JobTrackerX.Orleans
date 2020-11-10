@@ -137,4 +137,16 @@ namespace JobTrackerX.SharedLibs
         public long GrainIntId { get; set; }
         public BufferedGrainInterfaceType GrainType { get; set; }
     }
+    
+    public class AddJobErrorResult
+    {
+        public long JobId { get; set; }
+        public string Error { get; set; }
+    }
+    
+    public class BatchAddJobDto
+    {
+        public long ParentJobId { get; set; }
+        public List<AddJobDto> Children { get; set; }
+    }
 }

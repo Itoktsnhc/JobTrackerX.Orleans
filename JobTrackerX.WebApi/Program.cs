@@ -20,7 +20,7 @@ namespace JobTrackerX.WebApi
 {
     public static class Program
     {
-        private static readonly string SettingFileName = $"appsettings.{Constants.EnvName}.json";
+        private static readonly string SettingFileName = $"appsettings.{Constants.GetEnv()}.json";
 
         private static IConfiguration Configuration { get; } = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
@@ -56,7 +56,7 @@ namespace JobTrackerX.WebApi
             return Host.CreateDefaultBuilder(args)
                 .ConfigureHostConfiguration(config => config.AddJsonFile(SettingFileName))
                 .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>())
-                .UseOrleans((context, options) =>
+                .UseOrleans((context, siloBuilder) =>
                 {
                     var jobTrackerConfig =
                         context.Configuration.GetSection(nameof(JobTrackerConfig)).Get<JobTrackerConfig>();
@@ -82,7 +82,7 @@ namespace JobTrackerX.WebApi
                         storageOptions.TableName = siloConfig.ReminderPersistConfig.TableName;
                     });
 
-                    options.UseLocalhostClustering(serviceId: siloConfig.ServiceId, clusterId: siloConfig.ClusterId)
+                    siloBuilder
                         .ConfigureApplicationParts(parts =>
                             parts.AddApplicationPart(typeof(JobGrain).Assembly).WithReferences().WithCodeGeneration())
                         .AddIncomingGrainCallFilter<BufferFilter>()
@@ -111,10 +111,33 @@ namespace JobTrackerX.WebApi
                                 typeof(RollingJobIndexGrain).FullName ?? throw new
                                     InvalidOperationException()] = TimeSpan.FromMinutes(5);
                         });
+                    
+                    if (Constants.IsDev)
+                    {
+                        siloBuilder.UseLocalhostClustering(
+                            clusterId: siloConfig.ClusterId,
+                            serviceId: siloConfig.ServiceId
+                        );
+                    }
+                    else
+                    {
+                        siloBuilder.Configure<ClusterOptions>(clusterOptions =>
+                            {
+                                clusterOptions.ClusterId = siloConfig.ClusterId;
+                                clusterOptions.ServiceId = siloConfig.ServiceId;
+                            })
+                            .UseAzureStorageClustering(azureStorageClusteringOptions =>
+                            {
+                                azureStorageClusteringOptions.ConnectionString =
+                                    jobTrackerConfig.AzureClusterConfig.ConnStr;
+                                azureStorageClusteringOptions.TableName = jobTrackerConfig.AzureClusterConfig.TableName;
+                            })
+                            .ConfigureEndpoints(10001, 10000);
+                    }
 
                     if (jobTrackerConfig.CommonConfig.UseDashboard)
                     {
-                        options.UseDashboard(x => x.HostSelf = false);
+                        siloBuilder.UseDashboard(x => x.HostSelf = false);
                     }
                 })
                 .UseSerilog();

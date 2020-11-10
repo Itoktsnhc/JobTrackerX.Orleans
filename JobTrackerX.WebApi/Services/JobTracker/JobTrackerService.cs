@@ -134,5 +134,35 @@ namespace JobTrackerX.WebApi.Services.JobTracker
             await getStatisticsProcessor.Completion;
             return statisticsContainer.ToDictionary(s => s.JobId, s => s);
         }
+        
+        public async Task<List<AddJobErrorResult>> BatchAddJobAsync(BatchAddJobDto dto)
+        {
+            var addErrorResult = new ConcurrentBag<AddJobErrorResult>();
+            var parentGrain = _client.GetGrain<IJobGrain>(dto.ParentJobId);
+            var parent = await parentGrain.GetJobAsync();
+            var idGrain = _client.GetGrain<IJobIdGrain>(Constants.JobIdGrainDefaultName);
+            var createChildBlock = new ActionBlock<AddJobDto>(async child =>
+            {
+                child.JobId ??= await idGrain.GetNewIdAsync();
+                child.ParentJobId = dto.ParentJobId;
+                var childGrain = _client.GetGrain<IJobGrain>(child.JobId.Value);
+                var addChildError = await childGrain.AddJobFromParentAsync(child, parent.AncestorJobId);
+                if (addChildError != null)
+                {
+                    addErrorResult.Add(addChildError);
+                }
+            }, Helper.GetOutOfGrainExecutionOptions());
+            foreach (var child in dto.Children)
+            {
+                await createChildBlock.PostToBlockUntilSuccessAsync(child);
+            }
+
+            createChildBlock.Complete();
+            await createChildBlock.Completion;
+
+            // ReSharper disable once PossibleInvalidOperationException
+            await parentGrain.BatchInitChildrenAsync(dto.Children.Select(s => s.JobId.Value).ToList());
+            return addErrorResult.ToList();
+        }
     }
 }

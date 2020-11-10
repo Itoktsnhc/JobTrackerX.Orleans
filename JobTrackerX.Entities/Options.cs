@@ -12,6 +12,14 @@ namespace JobTrackerX.Entities
         public WebUiConfig WebUiConfig { get; set; }
         public JobLogConfig JobLogConfig { get; set; }
         public ActionHandlerConfig ActionHandlerConfig { get; set; }
+        
+        public AzureClusterConfig AzureClusterConfig { get; set; }
+    }
+    
+    public class AzureClusterConfig
+    {
+        public string ConnStr { get; set; }
+        public string TableName { get; set; }
     }
 
     public class IdGeneratorConfig
