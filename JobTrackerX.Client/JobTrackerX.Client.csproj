@@ -14,7 +14,8 @@
     <Description>JobTrackerX.Client</Description>
     <LangVersion>8</LangVersion>
     <PackageReleaseNotes>remove descendants Ref releated;
-add NewBatchCreateChildren Api</PackageReleaseNotes>
+add NewBatchCreateChildren Api;
+use environment as config switch for localCluster/AzureCluster</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
