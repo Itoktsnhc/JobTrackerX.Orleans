@@ -18,5 +18,6 @@ namespace JobTrackerX.GrainInterfaces
         Task OnChildRunningAsync(long childJobId);
         Task BatchInitChildrenAsync(List<long> toList);
         Task<AddJobErrorResult> AddJobFromParentAsync(AddJobDto child, long parentAncestorJobId, long? trackCountRef);
+        Task<JobEntityLite> GetJobEntityLiteAsync();
     }
 }

@@ -180,5 +180,21 @@ namespace JobTrackerX.WebApi.Controllers
         {
             return new ReturnDto<long>(await _service.GetDescendantsCountAsync(jobId));
         }
+
+        [HttpGet("{jobId}/state")]
+        public async Task<ReturnDto<JobStateDto>> GetJobStateAsync([FromRoute] long jobId)
+        {
+            return new ReturnDto<JobStateDto>(new JobStateDto()
+            {
+                JobId = jobId,
+                JobState = await _service.GetJobStateAsync(jobId)
+            });
+        }
+
+        [HttpGet("{jobId}/lite")]
+        public async Task<ReturnDto<JobEntityLite>> GetJobEntityLiteAsync([FromRoute] long jobId)
+        {
+            return new ReturnDto<JobEntityLite>(await _service.GetJobEntityLiteAsync(jobId));
+        }
     }
 }

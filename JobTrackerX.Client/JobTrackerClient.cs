@@ -211,6 +211,29 @@ namespace JobTrackerX.Client
             throw new Exception($"{nameof(GetDescendantsCountAsync)} failed {resp.Msg}");
         }
 
+
+        public override async Task<JobStateDto> GetJobStateAsync(long jobId)
+        {
+            var resp = await SendRequestAsync<JobStateDto, object>(HttpMethod.Get, $"/api/JobTracker/{jobId}/state");
+            if (resp.Result)
+            {
+                return resp.Data;
+            }
+
+            throw new Exception($"{nameof(GetJobStateAsync)} failed {resp.Msg}");
+        }
+
+        public override async Task<JobEntityLite> GetJobEntityLiteAsync(long jobId)
+        {
+            var resp = await SendRequestAsync<JobEntityLite, object>(HttpMethod.Get, $"/api/JobTracker/{jobId}/lite");
+            if (resp.Result)
+            {
+                return resp.Data;
+            }
+
+            throw new Exception($"{nameof(GetJobEntityLiteAsync)} failed {resp.Msg}");
+        }
+
         #region WithBuffer
 
         internal override async Task<JobEntity> CreateNewJobWithBufferAsync(AddJobDto dto, Guid bufferId)

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace JobTrackerX.SharedLibs
 {
-    public class JobEntity
+    public class JobEntityLite
     {
         public long JobId { get; set; }
         public string JobName { get; set; }
@@ -12,7 +12,6 @@ namespace JobTrackerX.SharedLibs
         public List<string> Tags { get; set; }
         public string Options { get; set; }
         public string CreatedBy { get; set; }
-        public List<StateChangeDto> StateChanges { get; set; }
         public JobState CurrentJobState { get; set; }
         public DateTimeOffset? CreateTime { get; set; }
         public DateTimeOffset? StartTime { get; set; }
@@ -21,10 +20,15 @@ namespace JobTrackerX.SharedLibs
         public int SuccessfulChildrenCount { get; set; }
         public int FailedChildrenCount { get; set; }
         public int PendingChildrenCount { get; set; }
-        public Dictionary<long, JobStateCategory> ChildrenStatesDic { get; set; }
         public string SourceLink { get; set; }
         public List<ActionConfig> ActionConfigs { get; set; }
         public List<StateCheckConfig> StateCheckConfigs { get; set; }
+    }
+
+    public class JobEntity : JobEntityLite
+    {
+        public List<StateChangeDto> StateChanges { get; set; }
+        public Dictionary<long, JobStateCategory> ChildrenStatesDic { get; set; }
     }
 
     public class JobIndex
@@ -94,5 +98,11 @@ namespace JobTrackerX.SharedLibs
     {
         public long SourceJobId { get; set; }
         public DateTimeOffset TimePoint { get; set; }
+    }
+
+    public class JobStateDto
+    {
+        public long JobId { get; set; }
+        public JobState JobState { get; set; }
     }
 }

@@ -175,5 +175,16 @@ namespace JobTrackerX.WebApi.Services.JobTracker
         {
             return await _client.GetGrain<IAggregateCounterGrain>(jobId).GetAsync();
         }
+
+        public async Task<JobState> GetJobStateAsync(long jobId)
+        {
+            return await _client.GetGrain<IJobGrain>(jobId).GetCurrentJobStateAsync();
+        }
+
+        public async Task<JobEntityLite> GetJobEntityLiteAsync(long jobId)
+        {
+            return await _client.GetGrain<IJobGrain>(jobId).GetJobEntityLiteAsync();
+        }
+
     }
 }

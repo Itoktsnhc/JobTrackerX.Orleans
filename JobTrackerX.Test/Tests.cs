@@ -538,5 +538,18 @@ namespace JobTrackerX.Test
             count = await _client.GetDescendantsCountAsync(c1.JobId);
             Assert.AreEqual(31, count);
         }
+
+        [TestMethod]
+        public async Task TestGetJobStateAndLiteAsync()
+        {
+            var root = await _client.CreateNewJobAsync(new AddJobDto());
+            await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.Running));
+            var state = await _client.GetJobStateAsync(root.JobId);
+            Assert.AreEqual(JobState.Running, state.JobState);
+            await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
+
+            var lite = await _client.GetJobEntityLiteAsync(root.JobId);
+            Assert.AreEqual(JobState.RanToCompletion, lite.CurrentJobState);
+        }
     }
 }

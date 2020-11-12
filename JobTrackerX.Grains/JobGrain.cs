@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using AutoMapper;
 
 namespace JobTrackerX.Grains
 {
@@ -23,12 +24,15 @@ namespace JobTrackerX.Grains
         private readonly ServiceBusWrapper _wrapper;
         private readonly ILogger<JobGrain> _logger;
         private readonly IOptions<JobTrackerConfig> _options;
+        private readonly IMapper _mapper;
 
-        public JobGrain(ServiceBusWrapper wrapper, IOptions<JobTrackerConfig> options, ILogger<JobGrain> logger)
+        public JobGrain(ServiceBusWrapper wrapper, IOptions<JobTrackerConfig> options,
+            ILogger<JobGrain> logger, IMapper mapper)
         {
             _wrapper = wrapper;
             _logger = logger;
             _options = options;
+            _mapper = mapper;
         }
 
         public async Task<JobEntityState> AddJobAsync(AddJobDto addJobDto)
@@ -183,6 +187,11 @@ namespace JobTrackerX.Grains
 
             await TryTriggerActionAsync();
             await UpdateJobStatisticsAsync(childJobId, currentState);
+        }
+
+        public Task<JobEntityLite> GetJobEntityLiteAsync()
+        {
+            return Task.FromResult(_mapper.Map<JobEntityLite>(State));
         }
 
         public async Task UpdateJobOptionsAsync(UpdateJobOptionsDto dto)
@@ -344,7 +353,7 @@ namespace JobTrackerX.Grains
             }
             catch (Exception ex)
             {
-                var res = new AddJobErrorResult {JobId = this.GetPrimaryKeyLong(), Error = ex.ToString()};
+                var res = new AddJobErrorResult { JobId = this.GetPrimaryKeyLong(), Error = ex.ToString() };
 
                 DeactivateOnIdle();
                 return res;

@@ -36,6 +36,10 @@ namespace JobTrackerX.Client
         
         public abstract Task<long> GetDescendantsCountAsync(long jobId);
 
+        public abstract Task<JobStateDto> GetJobStateAsync(long jobId);
+
+        public abstract Task<JobEntityLite> GetJobEntityLiteAsync(long jobId);
+
         internal abstract Task<JobEntity> CreateNewJobWithBufferAsync(AddJobDto dto, Guid bufferId);
 
         internal abstract Task UpdateJobStatesWithBufferAsync(long id, UpdateJobStateDto dto, Guid bufferId);
