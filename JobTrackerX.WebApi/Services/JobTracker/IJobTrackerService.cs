@@ -31,5 +31,6 @@ namespace JobTrackerX.WebApi.Services.JobTracker
         Task<string> GetJobLogUrlAsync(long id);
         Task<Dictionary<long, JobTreeStatistics>> GetJobStatisticsListByIdsAsync(IEnumerable<long> ids);
         Task<List<AddJobErrorResult>> BatchAddJobAsync(BatchAddJobDto batchAddJobDto);
+        Task<long> GetDescendantsCountAsync(long jobId);
     }
 }

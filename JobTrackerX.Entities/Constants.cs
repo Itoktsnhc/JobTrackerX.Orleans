@@ -9,6 +9,7 @@ namespace JobTrackerX.Entities
         public const string JobRefStoreName = "JobRefStore";
         public const string ReadOnlyJobIndexStoreName = "ReadOnlyJobIndexStore";
         public const string AttachmentStoreName = "AttachmentStore";
+        public const string CounterStoreName = "CounterStore";
 
         public const string JobIdOffsetStoreName = "JobIdOffsetStore";
         public const string JobIdStoreName = "JobIdStore";
@@ -17,6 +18,8 @@ namespace JobTrackerX.Entities
         public const string JobIdOffsetGrainDefaultName = "JobIdOffsetGenerator0";
 
         public const int DefaultDegreeOfParallelism = 100;
+        public const string DefaultCounterType = "_";
+        public const int CounterPerAggregateCounter = 20;
 
         public const string TokenAuthKey = "x-jobtracker-token";
         public const string StateCheckerHeaderKey = "x-jobtracker-statecheck";

@@ -418,5 +418,125 @@ namespace JobTrackerX.Test
             await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.Running));
             await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
         }
+        
+        [TestMethod]
+        public async Task TestDescendantsCountAsync()
+        {
+            var root = await _client.CreateNewJobAsync(new AddJobDto()
+            {
+                TrackJobCount = true
+            });
+            foreach (var index in Enumerable.Range(1, 1))
+            {
+                var child = await _client.CreateNewJobAsync(new AddJobDto(index.ToString(), root.JobId));
+                foreach (var childChildIndex in Enumerable.Range(1, 1))
+                {
+                    await _client.CreateNewJobAsync(new AddJobDto($"{index}_{childChildIndex}", child.JobId));
+                }
+            }
+
+            var count = await _client.GetDescendantsCountAsync(root.JobId);
+            Assert.AreEqual(3, count);
+
+            root = await _client.CreateNewJobAsync(new AddJobDto()
+            {
+                TrackJobCount = true
+            });
+            foreach (var index in Enumerable.Range(1, 10))
+            {
+                var child = await _client.CreateNewJobAsync(new AddJobDto(index.ToString(), root.JobId));
+                foreach (var childChildIndex in Enumerable.Range(1, 1))
+                {
+                    await _client.CreateNewJobAsync(new AddJobDto($"{index}_{childChildIndex}", child.JobId));
+                }
+            }
+
+            count = await _client.GetDescendantsCountAsync(root.JobId);
+            Assert.AreEqual(21, count);
+
+            root = await _client.CreateNewJobAsync(new AddJobDto()
+            {
+                TrackJobCount = true
+            });
+            foreach (var index in Enumerable.Range(1, 5))
+            {
+                var child = await _client.CreateNewJobAsync(new AddJobDto(index.ToString(), root.JobId));
+                foreach (var childChildIndex in Enumerable.Range(1, 3))
+                {
+                    await _client.CreateNewJobAsync(new AddJobDto($"{index}_{childChildIndex}", child.JobId));
+                }
+            }
+
+            count = await _client.GetDescendantsCountAsync(root.JobId);
+            Assert.AreEqual(21, count);
+
+            root = await _client.CreateNewJobAsync(new AddJobDto()
+            {
+                TrackJobCount = true
+            });
+            foreach (var index in Enumerable.Range(1, 10))
+            {
+                var child = await _client.CreateNewJobAsync(new AddJobDto(index.ToString(), root.JobId));
+                foreach (var childChildIndex in Enumerable.Range(1, 3))
+                {
+                    await _client.CreateNewJobAsync(new AddJobDto($"{index}_{childChildIndex}", child.JobId));
+                }
+            }
+
+            count = await _client.GetDescendantsCountAsync(root.JobId);
+            Assert.AreEqual(41, count);
+        }
+
+        [TestMethod]
+        public async Task TestDescendantsCountInBatchAsync()
+        {
+            var root = await _client.CreateNewJobAsync(new AddJobDto()
+            {
+                TrackJobCount = true
+            });
+            await _client.CreateNewJobAsync(new AddJobDto($"--", root.JobId));
+            var addSubDto = new BatchAddJobDto()
+            {
+                Children = Enumerable.Range(0, 10).Select(s => new AddJobDto(s.ToString())).ToList(),
+                ParentJobId = root.JobId
+            };
+            var errorRes = await _client.BatchAddChildrenAsync(addSubDto);
+            addSubDto = new BatchAddJobDto()
+            {
+                Children = Enumerable.Range(0, 10).Select(s => new AddJobDto(s.ToString())).ToList(),
+                ParentJobId = root.JobId
+            };
+            await _client.BatchAddChildrenAsync(addSubDto);
+            var first = addSubDto.Children.First().JobId;
+            await _client.CreateNewJobAsync(new AddJobDto("--", first));
+            var count = await _client.GetDescendantsCountAsync(root.JobId);
+            Assert.AreEqual(false, errorRes.Any());
+            Assert.AreEqual(23, count);
+        }
+
+        [TestMethod]
+        public async Task TestSubDescendantsCountAsync()
+        {
+            var root = await _client.CreateNewJobAsync(new AddJobDto()
+            {
+                TrackJobCount = false
+            });
+            var c1 = await _client.CreateNewJobAsync(new AddJobDto($"--", root.JobId)
+            {
+                TrackJobCount = true
+            });
+            foreach (var index in Enumerable.Range(1, 10))
+            {
+                var c11 = await _client.CreateNewJobAsync(new AddJobDto("", c1.JobId));
+                var c111 = await _client.CreateNewJobAsync(new AddJobDto("", c11.JobId));
+                await _client.CreateNewJobAsync(new AddJobDto("", c111.JobId));
+            }
+
+            var count = await _client.GetDescendantsCountAsync(root.JobId);
+            Assert.AreEqual(0, count);
+
+            count = await _client.GetDescendantsCountAsync(c1.JobId);
+            Assert.AreEqual(31, count);
+        }
     }
 }

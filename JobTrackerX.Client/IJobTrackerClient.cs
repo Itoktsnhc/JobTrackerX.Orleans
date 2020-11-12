@@ -33,6 +33,8 @@ namespace JobTrackerX.Client
         
         public abstract Task<List<AddJobErrorResult>> BatchAddChildrenAsync(BatchAddJobDto dto,
             ExecutionDataflowBlockOptions options = null);
+        
+        public abstract Task<long> GetDescendantsCountAsync(long jobId);
 
         internal abstract Task<JobEntity> CreateNewJobWithBufferAsync(AddJobDto dto, Guid bufferId);
 

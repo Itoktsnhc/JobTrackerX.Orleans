@@ -24,6 +24,7 @@ namespace JobTrackerX.SharedLibs
         public string SourceLink { get; set; }
         public List<ActionConfig> ActionConfigs { get; set; }
         public List<StateCheckConfig> StateCheckConfigs { get; set; }
+        public bool TrackJobCount { get; set; }
     }
 
     public class UpdateJobStateDto

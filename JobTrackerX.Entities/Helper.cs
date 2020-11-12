@@ -61,6 +61,20 @@ namespace JobTrackerX.Entities
                 _ => "badge badge-pill badge-light"
             };
         }
+        
+        public static async Task RunWithActionBlockAsync<T>(IList<T> parameters, Func<T, Task> runBody,
+            ExecutionDataflowBlockOptions options = null)
+        {
+            options ??= GetOutOfGrainExecutionOptions();
+            var actionBlock = new ActionBlock<T>(runBody, options);
+            foreach (var parameter in parameters)
+            {
+                await actionBlock.PostToBlockUntilSuccessAsync(parameter);
+            }
+
+            actionBlock.Complete();
+            await actionBlock.Completion;
+        }
 
         public static ExecutionDataflowBlockOptions GetOutOfGrainExecutionOptions()
         {

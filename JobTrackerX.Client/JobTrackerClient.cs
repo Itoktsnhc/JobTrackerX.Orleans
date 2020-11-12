@@ -199,6 +199,18 @@ namespace JobTrackerX.Client
             throw new Exception($"{nameof(BatchAddChildrenAsync)} failed {resp.Msg}");
         }
 
+        public override async Task<long> GetDescendantsCountAsync(long jobId)
+        {
+            var resp = await SendRequestAsync<long, object>(HttpMethod.Get,
+                $"/api/JobTracker/{jobId}/descendantsCount");
+            if (resp.Result)
+            {
+                return resp.Data;
+            }
+
+            throw new Exception($"{nameof(GetDescendantsCountAsync)} failed {resp.Msg}");
+        }
+
         #region WithBuffer
 
         internal override async Task<JobEntity> CreateNewJobWithBufferAsync(AddJobDto dto, Guid bufferId)

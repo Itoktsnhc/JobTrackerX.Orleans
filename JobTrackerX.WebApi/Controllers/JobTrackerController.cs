@@ -174,5 +174,11 @@ namespace JobTrackerX.WebApi.Controllers
                 ParentJobId = parentJobId.Value
             }));
         }
+        
+        [HttpGet("{jobId}/descendantsCount")]
+        public async Task<ReturnDto<long>> GetDescendantsCountAsync([FromRoute] long jobId)
+        {
+            return new ReturnDto<long>(await _service.GetDescendantsCountAsync(jobId));
+        }
     }
 }

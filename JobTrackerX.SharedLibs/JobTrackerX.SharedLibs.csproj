@@ -2,15 +2,17 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyVersion>1.0.14.0</AssemblyVersion>
-    <FileVersion>1.0.14.0</FileVersion>
+    <AssemblyVersion>1.0.15.0</AssemblyVersion>
+    <FileVersion>1.0.15.0</FileVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Copyright>itoktsnhc@hotmail.com</Copyright>
     <PackageProjectUrl>https://github.com/Itoktsnhc/JobTrackerX.Orleans</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Itoktsnhc/JobTrackerX.Orleans</RepositoryUrl>
-    <Version>1.0.14</Version>
+    <Version>1.0.15</Version>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Description>JobTrackerX.SharedLibs</Description>
+    <PackageVersion>1.0.15</PackageVersion>
+    <PackageReleaseNotes>add trackJobcount option</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

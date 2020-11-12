@@ -47,6 +47,11 @@ namespace JobTrackerX.Grains
                 State.CreatedBy = addJobDto.CreatedBy;
                 State.Tags = addJobDto.Tags;
                 State.Options = addJobDto.Options;
+                if (addJobDto.TrackJobCount)
+                {
+                    State.TrackCountRef = jobId;
+                }
+
                 if (addJobDto.ParentJobId.HasValue)
                 {
                     var parentGrain = GrainFactory.GetGrain<IJobGrain>(addJobDto.ParentJobId.Value);
@@ -57,6 +62,7 @@ namespace JobTrackerX.Grains
                     }
 
                     State.AncestorJobId = parent.AncestorJobId;
+                    State.TrackCountRef ??= parent.TrackCountRef;
                     await UpdateJobStateAsync(new UpdateJobStateDto(JobState.WaitingToRun), false);
                 }
                 else
@@ -77,6 +83,12 @@ namespace JobTrackerX.Grains
                     var indexGrain = GrainFactory.GetGrain<IShardJobIndexGrain>(Helper.GetTimeIndex());
                     await indexGrain.AddToIndexAsync(new JobIndexInternal(State.JobId, State.JobName, State.CreatedBy,
                         State.Tags));
+                }
+
+                if (State.TrackCountRef.HasValue)
+                {
+                    var counter = GrainFactory.GetGrain<IAggregateCounterGrain>(State.TrackCountRef.Value);
+                    await counter.AddAsync();
                 }
             }
             catch (Exception)
@@ -125,6 +137,7 @@ namespace JobTrackerX.Grains
                     {
                         await parentGrain.OnChildRunningAsync(State.JobId);
                     }
+
                     if (beforeCategory != currentCategory)
                     {
                         await parentGrain.OnChildStateCategoryChangeAsync(State.JobId, currentCategory);
@@ -160,6 +173,7 @@ namespace JobTrackerX.Grains
                 {
                     await parentGrain.OnChildRunningAsync(State.JobId);
                 }
+
                 if (beforeCategory != currentCategory)
                 {
                     await parentGrain.OnChildStateCategoryChangeAsync(State.JobId, currentCategory);
@@ -302,7 +316,8 @@ namespace JobTrackerX.Grains
             await UpdateJobStatisticsAsync(childJobId, JobState.Running);
         }
 
-        public async Task<AddJobErrorResult> AddJobFromParentAsync(AddJobDto addJobDto, long ancestorJobId)
+        public async Task<AddJobErrorResult> AddJobFromParentAsync(AddJobDto addJobDto, long ancestorJobId,
+            long? trackCountRef)
         {
             if (State.CurrentJobState != JobState.WaitingForActivation)
             {
@@ -316,6 +331,7 @@ namespace JobTrackerX.Grains
                 State.ParentJobId = addJobDto.ParentJobId;
                 State.CreatedBy = addJobDto.CreatedBy;
                 State.Tags = addJobDto.Tags;
+                State.TrackCountRef = trackCountRef;
                 State.Options = addJobDto.Options;
                 State.AncestorJobId = ancestorJobId;
                 State.StateChanges.Add(new StateChangeDto(state));
@@ -341,6 +357,19 @@ namespace JobTrackerX.Grains
         {
             try
             {
+                var counter = State.TrackCountRef.HasValue
+                    ? GrainFactory.GetGrain<IAggregateCounterGrain>(State.AncestorJobId)
+                    : null;
+                if (counter != null)
+                {
+                    var innerCount = childrenIdList.Count(child => !State.ChildrenStatesDic.ContainsKey(child));
+
+                    if (innerCount > 0)
+                    {
+                        await counter.AddAsync(innerCount);
+                    }
+                }
+
                 var beforeCategory = Helper.GetJobStateCategory(State.CurrentJobState);
                 foreach (var child in childrenIdList)
                 {

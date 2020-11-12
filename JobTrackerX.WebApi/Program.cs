@@ -87,6 +87,7 @@ namespace JobTrackerX.WebApi
                             parts.AddApplicationPart(typeof(JobGrain).Assembly).WithReferences().WithCodeGeneration())
                         .AddIncomingGrainCallFilter<BufferFilter>()
                         .AddAzureTableGrainStorage(Constants.JobEntityStoreName, tableStorageOption)
+                        .AddAzureTableGrainStorage(Constants.CounterStoreName, tableStorageOption)
                         .AddAzureTableGrainStorage(Constants.JobRefStoreName, tableStorageOption)
                         .AddAzureTableGrainStorage(Constants.JobIdStoreName, tableStorageOption)
                         .AddAzureTableGrainStorage(Constants.JobIdOffsetStoreName, tableStorageOption)

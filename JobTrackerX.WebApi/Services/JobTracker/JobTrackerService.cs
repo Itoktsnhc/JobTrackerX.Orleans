@@ -36,6 +36,7 @@ namespace JobTrackerX.WebApi.Services.JobTracker
             {
                 return null;
             }
+
             return _mapper.Map<JobEntity>(res);
         }
 
@@ -63,6 +64,7 @@ namespace JobTrackerX.WebApi.Services.JobTracker
             {
                 await getJobInfoProcessor.PostToBlockUntilSuccessAsync(childJobId);
             }
+
             getJobInfoProcessor.Complete();
             await getJobInfoProcessor.Completion;
             return _mapper.Map<List<JobEntity>>(jobs.OrderByDescending(s => s.JobId).ToList());
@@ -76,7 +78,8 @@ namespace JobTrackerX.WebApi.Services.JobTracker
 
         public async Task<JobEntity> AddNewJobAsync(AddJobDto dto)
         {
-            var jobId = dto.JobId ?? await _client.GetGrain<IJobIdGrain>(Constants.JobIdGrainDefaultName).GetNewIdAsync();
+            var jobId = dto.JobId ??
+                        await _client.GetGrain<IJobIdGrain>(Constants.JobIdGrainDefaultName).GetNewIdAsync();
             return _mapper.Map<JobEntity>(await _client.GetGrain<IJobGrain>(jobId)
                 .AddJobAsync(dto));
         }
@@ -118,6 +121,7 @@ namespace JobTrackerX.WebApi.Services.JobTracker
             var statisticsGrain = _client.GetGrain<IJobTreeStatisticsGrain>(id);
             return _mapper.Map<JobTreeStatistics>(await statisticsGrain.GetStatisticsAsync());
         }
+
         public async Task<Dictionary<long, JobTreeStatistics>> GetJobStatisticsListByIdsAsync(IEnumerable<long> ids)
         {
             var statisticsContainer = new ConcurrentBag<JobTreeStatistics>();
@@ -130,11 +134,12 @@ namespace JobTrackerX.WebApi.Services.JobTracker
             {
                 await getStatisticsProcessor.PostToBlockUntilSuccessAsync(id);
             }
+
             getStatisticsProcessor.Complete();
             await getStatisticsProcessor.Completion;
             return statisticsContainer.ToDictionary(s => s.JobId, s => s);
         }
-        
+
         public async Task<List<AddJobErrorResult>> BatchAddJobAsync(BatchAddJobDto dto)
         {
             var addErrorResult = new ConcurrentBag<AddJobErrorResult>();
@@ -146,7 +151,8 @@ namespace JobTrackerX.WebApi.Services.JobTracker
                 child.JobId ??= await idGrain.GetNewIdAsync();
                 child.ParentJobId = dto.ParentJobId;
                 var childGrain = _client.GetGrain<IJobGrain>(child.JobId.Value);
-                var addChildError = await childGrain.AddJobFromParentAsync(child, parent.AncestorJobId);
+                var addChildError =
+                    await childGrain.AddJobFromParentAsync(child, parent.AncestorJobId, parent.TrackCountRef);
                 if (addChildError != null)
                 {
                     addErrorResult.Add(addChildError);
@@ -163,6 +169,11 @@ namespace JobTrackerX.WebApi.Services.JobTracker
             // ReSharper disable once PossibleInvalidOperationException
             await parentGrain.BatchInitChildrenAsync(dto.Children.Select(s => s.JobId.Value).ToList());
             return addErrorResult.ToList();
+        }
+        
+        public async Task<long> GetDescendantsCountAsync(long jobId)
+        {
+            return await _client.GetGrain<IAggregateCounterGrain>(jobId).GetAsync();
         }
     }
 }

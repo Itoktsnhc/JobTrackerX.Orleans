@@ -19,6 +19,8 @@ namespace JobTrackerX.Entities.GrainStates
         public List<StateCheckConfig> StateCheckConfigs { get; set; }
         public List<StateChangeDto> StateChanges { get; set; } = new List<StateChangeDto>();
 
+        public long? TrackCountRef { get; set; }
+
         public JobState CurrentJobState
         {
             get
@@ -62,7 +64,9 @@ namespace JobTrackerX.Entities.GrainStates
         {
             get
             {
-                return StateChanges.LastOrDefault(s => Helper.FinishedOrWaitingForChildrenOrFaultedJobStates.Contains(s.State))?.TimePoint;
+                return StateChanges
+                    .LastOrDefault(s => Helper.FinishedOrWaitingForChildrenOrFaultedJobStates.Contains(s.State))
+                    ?.TimePoint;
             }
         }
 
@@ -100,6 +104,7 @@ namespace JobTrackerX.Entities.GrainStates
             }
         }
 
-        public Dictionary<long, JobStateCategory> ChildrenStatesDic { get; set; } = new Dictionary<long, JobStateCategory>();
+        public Dictionary<long, JobStateCategory> ChildrenStatesDic { get; set; } =
+            new Dictionary<long, JobStateCategory>();
     }
 }
