@@ -382,7 +382,10 @@ namespace JobTrackerX.Grains
                 var beforeCategory = Helper.GetJobStateCategory(State.CurrentJobState);
                 foreach (var child in childrenIdList)
                 {
-                    State.ChildrenStatesDic[child] = JobStateCategory.Pending;
+                    if (!State.ChildrenStatesDic.ContainsKey(child))
+                    {
+                        State.ChildrenStatesDic[child] = JobStateCategory.Pending;
+                    }
                 }
 
                 var currentCategory = Helper.GetJobStateCategory(State.CurrentJobState);
