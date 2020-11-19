@@ -43,25 +43,21 @@ namespace JobTrackerX.WebApi.Services.Query
 
             var timeIndices = Helper.GetTimeIndexRange(dto.Start, dto.End);
             var result = new ConcurrentDictionary<long, JobIndexInternal>();
-            var queryIndicesBlock = new ActionBlock<string>(
-                async index =>
-                {
-                    var readOnlyGrainIndices =
-                        await _client.GetGrain<IAggregateJobIndexGrain>(index).QueryAsync(dto.Predicate);
-                    foreach (var innerIndex in readOnlyGrainIndices)
-                    {
-                        result[innerIndex.JobId] = innerIndex;
-                    }
-                }, Helper.GetOutOfGrainExecutionOptions());
 
-            foreach (var index in timeIndices)
+            await Helper.RunWithActionBlockAsync(timeIndices, async index =>
             {
-                await queryIndicesBlock.PostToBlockUntilSuccessAsync(index);
-            }
+                var indexCount = await _client.GetGrain<IAggregateJobIndexGrain>(index).GetRollingIndexCountAsync();
+                var indexSeq = Enumerable.Range(0, indexCount + 1).ToList();
 
-            queryIndicesBlock.Complete();
-            await queryIndicesBlock.Completion;
-
+                await Helper.RunWithActionBlockAsync(indexSeq, async shardIndex =>
+                {
+                    var grain = _client.GetGrain<IRollingJobIndexGrain>(Helper.GetRollingIndexId(index, shardIndex));
+                    foreach (var item in await grain.QueryAsync(dto.Predicate))
+                    {
+                        result[item.JobId] = item;
+                    }
+                });
+            });
             return new ReturnQueryIndexDto
             {
                 Indices = _mapper.Map<List<JobIndex>>(result.Values

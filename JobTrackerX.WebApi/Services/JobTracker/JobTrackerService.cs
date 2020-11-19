@@ -7,6 +7,7 @@ using Orleans;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 
@@ -173,7 +174,13 @@ namespace JobTrackerX.WebApi.Services.JobTracker
         
         public async Task<long> GetDescendantsCountAsync(long jobId)
         {
-            return await _client.GetGrain<IAggregateCounterGrain>(jobId).GetAsync();
+            var shardCounters = await _client.GetGrain<IAggregateCounterGrain>(jobId).GetCountersAsync();
+
+            long sum = 0;
+            await Helper.RunWithActionBlockAsync(shardCounters,
+                async counter => Interlocked.Add(ref sum, await _client.GetGrain<ICounterGrain>(counter).GetAsync()),
+                Helper.GetOutOfGrainExecutionOptions());
+            return sum;
         }
 
         public async Task<JobState> GetJobStateAsync(long jobId)

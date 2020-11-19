@@ -17,7 +17,7 @@ namespace JobTrackerX.Grains
             _state = state;
         }
 
-        public async Task AddAsync(int count, string type)
+        public async Task AddAsync(int count, string type = Constants.DefaultCounterType)
         {
             if (!_state.State.CountMap.TryGetValue(type, out _))
             {
@@ -28,7 +28,7 @@ namespace JobTrackerX.Grains
             await _state.WriteStateAsync();
         }
 
-        public Task<long> GetAsync(string type)
+        public Task<long> GetAsync(string type = Constants.DefaultCounterType)
         {
             _state.State.CountMap.TryGetValue(type, out var count);
             return Task.FromResult(count);

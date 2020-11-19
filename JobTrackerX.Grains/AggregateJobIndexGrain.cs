@@ -22,28 +22,6 @@ namespace JobTrackerX.Grains
             _indexConfig = options.Value.JobIndexConfig;
         }
 
-        public async Task<List<JobIndexInternal>> QueryAsync(string queryStr)
-        {
-            var queryResult = new ConcurrentBag<JobIndexInternal>();
-            var queryActionBlock = new ActionBlock<int>(async index =>
-            {
-                var grain = GrainFactory.GetGrain<IRollingJobIndexGrain>(Helper.GetRollingIndexId(this.GetPrimaryKeyString(), index));
-                foreach (var item in await grain.QueryAsync(queryStr))
-                {
-                    queryResult.Add(item);
-                }
-            }, Helper.GetGrainInternalExecutionOptions());
-
-            for (var i = 0; i <= State.RollingIndexCount; i++)
-            {
-                await queryActionBlock.PostToBlockUntilSuccessAsync(i);
-            }
-
-            queryActionBlock.Complete();
-            await queryActionBlock.Completion;
-            return queryResult.ToList();
-        }
-
         public async Task MergeIntoIndicesAsync(List<JobIndexInternal> indices)
         {
             var current = GrainFactory.GetGrain<IRollingJobIndexGrain>(Helper.GetRollingIndexId(
@@ -56,6 +34,11 @@ namespace JobTrackerX.Grains
             }
 
             await WriteStateAsync();
+        }
+
+        public Task<int> GetRollingIndexCountAsync()
+        {
+            return Task.FromResult(State.RollingIndexCount);
         }
     }
 }

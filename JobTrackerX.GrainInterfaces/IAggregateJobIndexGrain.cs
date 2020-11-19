@@ -7,8 +7,7 @@ namespace JobTrackerX.GrainInterfaces
 {
     public interface IAggregateJobIndexGrain : IGrainWithStringKey
     {
-        Task<List<JobIndexInternal>> QueryAsync(string queryStr);
-
         Task MergeIntoIndicesAsync(List<JobIndexInternal> indices);
+        Task<int> GetRollingIndexCountAsync();
     }
 }

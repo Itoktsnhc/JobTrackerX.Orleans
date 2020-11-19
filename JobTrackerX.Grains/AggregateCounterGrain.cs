@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,15 +20,10 @@ namespace JobTrackerX.Grains
             await counter.AddAsync(count, type);
         }
 
-        public async Task<long> GetAsync(string type = Constants.DefaultCounterType)
+        public Task<List<string>> GetCountersAsync()
         {
-            var counters = Enumerable.Range(0, Constants.CounterPerAggregateCounter)
-                .Select(s => GrainFactory.GetGrain<ICounterGrain>($"{this.GetPrimaryKeyLong()}-{s}")).ToList();
-            long sum = 0;
-            await Helper.RunWithActionBlockAsync(counters,
-                async counter => Interlocked.Add(ref sum, await counter.GetAsync(type)),
-                Helper.GetGrainInternalExecutionOptions());
-            return sum;
+            return Task.FromResult(Enumerable.Range(0, Constants.CounterPerAggregateCounter)
+                .Select(s => $"{this.GetPrimaryKeyLong()}-{s}").ToList());
         }
     }
 }

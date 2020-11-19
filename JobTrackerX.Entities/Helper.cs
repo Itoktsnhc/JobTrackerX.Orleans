@@ -84,15 +84,6 @@ namespace JobTrackerX.Entities
             };
         }
 
-        public static ExecutionDataflowBlockOptions GetGrainInternalExecutionOptions()
-        {
-            return new ExecutionDataflowBlockOptions
-            {
-                MaxDegreeOfParallelism = Constants.DefaultDegreeOfParallelism,
-                TaskScheduler = TaskScheduler.Current
-            };
-        }
-
         public static IEnumerable<List<T>> SplitListByCount<T>(int nSize, List<T> list)
         {
             for (var i = 0; i < list.Count; i += nSize)
