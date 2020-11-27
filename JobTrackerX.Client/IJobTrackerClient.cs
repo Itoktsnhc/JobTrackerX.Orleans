@@ -21,19 +21,15 @@ namespace JobTrackerX.Client
 
         public abstract Task<ReturnQueryIndexDto> QueryJobIndexAsync(QueryJobIndexDto dto);
 
-        public abstract Task<List<JobEntity>> GetDescendantsAsync(long jobId);
-
         public abstract Task<List<JobEntity>> GetChildrenAsync(long jobId);
-
-        public abstract Task<List<long>> GetDescendantIdsAsync(long jobId);
 
         public abstract Task<bool> AppendToJobLogAsync(long jobId, AppendLogDto dto);
 
         public abstract Task<JobTreeStatistics> GetJobTreeStatisticsAsync(long jobId);
-        
+
         public abstract Task<List<AddJobErrorResult>> BatchAddChildrenAsync(BatchAddJobDto dto,
             ExecutionDataflowBlockOptions options = null);
-        
+
         public abstract Task<long> GetDescendantsCountAsync(long jobId);
 
         public abstract Task<JobStateDto> GetJobStateAsync(long jobId);

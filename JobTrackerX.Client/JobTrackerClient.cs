@@ -112,30 +112,6 @@ namespace JobTrackerX.Client
             throw new Exception($"{nameof(QueryJobIndexAsync)} failed {resp.Msg}");
         }
 
-        public override async Task<List<JobEntity>> GetDescendantsAsync(long jobId)
-        {
-            var resp = await SendRequestAsync<List<JobEntity>, object>(HttpMethod.Get,
-                $"api/jobTracker/{jobId}/descendants/detail");
-            if (resp.Result)
-            {
-                return resp.Data;
-            }
-
-            throw new Exception($"{nameof(GetDescendantsAsync)} failed {resp.Msg}");
-        }
-
-        public override async Task<List<long>> GetDescendantIdsAsync(long jobId)
-        {
-            var resp = await SendRequestAsync<List<long>, object>(HttpMethod.Get,
-                $"api/jobTracker/{jobId}/descendants");
-            if (resp.Result)
-            {
-                return resp.Data;
-            }
-
-            throw new Exception($"{nameof(GetDescendantIdsAsync)} failed {resp.Msg}");
-        }
-
         public override async Task<List<JobEntity>> GetChildrenAsync(long jobId)
         {
             var resp = await SendRequestAsync<List<JobEntity>, object>(HttpMethod.Get,
