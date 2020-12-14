@@ -100,6 +100,8 @@ namespace JobTrackerX.WebApi
                             var factory = sp.GetRequiredService<IGrainFactory>();
                             await factory.GetGrain<IMergeIndexReminder>(Constants.MergeIndexReminderDefaultGrainId)
                                 .ActiveAsync();
+                            await factory.GetGrain<IMergeIndexTimer>(Constants.MergeIndexTimerDefaultGrainId)
+                                .KeepAliveAsync();
                         })
                         .Configure<GrainCollectionOptions>(grainCollectionOptions =>
                         {
@@ -112,7 +114,7 @@ namespace JobTrackerX.WebApi
                                 typeof(RollingJobIndexGrain).FullName ?? throw new
                                     InvalidOperationException()] = TimeSpan.FromMinutes(5);
                         });
-                    
+
                     if (Constants.IsDev)
                     {
                         siloBuilder.UseLocalhostClustering(

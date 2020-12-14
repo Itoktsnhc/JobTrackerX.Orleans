@@ -19,6 +19,7 @@ namespace JobTrackerX.Grains
         private readonly IndexConfig _indexConfig;
         private readonly ILogger<IMergeIndexTimer> _logger;
         private readonly string _tableName;
+        private IDisposable _timer;
         private CloudTableClient Client => _account.CreateCloudTableClient();
 
         public MergeIndexTimer(ILogger<IMergeIndexTimer> logger,
@@ -88,7 +89,7 @@ namespace JobTrackerX.Grains
 
         public Task KeepAliveAsync()
         {
-            RegisterTimer(async _ => await MergeShardingIndexAsync(), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(30));
+            _timer ??= RegisterTimer(async _ => await MergeShardingIndexAsync(), null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(30));
             return Task.CompletedTask;
         }
     }
