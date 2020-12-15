@@ -1,30 +1,30 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyVersion>1.0.28.0</AssemblyVersion>
-    <FileVersion>1.0.28.0</FileVersion>
-    <Copyright>itoktsnhc@hotmail.com</Copyright>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Version>1.0.28</Version>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <PackageProjectUrl>https://github.com/Itoktsnhc/JobTrackerX.Orleans</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/Itoktsnhc/JobTrackerX.Orleans</RepositoryUrl>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <Description>JobTrackerX.Client</Description>
-    <LangVersion>8</LangVersion>
-    <PackageReleaseNotes>add trackJobcount option</PackageReleaseNotes>
-    <PackageVersion>1.0.28</PackageVersion>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<AssemblyVersion>1.0.29.0</AssemblyVersion>
+		<FileVersion>1.0.29.0</FileVersion>
+		<Copyright>itoktsnhc@hotmail.com</Copyright>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Version>1.0.29</Version>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageProjectUrl>https://github.com/Itoktsnhc/JobTrackerX.Orleans</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/Itoktsnhc/JobTrackerX.Orleans</RepositoryUrl>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<Description>JobTrackerX.Client</Description>
+		<LangVersion>8</LangVersion>
+		<PackageReleaseNotes>down grade polly version  to  6</PackageReleaseNotes>
+		<PackageVersion>1.0.29</PackageVersion>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="10.1.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="Polly" Version="7.2.1" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="AutoMapper" Version="10.1.1" />
+		<PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+		<PackageReference Include="Polly" Version="6.1.2" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\JobTrackerX.SharedLibs\JobTrackerX.SharedLibs.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\JobTrackerX.SharedLibs\JobTrackerX.SharedLibs.csproj" />
+	</ItemGroup>
 
 </Project>
