@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 using JobTrackerX.Entities;
 using JobTrackerX.GrainInterfaces;
 using Orleans;
+using Orleans.Concurrency;
 
 namespace JobTrackerX.Grains
 {
+    [StatelessWorker]
     public class AggregateCounterGrain : Grain, IAggregateCounterGrain
     {
         private readonly Random _rand = new Random();
