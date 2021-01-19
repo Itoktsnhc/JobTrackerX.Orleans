@@ -12,7 +12,7 @@ Orleans实现了[Virtual Actor](http://research.microsoft.com/apps/pubs/default.
 - Grain对于请求单线程处理，不存在并发。
 - Grain在Active后State存在于内存中，可选持久化。
 
-Job System基于Orleans项目，实现了以下功能：
+JobTrackerX基于Orleans项目，实现了以下功能：
 
 - Job与job之间存在树状关系:
 
@@ -43,7 +43,7 @@ Job System基于Orleans项目，实现了以下功能：
 
 ### 部署
 当前集成模式为[Asp.Net Core Co-Hosting](https://devblogs.microsoft.com/dotnet/orleans-3-0/#co-hosting-via-the-generic-host)将Orleans和对外暴露Api接口的asp.net core项目组合在同一个 generic host上,简化部署模式
-一个Orleans集群由一个或多个Silo组成。每个Silo开放两个端口:silo port,gateway port 用作集群内互相通信,集群信息使用Clustering Membership管理。job system 中使用的时Azure Storage Table 作为集群信息的存储. 启动时每个Silo会将自己的信息同步到Membership table中，根据membership中的记录尝试互相连通(gossip)，组成集群。当接收到外部请求，Orleans Runtime 会依照一定的负载均衡规则将请求转发给特定的Silo上对应的Grain，如果Grain未激活，则runtime 会根据一定的规则将其激活在集群内的某一个Silo上.  
+一个Orleans集群由一个或多个Silo组成。每个Silo开放两个端口:silo port,gateway port 用作集群内互相通信,集群信息使用Clustering Membership管理。JobTrackerX 中使用的时Azure Storage Table 作为集群信息的存储. 启动时每个Silo会将自己的信息同步到Membership table中，根据membership中的记录尝试互相连通(gossip)，组成集群。当接收到外部请求，Orleans Runtime 会依照一定的负载均衡规则将请求转发给特定的Silo上对应的Grain，如果Grain未激活，则runtime 会根据一定的规则将其激活在集群内的某一个Silo上.  
 
 
 ![silos](https://user-images.githubusercontent.com/11204672/105013649-6f9cf780-5a7a-11eb-8a20-d2551784cd08.png)
