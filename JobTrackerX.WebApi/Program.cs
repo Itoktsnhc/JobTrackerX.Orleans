@@ -15,16 +15,17 @@ using JobTrackerX.Grains;
 using JobTrackerX.Grains.InMem;
 using Microsoft.Extensions.DependencyInjection;
 using Orleans.Reminders.AzureStorage;
+using Itok.Extension.Configuration.AzureBlob;
+using JobTrackerX.WebApi.Entities;
 
 namespace JobTrackerX.WebApi
 {
     public static class Program
     {
-        private static readonly string SettingFileName = $"appsettings.{Constants.GetEnv()}.json";
 
         private static IConfiguration Configuration { get; } = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile(SettingFileName, false)
+            .AddAzureBlobJson(ConfigExtensions.GetJobTrackerConfig())
             .AddEnvironmentVariables()
             .Build();
 
@@ -54,7 +55,7 @@ namespace JobTrackerX.WebApi
         private static IHostBuilder CreateWebHostBuilder(string[] args)
         {
             return Host.CreateDefaultBuilder(args)
-                .ConfigureHostConfiguration(config => config.AddJsonFile(SettingFileName))
+                .ConfigureHostConfiguration(config => config.AddAzureBlobJson(ConfigExtensions.GetJobTrackerConfig()))
                 .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>())
                 .UseOrleans((context, siloBuilder) =>
                 {
