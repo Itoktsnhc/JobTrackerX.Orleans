@@ -6,8 +6,8 @@ namespace JobTrackerX.Entities
     {
         #region AzureStorageConfigurations
 
-        public const string ConfigStorageKey = "JOBSYS_CONFIG_CONNECTION";
-        public const string ConfigContainer = "JOBSYS_CONFIG_CONTAINER";
+        public const string ConfigStoreConnStr = "JOBSYS_CONFIG_CONNECTION";
+        public const string ConfigStoreContainer = "JOBSYS_CONFIG_CONTAINER";
 
 
         #endregion

@@ -9,8 +9,8 @@ namespace JobTrackerX.WebApi.Entities
         private static readonly AzureBlobConfigurationOption _azureOptions = new AzureBlobConfigurationOption()
         {
             BlobName = $"appsettings.{Constants.GetEnv()}.json",
-            ConnStr = Environment.GetEnvironmentVariable(Constants.ConfigStorageKey),
-            ContainerName = Environment.GetEnvironmentVariable(Constants.ConfigStorageKey),
+            ConnStr = Environment.GetEnvironmentVariable(Constants.ConfigStoreConnStr),
+            ContainerName = Environment.GetEnvironmentVariable(Constants.ConfigStoreContainer),
             ReloadOnChange = false
         };
 
