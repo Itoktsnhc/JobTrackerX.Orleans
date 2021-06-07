@@ -48,6 +48,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Dockerfile">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="JobTrackerX.Web.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

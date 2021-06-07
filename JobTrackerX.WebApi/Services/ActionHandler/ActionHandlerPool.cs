@@ -128,7 +128,8 @@ namespace JobTrackerX.WebApi.Services.ActionHandler
                 using var smtp = new SmtpClient(_emailConfig.SmtpHost, _emailConfig.SmtpPort)
                 {
                     UseDefaultCredentials = false,
-                    Credentials = new NetworkCredential(_emailConfig.Account, _emailConfig.Password)
+                    Credentials = new NetworkCredential(_emailConfig.Account, _emailConfig.Password),
+                    EnableSsl = _emailConfig.EnableSsl
                 };
                 await smtp.SendMailAsync(message);
             }
