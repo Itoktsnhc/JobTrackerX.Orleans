@@ -4,6 +4,13 @@ namespace JobTrackerX.Entities
 {
     public static class Constants
     {
+        #region AzureStorageConfigurations
+
+        public const string ConfigStoreConnStr = "JOBSYS_CONFIG_CONNECTION";
+        public const string ConfigStoreContainer = "JOBSYS_CONFIG_CONTAINER";
+
+
+        #endregion
         public const string JobEntityStoreName = "JobStore";
         public const string AppendStoreName = "JobAppendStore";
         public const string JobRefStoreName = "JobRefStore";
@@ -37,6 +44,7 @@ namespace JobTrackerX.Entities
         public const string WebUiInputDateTimeFormat = "yyyy-MM-dd HH";
         public const string WebUiShowDateTimeFormat = "yyyy-MM-dd HH:mm:ss";
         public const string WebUiShowTimeSpanFormat = "d'd 'h'h 'm'm 's's'";
+
         #region Environment
 
         public const string JobSysEnvKey = "JOBSYS_ENV";
@@ -57,6 +65,7 @@ namespace JobTrackerX.Entities
         public static bool IsDev => GetEnv() == DevEnvValue;
 
         #endregion
+
         public const string BufferIdKey = "BufferIdKey";
     }
 }

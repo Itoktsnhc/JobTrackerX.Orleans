@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -14,6 +15,7 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.0" />
     <PackageReference Include="Blazored.Toast" Version="3.1.2" />
+    <PackageReference Include="Itok.Extension.Configuration.AzureBlob" Version="1.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.6" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.6" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.6" />
@@ -46,6 +48,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Dockerfile">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="JobTrackerX.Web.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
