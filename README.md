@@ -1,6 +1,9 @@
 # JobTrackerX.Orleans
 [![JetBrainsOpenSource](https://img.shields.io/badge/JB-OpenSource-orange) ](https://www.jetbrains.com/?from=JobTracker.Orleans)  [![Nuget](https://img.shields.io/nuget/dt/JobTrackerX.Client?label=JobTrackerX.Client&logo=Nuget)](https://www.nuget.org/packages/JobTrackerX.Client/)
 
+[![Server on DockerHub](https://img.shields.io/docker/pulls/itoktsnhc/jobtracker)](https://hub.docker.com/repository/docker/itoktsnhc/jobtracker)
+
+Demo站点: https://itok-jobtracker.azurewebsites.net/
 ## 简介
 
 **基于[Orleans](https://github.com/dotnet/orleans)框架实现的任务状态跟踪系统。**
