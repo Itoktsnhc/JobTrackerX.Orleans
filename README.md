@@ -3,7 +3,7 @@
 
 [![Server on DockerHub](https://img.shields.io/docker/pulls/itoktsnhc/jobtracker)](https://hub.docker.com/repository/docker/itoktsnhc/jobtracker)
 
-Demo: http://jobtracker-x.eastasia.cloudapp.azure.com/
+Demo: http://jobtracker.itok.xyz/
 ## 简介
 
 **基于[Orleans](https://github.com/dotnet/orleans)框架实现的任务状态跟踪系统。**
