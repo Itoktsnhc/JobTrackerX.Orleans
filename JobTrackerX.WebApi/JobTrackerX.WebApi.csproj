@@ -37,10 +37,7 @@
 
   <ItemGroup>
     <Content Update="appsettings.dev.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="appsettings.prod.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Content>
     <Content Update="wwwroot\css\bootstrap\bootstrap.min.css">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>

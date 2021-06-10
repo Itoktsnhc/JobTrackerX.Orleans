@@ -15,33 +15,31 @@ namespace JobTrackerX.SampleTrigger
             while (true)
             {
                 Console.WriteLine("Cycle Start");
-                var root = await _client.CreateNewJobAsync(new AddJobDto($"JOB-{DateTimeOffset.UtcNow:yy-MM-dd HH:mm}")
+                var root = await _client.CreateNewJobAsync(new AddJobDto($"ROOT JOB")
                 {
-                    Tags = new List<string>() { "示例任务" },
-                    CreatedBy = "SampleTrigger",
-                    SourceLink = "这是任务来源链接"
+                    Tags = new List<string>() { "演示用" },
+                    CreatedBy = "演示创建人",
+                    SourceLink = "https://blog.itok.xyz/"
                 });
-                var layer1Child1 = await _client.CreateNewJobAsync(new AddJobDto("", root.JobId));
-                var layer2Child1 = await _client.CreateNewJobAsync(new AddJobDto("", layer1Child1.JobId));
-                var layer2Child2 = await _client.CreateNewJobAsync(new AddJobDto("", layer1Child1.JobId));
-                var layer2Child3 = await _client.CreateNewJobAsync(new AddJobDto("", layer1Child1.JobId));
-                var layer1Child2 = await _client.CreateNewJobAsync(new AddJobDto("", root.JobId));
-                Console.WriteLine($"RootJobId {root.JobId}");
+                await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.Running));
+                var child1 = await _client.CreateNewJobAsync(new AddJobDto($"L1-JOB-1", root.JobId));
+
+                var child2 = await _client.CreateNewJobAsync(new AddJobDto($"L1-JOB-2", root.JobId));
+                await _client.UpdateJobStatesAsync(child2.JobId, new UpdateJobStateDto(JobState.Running));
+                await _client.UpdateJobStatesAsync(child2.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
 
                 await _client.UpdateJobStatesAsync(root.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
-                await _client.UpdateJobStatesAsync(layer1Child1.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
-                await _client.UpdateJobStatesAsync(layer1Child2.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
-                await _client.UpdateJobStatesAsync(layer2Child1.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
 
-                root = await _client.GetJobEntityAsync(root.JobId);
-                Console.WriteLine($"root job cur status : {root.JobId} {root.CurrentJobState}");
-                await _client.UpdateJobStatesAsync(layer2Child2.JobId, new UpdateJobStateDto(JobState.Faulted));
-                root = await _client.GetJobEntityAsync(root.JobId); ;
-                Console.WriteLine($"root job cur status : {root.JobId} {root.CurrentJobState}");
-                await _client.UpdateJobStatesAsync(layer2Child3.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
-                root = await _client.GetJobEntityAsync(root.JobId);
-                Console.WriteLine($"root job cur status : {root.JobId} {root.CurrentJobState}");
-                await Task.Delay(TimeSpan.FromMinutes(6));
+                await _client.UpdateJobStatesAsync(child1.JobId, new UpdateJobStateDto(JobState.Running));
+                var child1Child1 = await _client.CreateNewJobAsync(new AddJobDto($"L1-JOB-1/L2-JOB-1", child1.JobId)
+                {
+                    Tags = new List<string>() { "演示用" },
+                    CreatedBy = "演示创建人",
+                });
+                await _client.UpdateJobStatesAsync(child1.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
+                await _client.UpdateJobStatesAsync(child1Child1.JobId, new UpdateJobStateDto(JobState.Running));
+                await _client.UpdateJobStatesAsync(child1Child1.JobId, new UpdateJobStateDto(JobState.RanToCompletion));
+                await Task.Delay(TimeSpan.FromMinutes(7));
             }
         }
     }
