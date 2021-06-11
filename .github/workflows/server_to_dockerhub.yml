@@ -33,7 +33,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./release
-          file: ./Dockerfile
+          file: ./release/Dockerfile
           push: true
           tags: jobtracker:0.4
           
