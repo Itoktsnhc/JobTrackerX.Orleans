@@ -25,4 +25,4 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           workdir: ./release
-          tag_semver: true
+          tag_names: true
