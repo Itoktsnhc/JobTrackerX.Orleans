@@ -1,7 +1,7 @@
 name: CI to Docker Hub
 on:
   push:
-    branches: [release/*]
+    tags: [server:*]
        # Default release branch
 jobs:
   publish:
@@ -30,6 +30,6 @@ jobs:
           context: ./release
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/jobtracker:${GITHUB_REF##*/}
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/jobtracker:${GITHUB_REF#refs/tags/server:*}
           
         
