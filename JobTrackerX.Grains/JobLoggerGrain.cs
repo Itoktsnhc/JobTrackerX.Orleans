@@ -69,8 +69,7 @@ namespace JobTrackerX.Grains
             var appendBlob = container.GetAppendBlobClient(this.GetPrimaryKeyLong().ToString());
             if (await appendBlob.ExistsAsync())
             {
-                var token = await GetAccessUrlWithSasTokenAsync(appendBlob, this.GetPrimaryKeyLong().ToString());
-                return $"{appendBlob.Uri}{token}";
+                return await GetAccessUrlWithSasTokenAsync(appendBlob, this.GetPrimaryKeyLong().ToString());
             }
             return null;
         }
