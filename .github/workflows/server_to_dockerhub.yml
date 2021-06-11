@@ -35,6 +35,6 @@ jobs:
           context: ./release
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/jobtracker:$GIT_TAG_NAME
+          tags: jobtracker:$GIT_TAG_NAME
           
         
