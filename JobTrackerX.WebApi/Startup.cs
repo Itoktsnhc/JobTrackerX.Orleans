@@ -87,7 +87,7 @@ namespace JobTrackerX.WebApi
                 .AddCircuitOptions(options => options.DetailedErrors = true);
             services.AddControllers(options =>
                 options.Filters.Add(new TypeFilterAttribute(typeof(GlobalExceptionFilter)))).AddNewtonsoftJson();
-
+           
             #endregion
 
             #region AutoMappers

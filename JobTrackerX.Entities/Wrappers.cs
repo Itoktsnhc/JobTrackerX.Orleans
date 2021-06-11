@@ -1,9 +1,9 @@
 ﻿using Microsoft.Azure.ServiceBus;
 using Microsoft.Extensions.Options;
-using Microsoft.Azure.Storage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Azure.Storage.Blobs;
 
 namespace JobTrackerX.Entities
 {
@@ -39,7 +39,7 @@ namespace JobTrackerX.Entities
 
     public class StorageAccountWrapper
     {
-        public CloudStorageAccount Account { get; set; }
+        public BlobServiceClient BlobSvcClient { get; set; }
         public Microsoft.Azure.Cosmos.Table.CloudStorageAccount TableAccount { get; set; }
     }
 

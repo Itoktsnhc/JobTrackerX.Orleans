@@ -1,3 +1,4 @@
+using Azure.Storage.Blobs;
 using DynamicExpresso;
 using JobTrackerX.Entities.GrainStates;
 using JobTrackerX.SharedLibs;
@@ -61,7 +62,7 @@ namespace JobTrackerX.Entities
                 _ => "badge badge-pill badge-light"
             };
         }
-        
+
         public static async Task RunWithActionBlockAsync<T>(IList<T> parameters, Func<T, Task> runBody,
             ExecutionDataflowBlockOptions options = null)
         {
@@ -220,17 +221,13 @@ namespace JobTrackerX.Entities
         public static TReturn GetWrapperStorageAccount<TReturn>(string connStr)
             where TReturn : StorageAccountWrapper, new()
         {
-            if (!Microsoft.Azure.Storage.CloudStorageAccount.TryParse(connStr, out var account))
-            {
-                throw new Exception("Cannot create Storage Account");
-            }
 
             if (!Microsoft.Azure.Cosmos.Table.CloudStorageAccount.TryParse(connStr, out var tableAccount))
             {
                 throw new Exception("Cannot create Storage Account");
             }
 
-            return new TReturn {Account = account, TableAccount = tableAccount};
+            return new TReturn { BlobSvcClient = new BlobServiceClient(connStr), TableAccount = tableAccount };
         }
 
         public static string GetRollingIndexId(string prefix, int indexCount)
@@ -293,7 +290,7 @@ namespace JobTrackerX.Entities
             }
         }
     }
-    
+
     public class AddToBufferDtoEqualityComparer : IEqualityComparer<AddToBufferDto>
     {
         public bool Equals(AddToBufferDto x, AddToBufferDto y)
