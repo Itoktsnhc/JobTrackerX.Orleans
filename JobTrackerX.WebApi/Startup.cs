@@ -18,6 +18,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Orleans;
 using OrleansDashboard;
+using ProxyMediator.Core.Misc;
+using ProxyMediator.Extension;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace JobTrackerX.WebApi
 {
@@ -87,7 +94,30 @@ namespace JobTrackerX.WebApi
                 .AddCircuitOptions(options => options.DetailedErrors = true);
             services.AddControllers(options =>
                 options.Filters.Add(new TypeFilterAttribute(typeof(GlobalExceptionFilter)))).AddNewtonsoftJson();
-           
+            services.AddProxyMediator(IPEndPoint.Parse("127.0.0.1:0"), (session, proxyMediatorHandler) =>
+            {
+                var host = session.Header.Host.Hostname;
+                var external = proxyMediatorHandler.OutBoundMap.OrderByDescending(s => s.Key.Length)//
+                    .FirstOrDefault(s =>
+                        host.Contains(s.Key)
+                        || host == s.Key).Value;
+                return Task.FromResult(external);
+            });
+            services.AddHttpClient(nameof(ProxyMediator))
+                .ConfigurePrimaryHttpMessageHandler(ctx =>
+                {
+                    var proxyMediatorHandler = ctx.GetRequiredService<ProxyMediatorHandler>();
+                    var httpClientHandler = new HttpClientHandler();
+                    while (proxyMediatorHandler.EndPoint.Port == 0)//当系统自动分配的时候，需要等待后台服务启动
+                    {
+                        Thread.Sleep(100);
+                    }
+
+                    httpClientHandler.UseProxy = true;
+                    httpClientHandler.Proxy = new WebProxy(proxyMediatorHandler.EndPoint.ToString());
+                    return httpClientHandler;
+                });
+
             #endregion
 
             #region AutoMappers
@@ -103,7 +133,7 @@ namespace JobTrackerX.WebApi
         {
             if (JobTrackerConfig.CommonConfig.UseDashboard)
             {
-                app.UseOrleansDashboard(new DashboardOptions {BasePath = "/dashboard"});
+                app.UseOrleansDashboard(new DashboardOptions { BasePath = "/dashboard" });
             }
 
             app.UseStaticFiles();
