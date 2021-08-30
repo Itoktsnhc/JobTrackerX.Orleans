@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Polly;
+using ProxyMediator.Core.Misc;
 using System;
 using System.Linq;
 using System.Net;
@@ -22,8 +23,12 @@ namespace JobTrackerX.WebApi.Services.ActionHandler
         private readonly ILogger<ActionHandlerPool> _logger;
         private readonly IHttpClientFactory _httpFactory;
         private readonly JsonSerializerSettings _serializerSettings;
+        private readonly ProxyMediatorHandler _handler;
 
-        public ActionHandlerPool(IOptions<EmailConfig> options, IHttpClientFactory httpFactory, ILogger<ActionHandlerPool> logger)
+        public ActionHandlerPool(IOptions<EmailConfig> options,
+            ProxyMediatorHandler handler,
+            IHttpClientFactory httpFactory,
+            ILogger<ActionHandlerPool> logger)
         {
             _serializerSettings = new JsonSerializerSettings()
             {
@@ -33,6 +38,12 @@ namespace JobTrackerX.WebApi.Services.ActionHandler
 
             _emailConfig = options.Value;
             _logger = logger;
+            _handler = handler;
+        }
+
+        private HttpClient GetLocalProxiedClient()
+        {
+            return _httpFactory.CreateClient(nameof(ProxyMediator));
         }
 
         public async Task<bool> HandleMessageAsync(ActionMessageDto msg)
@@ -71,8 +82,18 @@ namespace JobTrackerX.WebApi.Services.ActionHandler
                 {
                     return true;
                 }
-                var client = _httpFactory.CreateClient();
 
+                var uri = new Uri(dto.Url, UriKind.Absolute);
+                var client = GetLocalProxiedClient();
+                if (dto.Proxy != null)
+                {
+                    var proxy = dto.Proxy;
+                    _handler.OutBoundMap[uri.Host] = new ExternalProxy(proxy.Host, proxy.Port)
+                    {
+                        Password = proxy.Password,
+                        Username = proxy.Username
+                    };
+                }
                 var req = new HttpRequestMessage(HttpMethod.Post, dto.Url);
                 if (dto.Headers?.Any() == true)
                 {
@@ -181,7 +202,18 @@ namespace JobTrackerX.WebApi.Services.ActionHandler
                 {
                     return true;
                 }
-                var client = _httpFactory.CreateClient();
+                var uri = new Uri(dto.Url, UriKind.Absolute);
+                var client = GetLocalProxiedClient();
+                if (dto.Proxy != null)
+                {
+                    var proxy = dto.Proxy;
+                    _handler.OutBoundMap[uri.Host] = new ExternalProxy(proxy.Host, proxy.Port)
+                    {
+                        Password = proxy.Password,
+                        Username = proxy.Username
+                    };
+                }
+
 
                 var req = new HttpRequestMessage(HttpMethod.Post, dto.Url);
                 if (dto.Headers?.Any() == true)

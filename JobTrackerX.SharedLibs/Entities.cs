@@ -78,7 +78,17 @@ namespace JobTrackerX.SharedLibs
         public string Url { get; set; }
         public object Payload { get; set; }
         public Dictionary<string, string> Headers { get; set; } = new Dictionary<string, string>();
+        public ProxyConfig Proxy { get; set; }
     }
+
+    public class ProxyConfig
+    {
+        public string Host { get; set; }
+        public int Port { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
+    }
+
 
     public class ActionConfigWrapper
     {
