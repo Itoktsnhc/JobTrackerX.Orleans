@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>netstandard2.0</TargetFramework>
+		<TargetFramework>net6.0</TargetFramework>
 		<AssemblyVersion>1.0.30.0</AssemblyVersion>
 		<FileVersion>1.0.30.0</FileVersion>
 		<Copyright>itoktsnhc@hotmail.com</Copyright>
