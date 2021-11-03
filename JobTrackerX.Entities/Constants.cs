@@ -38,7 +38,7 @@ namespace JobTrackerX.Entities
         public const string MergeIndexTimerDefaultGrainId = "MergeIndexTimer0";
 
         public const string NotAvailableStr = "--";
-        public const string PercentageFormat = "P";
+        public const string PercentageFormat = "0.00%";
         public const string DecimalFormat = "0.##";
         public const string TagClassStr = "badge badge-dark";
         public const string WebUiInputDateTimeFormat = "yyyy-MM-dd HH";
