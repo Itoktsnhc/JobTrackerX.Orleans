@@ -1,0 +1,12 @@
+﻿@page "/show/{JobId:long}"
+@inject IJobTrackerService _service
+@inject IMapper _mapper
+@inject IToastService _toastService
+
+<h1>AHA</h1>
+
+@code{
+    [Parameter]
+    public long JobId { get; set; }
+
+}

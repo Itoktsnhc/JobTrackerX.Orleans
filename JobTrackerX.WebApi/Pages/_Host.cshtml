@@ -12,10 +12,14 @@
     <base href="~/" />
     <script type="text/javascript" src="~/js/jquery.min.js"></script>
     <script type="text/javascript" src="~/js/moment.min.js"></script>
+    <script  type="text/javascript" src="https://lib.baomitu.com/echarts/5.0.2/echarts.min.js"></script>
     <link rel="stylesheet" href="~/css/bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/app.css" />
     <link href="_content/Blazored.Toast/blazored-toast.css" rel="stylesheet" />
+    
 </head>
 <body>
+    <script type="module" src="_content/Blazor.ECharts/core.js"></script>
     <app>
         @(await Html.RenderComponentAsync<App>(RenderMode.Server))
     </app>
