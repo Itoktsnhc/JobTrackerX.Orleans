@@ -1,5 +1,6 @@
 # JobTrackerX.Orleans
-[![JetBrainsOpenSource](https://img.shields.io/badge/JB-OpenSource-orange) ](https://www.jetbrains.com/?from=JobTracker.Orleans)  [![Nuget](https://img.shields.io/nuget/dt/JobTrackerX.Client?label=JobTrackerX.Client&logo=Nuget)](https://www.nuget.org/packages/JobTrackerX.Client/)
+[![JetBrainsOpenSource](https://img.shields.io/badge/JB-OpenSource-orange) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FItoktsnhc%2FJobTrackerX.Orleans.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FItoktsnhc%2FJobTrackerX.Orleans?ref=badge_shield)
+](https://www.jetbrains.com/?from=JobTracker.Orleans)  [![Nuget](https://img.shields.io/nuget/dt/JobTrackerX.Client?label=JobTrackerX.Client&logo=Nuget)](https://www.nuget.org/packages/JobTrackerX.Client/)
 
 [![Server on DockerHub](https://img.shields.io/docker/pulls/itoktsnhc/jobtracker)](https://hub.docker.com/repository/docker/itoktsnhc/jobtracker)
 
@@ -310,3 +311,7 @@ public async Task TestStateCheckAsync()
     - AggrCounter在接到+n请求后通过随机数找到Id为aggrCounterGrainId+rand.Next(maxInternalCounter) 的CounterGrain，调用他的+n方法。
     - AggrCounter在读取时将会向[0,maxInternalCounter]的CounterGrain发送读取当前计数的请求。Sum后返回。
     - 主要解决AzureStorage单个对象的IOPS偏低，如单个Blob的写入IOPS约20~50,使用两级结构计数就可以得到maxInternalCounter+SingleIOPS的总IOPS吞吐，而在读取的时候，由于对应的CounterGrain常驻内存。所以读取也不会存在瓶颈。
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FItoktsnhc%2FJobTrackerX.Orleans.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FItoktsnhc%2FJobTrackerX.Orleans?ref=badge_large)
