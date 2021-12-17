@@ -1,12 +1,116 @@
-﻿@page "/show/{JobId:long}"
+﻿@page "/show/{JobId:long}/graph"
 @inject IJobTrackerService _service
 @inject IMapper _mapper
 @inject IToastService _toastService
 
-<h1>AHA</h1>
 
-@code{
+@using Blazor.ECharts.Options
+@using Blazor.ECharts.Options.Enum
+@using G = Blazor.ECharts.Options.Series.Graph
+
+<div class="chart-container">
+    <EGraph Option="@_jobGraph" Class="chart-fill"></EGraph>
+</div>
+
+@code {
+
     [Parameter]
     public long JobId { get; set; }
+
+    private EChartsOption<G.Graph> _jobGraph;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var jobEntity = await _service.GetJobByIdAsync(JobId);
+        if (jobEntity == null)
+        {
+            _toastService.ShowError($"Job {JobId} not found");
+            return;
+        }
+        var dataList = new List<object>();
+        var linkList = new List<G.GraphLink>();
+        var queue = new Queue<(long, int)>(); //jobId,parentIndex
+        queue.Enqueue((JobId, -1));
+        while (queue.Any())
+        {
+            var (jobId, pIndex) = queue.Dequeue();
+            var cur = new { Name = jobId.ToString(), Category = 0, Draggable = true };
+
+            dataList.Add(cur);
+            var cIdx = dataList.Count - 1;
+            if (pIndex >= 0)
+            {
+                linkList.Add(new() { Source = pIndex, Target = cIdx, Value = "parent to child" });
+            }
+            var job = await _service.GetJobByIdAsync(jobId);
+            if (job.ChildrenStatesDic?.Any() == true)
+            {
+                foreach (var child in job.ChildrenStatesDic)
+                {
+                    queue.Enqueue((child.Key, cIdx));
+                }
+            }
+        }
+
+        _jobGraph = new()
+            {
+                Title = new()
+                {
+                    Text = $"{JobId}'s JobTree",
+                    Top = "15%",
+                    Left = "center"
+                },
+                Series = new()
+                {
+                    new G.Graph()
+                    {
+                        Layout = Layout.Circular,
+                        SymbolSize = 50,
+                        FocusNodeAdjacency = true,
+                        Categories = new()
+                        {
+                            new()
+                            {
+                                Name = "Job",
+                                ItemStyle = new()
+                                {
+                                    Color = "#009800"
+                                }
+                            }
+                        },
+                        Label = new()
+                        {
+                            Show = true,
+                            TextStyle = new()
+                            {
+                                FontSize = 15
+                            }
+                        },
+                        Force = new()
+                        {
+                            Repulsion = 1000
+                        },
+                        EdgeLabel = new()
+                        {
+                            Show = true,
+                            TextStyle = new()
+                            {
+                                FontSize = 5
+                            },
+                            Formatter = "{c}"
+                        },
+                        Data = dataList,
+                        Links = linkList,
+                        LineStyle = new()
+                        {
+                            Opacity = 0.9,
+                            Width = 1,
+                            Curveness = 12
+                        }
+                    }
+                }
+            };
+        StateHasChanged();
+    }
 
 }

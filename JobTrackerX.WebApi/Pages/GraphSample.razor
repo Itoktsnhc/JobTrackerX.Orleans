@@ -5,34 +5,23 @@
 @using G = Blazor.ECharts.Options.Series.Graph
 
 <div class="chart-container">
-    <EGraph Option="@Option1" Class="chart-fill"></EGraph>
+    <EGraph Option="@_jobTree" Class="chart-fill"></EGraph>
 </div>
 
 @code{
-    private EChartsOption<G.Graph> Option1;
+    private EChartsOption<G.Graph> _jobTree;
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
 
-        Option1 = new()
+        _jobTree = new()
         {
             Title = new()
             {
-                Text = "关系图",
-                Top = "12%",
+                Text = "JobTree",
+                Top = "15%",
                 Left = "center"
-            },
-            Label = new()
-            {
-                Show = true
-            },
-            Legend = new()
-            {
-                X = Align.Center,
-                Show = true,
-                Top = "20%",
-                Data = new[] { "男性", "女性" }
             },
             Series = new()
             {
@@ -81,26 +70,18 @@
                         },
                         Formatter = "{c}"
                     },
-                    Data = new[] {
-                        new{ Name="A",Category=0,Draggable=true},
-                        new{ Name="B",Category=1,Draggable=true},
-                        new{ Name="C",Category=0,Draggable=true},
-                        new{ Name="D",Category=1,Draggable=true},
-                        new{ Name="E",Category=0,Draggable=true},
-                        new{ Name="F",Category=1,Draggable=true},
-                        new{ Name="G",Category=1,Draggable=true},
-                        new{ Name="H",Category=1,Draggable=true}
+                    Data = new[]
+                    {
+                        new { Name = "A", Category = 0, Draggable = true },
+                        new { Name = "B", Category = 0, Draggable = true },
+                        new { Name = "C", Category = 0, Draggable = true },
                     },
                     Links = new()
                     {
-                        new() { Source = 0, Target = 1, Value = "夫妻" },
-                        new() { Source = 0, Target = 3, Value = "父子" },
-                        new() { Source = 0, Target = 5, Value = "朋友" },
-                        new() { Source = 4, Target = 5, Value = "同事" },
-                        new() { Source = 2, Target = 7, Value = "夫妻" },
-                        new() { Source = 1, Target = 7, Value = "朋友" },
-                        new() { Source = 1, Target = 4, Value = "朋友" },
-                        new() { Source = 1, Target = 6, Value = "朋友" }
+                        new() { Source = 0, Target = 1, Value = "A->B" },
+                        new() { Source = 0, Target = 2, Value = "A->C" },
+                        new() { Source = 1, Target = 2, Value = "B->C" },
+                        new() { Source = 2, Target = 0, Value = "C->A" },
                     },
                     LineStyle = new()
                     {
@@ -112,4 +93,5 @@
             }
         };
     }
+
 }
