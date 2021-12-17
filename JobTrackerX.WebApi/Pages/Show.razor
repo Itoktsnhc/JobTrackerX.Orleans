@@ -4,15 +4,26 @@
 @inject IToastService _toastService
 @inject IJSRuntime _jsRuntime
 
+
 <div>
-    <h1> Graph for @JobId:</h1>
-    <div id="output" style="margin: 0 auto;text-align: center;"></div>
+    @if (_loadingFinished)
+    {
+        <h1> Graph for @JobId:</h1>
+        <div id="output" style="margin: 0 auto;text-align: center;"></div>
+    }
+    else
+    {
+        <h1 style="margin: 0 auto;text-align: center;"> Graph for @JobId: Loading~</h1>
+    }
+
 </div>
 
 @code {
 
     [Parameter]
     public long JobId { get; set; }
+
+    private bool _loadingFinished;
 
     protected override async Task OnInitializedAsync()
     {
@@ -23,6 +34,8 @@
             return;
         }
         var str = await GenerateMermaidContentAsync();
+        _loadingFinished = true;
+        StateHasChanged();
         await _jsRuntime.InvokeVoidAsync("renderJobGraph", str);
     }
 

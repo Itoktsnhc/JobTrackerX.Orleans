@@ -23,193 +23,194 @@
 else
 {
     <div class="container" style="max-width: 1440px; margin: 0 auto;}">
-        <p class="h2">任务详情</p>
-        <br />
+        <p class="h2">任务详情 <a target="_blank" href="@_jobEntity.PreviewPath">Job Graph</a></p>
+        <br/>
         <table class="table table-sm table-hover text-left">
             <tbody>
-                <tr>
-                    <td>任务Id (@nameof(_jobEntity.JobId)): </td>
-                    <td class="font-weight-bold">@_jobEntity.JobId</td>
-                </tr>
-                <tr>
-                    <td>上级任务Id (@nameof(_jobEntity.ParentJobId)): </td>
-                    <td>
-                        @if (_jobEntity.ParentJobId.HasValue)
-                        {
-                            <a href="@_jobEntity.ParentJobPath">@(_jobEntity.ParentJobId.Value.ToString())</a>
-                        }
-                        else
-                        {
-                            <span>@Constants.NotAvailableStr</span>
-                        }
-                    </td>
-                </tr>
-                <tr>
-                    <td>根任务Id (@nameof(_jobEntity.AncestorJobId)): </td>
-                    <td>
-                        <a href="@_jobEntity.AncestorJobPath">@_jobEntity.AncestorJobId</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>任务名称 (@nameof(_jobEntity.JobName)): </td>
-                    <td>@_jobEntity.JobName</td>
-                </tr>
-                <tr>
-                    <td>执行耗时 (ExecutionTime): </td>
-                    <td>
-                        @if (!_jobEntity.StartTime.HasValue && !_jobEntity.EndTime.HasValue)
-                        {
-                            <span>@Constants.NotAvailableStr</span>
-                        }
-                        else
-                        {
-                            <span>
-                                @(_jobEntity.StartTime.HasValue ? _jobEntity.StartTime.Value.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat) : Constants.NotAvailableStr)
-                                ->
-                                @(_jobEntity.EndTime.HasValue ? _jobEntity.EndTime.Value.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat) : Constants.NotAvailableStr)
-                                : [@(GetTimeSpanStr(_jobEntity.StartTime, _jobEntity.EndTime))]
-                            </span>
-                        }
-                    </td>
-                </tr>
-                <tr>
-                    <td>状态 (@nameof(_jobEntity.CurrentJobState)): </td>
-                    <td>
-                        <span class="@(Helper.GetStateBadgeColor(_jobEntity.CurrentJobState))">@(_jobEntity.CurrentJobState)</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td>状态变化 (@nameof(_jobEntity.StateChanges))</td>
-                    <td>
-                        <ul class="list-group small list-group-flush">
+            <tr>
+                <td>任务Id (@nameof(_jobEntity.JobId)): </td>
+                <td class="font-weight-bold">@_jobEntity.JobId</td>
+            </tr>
+            <tr>
+                <td>上级任务Id (@nameof(_jobEntity.ParentJobId)): </td>
+                <td>
+                    @if (_jobEntity.ParentJobId.HasValue)
+                    {
+                        <a href="@_jobEntity.ParentJobPath">@(_jobEntity.ParentJobId.Value.ToString())</a>
+                    }
+                    else
+                    {
+                        <span>@Constants.NotAvailableStr</span>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td>根任务Id (@nameof(_jobEntity.AncestorJobId)): </td>
+                <td>
+                    <a href="@_jobEntity.AncestorJobPath">@_jobEntity.AncestorJobId</a>
+                </td>
+            </tr>
+            <tr>
+                <td>任务名称 (@nameof(_jobEntity.JobName)): </td>
+                <td>@_jobEntity.JobName</td>
+            </tr>
+            <tr>
+                <td>执行耗时 (ExecutionTime): </td>
+                <td>
+                    @if (!_jobEntity.StartTime.HasValue && !_jobEntity.EndTime.HasValue)
+                    {
+                        <span>@Constants.NotAvailableStr</span>
+                    }
+                    else
+                    {
+                        <span>
+                            @(_jobEntity.StartTime.HasValue ? _jobEntity.StartTime.Value.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat) : Constants.NotAvailableStr)
+                            ->
+                            @(_jobEntity.EndTime.HasValue ? _jobEntity.EndTime.Value.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat) : Constants.NotAvailableStr)
+                            : [@(GetTimeSpanStr(_jobEntity.StartTime, _jobEntity.EndTime))]
+                        </span>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td>状态 (@nameof(_jobEntity.CurrentJobState)): </td>
+                <td>
+                    <span class="@(Helper.GetStateBadgeColor(_jobEntity.CurrentJobState))">@(_jobEntity.CurrentJobState)</span>
+                </td>
+            </tr>
+            <tr>
+                <td>状态变化 (@nameof(_jobEntity.StateChanges))</td>
+                <td>
+                    <ul class="list-group small list-group-flush">
 
-                            @foreach (var stateChange in _jobEntity.StateChanges.OrderBy(s => s.TimePoint))
-                            {
-                                <li class="list-group-item">
-                                    <span> @stateChange.TimePoint.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat) - </span>
-                                    <span class="@Helper.GetStateBadgeColor(stateChange.State)">@stateChange.State</span>
-                                    @if (!string.IsNullOrEmpty(stateChange.AdditionMsg))
-                                    {
-                                        <span> - @stateChange.AdditionMsg</span>
-                                    }
+                        @foreach (var stateChange in _jobEntity.StateChanges.OrderBy(s => s.TimePoint))
+                        {
+                            <li class="list-group-item">
+                                <span> @stateChange.TimePoint.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat) - </span>
+                                <span class="@Helper.GetStateBadgeColor(stateChange.State)">@stateChange.State</span>
+                                @if (!string.IsNullOrEmpty(stateChange.AdditionMsg))
+                                {
+                                    <span> - @stateChange.AdditionMsg</span>
+                                }
 
-                                </li>
-                            }
-                        </ul>
-                    </td>
-                </tr>
-                @if (_jobEntity.TotalChildrenCount > 0)
-                {
-                    <tr>
-                        <td>子任务进度: </td>
-                        <td>
-                            <div class="badge badge-pill badge-success">成功: @_jobEntity.SuccessfulChildrenCount</div>
-                            <div class="badge badge-pill badge-danger">失败: @_jobEntity.FailedChildrenCount</div>
-                            <div class="badge badge-pill badge-info">总数: @_jobEntity.TotalChildrenCount</div>
-                            <div class="badge badge-pill badge-secondary">等待: @_jobEntity.PendingChildrenCount</div>
-                            <br />
-                            <div class="progress" style="max-width:300px">
-                                <div class="progress-bar @(_jobEntity.FailedChildrenCount>0?" bg-danger":"bg-success")"
-                                     role="progressbar"
-                                     style="width:@(((_jobEntity.TotalChildrenCount-_jobEntity.PendingChildrenCount)/(_jobEntity.TotalChildrenCount*1.0)).ToString(Constants.PercentageFormat))"></div>
+                            </li>
+                        }
+                    </ul>
+                </td>
+            </tr>
+            @if (_jobEntity.TotalChildrenCount > 0)
+            {
+                <tr>
+                    <td>子任务进度: </td>
+                    <td>
+                        <div class="badge badge-pill badge-success">成功: @_jobEntity.SuccessfulChildrenCount</div>
+                        <div class="badge badge-pill badge-danger">失败: @_jobEntity.FailedChildrenCount</div>
+                        <div class="badge badge-pill badge-info">总数: @_jobEntity.TotalChildrenCount</div>
+                        <div class="badge badge-pill badge-secondary">等待: @_jobEntity.PendingChildrenCount</div>
+                        <br/>
+                        <div class="progress" style="max-width:300px">
+                            <div class="progress-bar @(_jobEntity.FailedChildrenCount > 0 ? " bg-danger" : "bg-success")"
+                                 role="progressbar"
+                                 style="width:@(((_jobEntity.TotalChildrenCount - _jobEntity.PendingChildrenCount) / (_jobEntity.TotalChildrenCount * 1.0)).ToString(Constants.PercentageFormat))">
                             </div>
-                        </td>
-                    </tr>
-                }
-                else
-                {
-                    <tr>
-                        <td>无子任务信息</td>
-                        <td></td>
-                    </tr>
-                }
-                <tr>
-                    <td>附加信息 (@nameof(_jobEntity.Options)): </td>
-                    <td>
-                        <p style="max-width:1024px">@_jobEntity.Options</p>
+                        </div>
                     </td>
                 </tr>
+            }
+            else
+            {
                 <tr>
-                    <td>创建人 (@nameof(_jobEntity.CreatedBy)): </td>
-                    <td>
-                        @(_jobEntity.CreatedBy ?? Constants.NotAvailableStr)
-                    </td>
+                    <td>无子任务信息</td>
+                    <td></td>
                 </tr>
-                <tr>
-                    <td>Tags : </td>
-                    <td>
-                        @if (_jobEntity.Tags?.Any() == true)
+            }
+            <tr>
+                <td>附加信息 (@nameof(_jobEntity.Options)): </td>
+                <td>
+                    <p style="max-width:1024px">@_jobEntity.Options</p>
+                </td>
+            </tr>
+            <tr>
+                <td>创建人 (@nameof(_jobEntity.CreatedBy)): </td>
+                <td>
+                    @(_jobEntity.CreatedBy ?? Constants.NotAvailableStr)
+                </td>
+            </tr>
+            <tr>
+                <td>Tags : </td>
+                <td>
+                    @if (_jobEntity.Tags?.Any() == true)
+                    {
+                        foreach (var tag in _jobEntity.Tags)
                         {
-                            foreach (var tag in _jobEntity.Tags)
-                            {
-                                <span class="@Constants.TagClassStr">@tag</span>
-                            }
+                            <span class="@Constants.TagClassStr">@tag</span>
                         }
-                    </td>
-                </tr>
-                <tr>
-                    <td>来源链接 (@nameof(_jobEntity.SourceLink)): </td>
-                    <td>
-                        @if (!string.IsNullOrEmpty(_jobEntity.SourceLink))
-                        {
-                            <a target="_blank" href="@_jobEntity.SourceLink">@_jobEntity.SourceLink</a>
-                        }
-                        else
-                        {
-                            <span>@Constants.NotAvailableStr</span>
-                        }
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td>来源链接 (@nameof(_jobEntity.SourceLink)): </td>
+                <td>
+                    @if (!string.IsNullOrEmpty(_jobEntity.SourceLink))
+                    {
+                        <a target="_blank" href="@_jobEntity.SourceLink">@_jobEntity.SourceLink</a>
+                    }
+                    else
+                    {
+                        <span>@Constants.NotAvailableStr</span>
+                    }
 
-                    </td>
-                </tr>
-                <tr>
-                    <td>任务日志 (JobLogs): </td>
-                    <td>
-                        @if (string.IsNullOrWhiteSpace(jobLogUrl))
-                        {
-                            <span>@Constants.NotAvailableStr</span>
-                        }
-                        else
-                        {
-                            <a target="_blank" href="@jobLogUrl">下载任务日志</a>
-                        }
-                    </td>
-                </tr>
-                <tr>
-                    <td>概览 (JobStatistics): </td>
-                    <td>
-                        @if (_jobTreeStatistics?.TreeStart != null || _jobTreeStatistics?.TreeEnd != null)
-                        {
-                            <span>
-                                @(_jobTreeStatistics.TreeStart == null?
-                                                Constants.NotAvailableStr:
-                                                $"{_jobTreeStatistics.TreeStart.TimePoint.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat)}({_jobTreeStatistics.TreeStart.SourceJobId})")
-                                ->
-                                @(_jobTreeStatistics.TreeEnd == null ?
-                                                Constants.NotAvailableStr :
-                                                $"{_jobTreeStatistics.TreeEnd.TimePoint.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat)} ({_jobTreeStatistics.TreeEnd.SourceJobId})")
-                                : [@(GetTimeSpanStr(_jobTreeStatistics?.TreeStart?.TimePoint,_jobTreeStatistics?.TreeEnd?.TimePoint))]
-                            </span>
-                        }
-                        else
-                        {
-                            <span>@Constants.NotAvailableStr</span>
-                        }
-                    </td>
-                </tr>
+                </td>
+            </tr>
+            <tr>
+                <td>任务日志 (JobLogs): </td>
+                <td>
+                    @if (string.IsNullOrWhiteSpace(jobLogUrl))
+                    {
+                        <span>@Constants.NotAvailableStr</span>
+                    }
+                    else
+                    {
+                        <a target="_blank" href="@jobLogUrl">下载任务日志</a>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td>概览 (JobStatistics): </td>
+                <td>
+                    @if (_jobTreeStatistics?.TreeStart != null || _jobTreeStatistics?.TreeEnd != null)
+                    {
+                        <span>
+                            @(_jobTreeStatistics.TreeStart == null ?
+                                Constants.NotAvailableStr :
+                                $"{_jobTreeStatistics.TreeStart.TimePoint.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat)}({_jobTreeStatistics.TreeStart.SourceJobId})")
+                            ->
+                            @(_jobTreeStatistics.TreeEnd == null ?
+                                Constants.NotAvailableStr :
+                                $"{_jobTreeStatistics.TreeEnd.TimePoint.ToOffset(TimeSpan.FromHours(8)).DateTime.ToString(Constants.WebUiShowDateTimeFormat)} ({_jobTreeStatistics.TreeEnd.SourceJobId})")
+                            : [@(GetTimeSpanStr(_jobTreeStatistics?.TreeStart?.TimePoint, _jobTreeStatistics?.TreeEnd?.TimePoint))]
+                        </span>
+                    }
+                    else
+                    {
+                        <span>@Constants.NotAvailableStr</span>
+                    }
+                </td>
+            </tr>
             </tbody>
         </table>
-        <br />
-        <hr />
+        <br/>
+        <hr/>
     </div>
     @if (ChildrenInternal?.Any() == true)
     {
         <div class="container" style="max-width: 4096px; margin: 0 auto;}">
             <div>
                 <p class="h2">子任务</p>
-                <button class="btn btn-secondary" @onclick="@(e=>OnRefreshChildrenClickedAsync())">RefreshChildren</button>
+                <button class="btn btn-secondary" @onclick="@(e => OnRefreshChildrenClickedAsync())">RefreshChildren</button>
                 <span class="small">条数: @totalCount</span>
                 <div class="form-group float-right">
-                    <select @onchange="@(e=>ApplyQueryByStatusAsync(e))" class="form-control">
+                    <select @onchange="@(e => ApplyQueryByStatusAsync(e))" class="form-control">
                         <option class="text-white-50" value="-1">@Constants.NotAvailableStr</option>
                         <option class="text-primary" value="@((int)JobState.WaitingToRun)">@nameof(JobState.WaitingToRun)</option>
                         <option class="text-danger" value="@((int)JobState.Faulted)">@nameof(JobState.Faulted)</option>
@@ -222,73 +223,78 @@ else
             <div class="table-responsive-md text-center">
                 <table class="table table-striped table-sm table-hover">
                     <thead class="thead-light">
-                        <tr>
-                            <th>JobId</th>
-                            <th>JobName</th>
-                            <th>JobStatus</th>
-                            <th>CreateTime</th>
-                            <th>StartTime</th>
-                            <th>EndTime</th>
-                            <th>ExecutionTime</th>
-                            <th>Tags</th>
-                            <th>CreatedBy</th>
-                            @if (Children.Any(s => s.TotalChildrenCount > 0))
-                            {
-                                <th>
-                                    ChildrenProgress
-                                </th>
-                            }
-                        </tr>
+                    <tr>
+                        <th>JobId</th>
+                        <th>JobName</th>
+                        <th>JobStatus</th>
+                        <th>CreateTime</th>
+                        <th>StartTime</th>
+                        <th>EndTime</th>
+                        <th>ExecutionTime</th>
+                        <th>Tags</th>
+                        <th>CreatedBy</th>
+                        @if (Children.Any(s => s.TotalChildrenCount > 0))
+                        {
+                            <th>
+                                ChildrenProgress
+                            </th>
+                            <th>Graph</th>
+                        }
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach (var child in Children)
-                        {
-                            <tr>
-                                <td>
-                                    <a href="@child.DetailPath">@child.JobId</a>
-                                </td>
-                                <td>@child.JobName</td>
-                                <td>
-                                    <span class="@(Helper.GetStateBadgeColor(child.CurrentJobState))">
-                                        @child.CurrentJobState
-                                    </span>
-                                </td>
-                                <td>@(child.CreateTime?.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUiShowDateTimeFormat) ?? Constants.NotAvailableStr)</td>
-                                <td>@(child.CalculatedStartTimeStr)</td>
-                                <td>@(child.CalculatedEndTimeStr)</td>
-                                <td>@(child.CalculatedExecutionTimeStr)</td>
-                                <td>
-                                    @if (child.Tags?.Any() == true)
-                                    {
-                                        foreach (var tag in child.Tags)
-                                        {
-                                            <span class="badge badge-dark badge-pill">@tag</span>
-                                        }
-                                    }
-                                </td>
-                                <td>@child.CreatedBy</td>
-                                @if (child.TotalChildrenCount > 0)
+                    @foreach (var child in Children)
+                    {
+                        <tr>
+                            <td>
+                                <a href="@child.DetailPath">@child.JobId</a>
+                            </td>
+                            <td>@child.JobName</td>
+                            <td>
+                                <span class="@(Helper.GetStateBadgeColor(child.CurrentJobState))">
+                                    @child.CurrentJobState
+                                </span>
+                            </td>
+                            <td>@(child.CreateTime?.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUiShowDateTimeFormat) ?? Constants.NotAvailableStr)</td>
+                            <td>@(child.CalculatedStartTimeStr)</td>
+                            <td>@(child.CalculatedEndTimeStr)</td>
+                            <td>@(child.CalculatedExecutionTimeStr)</td>
+                            <td>
+                                @if (child.Tags?.Any() == true)
                                 {
-                                    <td>
-                                        <div class="progress" style="max-width:300px">
-                                            <div class="progress-bar @(child.FailedChildrenCount>0?" bg-danger":"bg-success")"
-                                                 role="progressbar"
-                                                 style="width:@(((child.TotalChildrenCount-child.PendingChildrenCount)/(child.TotalChildrenCount*1.0)).ToString(Constants.PercentageFormat))"></div>
-                                        </div>
-                                    </td>
+                                    foreach (var tag in child.Tags)
+                                    {
+                                        <span class="badge badge-dark badge-pill">@tag</span>
+                                    }
                                 }
-                            </tr>
-                        }
+                            </td>
+                            <td>@child.CreatedBy</td>
+                            @if (child.TotalChildrenCount > 0)
+                            {
+                                <td>
+                                    <div class="progress" style="max-width:300px">
+                                        <div class="progress-bar @(child.FailedChildrenCount > 0 ? " bg-danger" : "bg-success")"
+                                             role="progressbar"
+                                             style="width:@(((child.TotalChildrenCount - child.PendingChildrenCount) / (child.TotalChildrenCount * 1.0)).ToString(Constants.PercentageFormat))">
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a target="_blank" href="@child.PreviewPath">Preview</a>
+                                </td>
+                            }
+                        </tr>
+                    }
                     </tbody>
                 </table>
             </div>
             <div>
                 <div class="float-left">
                     <span>Set page size:</span>
-                    <input type="text" style="max-width:50px" @bind-value="@setPageSize" @onblur="@(e=>RefreshByPageSizeAsync())" />
+                    <input type="text" style="max-width:50px" @bind-value="@setPageSize" @onblur="@(e => RefreshByPageSizeAsync())"/>
                 </div>
                 <div class="float-right">
-                    <select class="custom-select" @onchange="@(e=>GoToPageNumberAsync(e))">
+                    <select class="custom-select" @onchange="@(e => GoToPageNumberAsync(e))">
                         @for (int i = 1; i <= MaxPageNumber; i++)
                         {
                             if (pageNumber == i)
@@ -326,18 +332,27 @@ else
 }
 
 @code{
+
     [Parameter]
     public long JobId { get; set; }
-    private int MaxPageNumber { get { return (int)Math.Ceiling((totalCount * 1.0) / pageSize); } }
+
+    private int MaxPageNumber
+    {
+        get { return (int)Math.Ceiling((totalCount * 1.0) / pageSize); }
+    }
+
     private int pageSize = 10;
     private int setPageSize = 10;
     private int pageNumber = 1;
     private int totalCount = 0;
     private int JobStateFilter = -1;
+
     private IList<JobEntityViewModel>
     Children;
+
     private List<JobEntityViewModel>
-        ChildrenInternal = new List<JobEntityViewModel>();
+    ChildrenInternal = new List<JobEntityViewModel>();
+
     private JobEntityViewModel _jobEntity;
     private JobTreeStatistics _jobTreeStatistics;
     private Task _refresher;
@@ -557,4 +572,5 @@ else
             }
         });
     }
+
 }

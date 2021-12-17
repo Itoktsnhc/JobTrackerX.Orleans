@@ -4,8 +4,8 @@ namespace JobTrackerX.WebApi.Entities
 {
     public class JobIndexViewModel : JobIndex
     {
-        public string DetailPath { get { return $"/{JobId}"; } }
-        public string PreviewPath { get { return $"/show/{JobId}/graph"; } }
+        public string DetailPath => $"/{JobId}";
+        public string PreviewPath => $"/show/{JobId}/graph";
         public JobEntityViewModel JobEntity { get; set; }
     }
 
@@ -15,6 +15,7 @@ namespace JobTrackerX.WebApi.Entities
         public string CalculatedStartTimeStr { get; set; }
         public string CalculatedEndTimeStr { get; set; }
         public string DetailPath { get { return $"/{JobId}"; } }
+        public string PreviewPath => $"/show/{JobId}/graph";
         public string AncestorJobPath { get { return $"/{AncestorJobId}"; } }
         public string ParentJobPath { get { return $"/{ParentJobId}"; } }
     }
