@@ -83,7 +83,6 @@ namespace JobTrackerX.WebApi
             services.AddScoped<IJobTrackerService, JobTrackerService>();
             services.AddScoped<IAttachmentService, AttachmentService>();
             services.AddScoped<IBufferManagerService, BufferManagerService>();
-            services.AddECharts();
             if (JobTrackerConfig.CommonConfig.UseDashboard)
             {
                 services.AddServicesForSelfHostedDashboard();

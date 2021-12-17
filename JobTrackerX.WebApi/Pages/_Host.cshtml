@@ -16,10 +16,17 @@
     <script src="https://lib.baomitu.com/echarts/5.0.2/echarts.min.js"></script>
     <link rel="stylesheet" href="~/css/bootstrap/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/app.css" />
-    
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        window.renderJobGraph = (input) => {
+            var output = document.getElementById("output");
+            mermaid.mermaidAPI.render('theGraph', input, function (svgCode) {
+                output.innerHTML = svgCode;
+            });
+        }
+    </script>
 </head>
 <body>
-    <script type="module" src="_content/Blazor.ECharts/core.js"></script>
     <app>
         @(await Html.RenderComponentAsync<App>(RenderMode.Server))
     </app>
