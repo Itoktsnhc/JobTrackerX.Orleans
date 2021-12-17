@@ -1,0 +1,83 @@
+﻿@page "/show/{JobId:long}/graph"
+@using System.Text
+@inject IJobTrackerService _service
+@inject IToastService _toastService
+@inject IJSRuntime _jsRuntime
+
+<div>
+    <h1> Graph for @JobId:</h1>
+    <div id="output" style="margin: 0 auto;text-align: center;"></div>
+</div>
+
+@code {
+
+    [Parameter]
+    public long JobId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var jobEntity = await _service.GetJobByIdAsync(JobId);
+        if (jobEntity == null)
+        {
+            _toastService.ShowError($"Job {JobId} not found");
+            return;
+        }
+        var str = await GenerateMermaidContentAsync();
+        await _jsRuntime.InvokeVoidAsync("renderJobGraph", str);
+    }
+
+    private async Task<string> GenerateMermaidContentAsync()
+    {
+        const string complete = "fill:green,color:#fff";
+        const string fault = "fill:red,stroke:red,stroke-width:3px,color:white";
+        const string running = "fill:white,stroke:green,stroke-width:3px";
+        const string warning = "fill:#FF8000,color:white";
+        const string pending = "fill:white";
+
+        var sb = new StringBuilder();
+        sb.AppendLine("graph TD");
+        var queue = new Queue<long>(); //jobId,parentIndex
+        queue.Enqueue(JobId);
+        while (queue.Any())
+        {
+            var curJobId = queue.Dequeue();
+            var job = await _service.GetJobByIdAsync(curJobId);
+            if (job == null)
+            {
+                continue;
+            }
+            if (job.ChildrenStatesDic?.Any() == true)
+            {
+                foreach (var (childJobId, _) in job.ChildrenStatesDic)
+                {
+                    sb.AppendLine($"    {curJobId} ==> {childJobId}");
+                    queue.Enqueue(childJobId);
+                }
+            }
+            switch (job.CurrentJobState)
+            {
+                case JobState.Faulted:
+                    sb.AppendLine($"    style {curJobId} {fault}");
+                    break;
+                case JobState.RanToCompletion:
+                    sb.AppendLine($"    style {curJobId} {complete}");
+                    break;
+                case JobState.Running:
+                    sb.AppendLine($"    style {curJobId} {running}");
+                    break;
+                case JobState.Warning:
+                    sb.AppendLine($"    style {curJobId} {warning}");
+                    break;
+                case JobState.WaitingForActivation:
+                case JobState.WaitingToRun:
+                case JobState.WaitingForChildrenToComplete:
+                default:
+                    sb.AppendLine($"    style {curJobId} {pending}");
+                    break;
+            }
+            sb.AppendLine($"    click {curJobId} \"/{curJobId}\" _blank");
+        }
+        return sb.ToString();
+    }
+
+}

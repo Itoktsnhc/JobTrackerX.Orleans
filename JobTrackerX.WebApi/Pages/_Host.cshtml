@@ -10,10 +10,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@Constants.BrandName</title>
     <base href="~/" />
+    <link href="_content/Blazored.Toast/blazored-toast.min.css" rel="stylesheet" />
     <script type="text/javascript" src="~/js/jquery.min.js"></script>
     <script type="text/javascript" src="~/js/moment.min.js"></script>
+    <script src="https://lib.baomitu.com/echarts/5.0.2/echarts.min.js"></script>
     <link rel="stylesheet" href="~/css/bootstrap/bootstrap.min.css" />
-    <link href="_content/Blazored.Toast/blazored-toast.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/app.css" />
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        window.renderJobGraph = (input) => {
+            var output = document.getElementById("output");
+            mermaid.mermaidAPI.render('theGraph', input, function (svgCode) {
+                output.innerHTML = svgCode;
+            });
+        }
+    </script>
 </head>
 <body>
     <app>
