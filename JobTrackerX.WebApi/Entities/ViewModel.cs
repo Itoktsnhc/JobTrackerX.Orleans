@@ -5,6 +5,7 @@ namespace JobTrackerX.WebApi.Entities
     public class JobIndexViewModel : JobIndex
     {
         public string DetailPath { get { return $"/{JobId}"; } }
+        public string PreviewPath { get { return $"/show/{JobId}/graph"; } }
         public JobEntityViewModel JobEntity { get; set; }
     }
 
