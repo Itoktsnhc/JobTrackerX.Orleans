@@ -17,12 +17,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Orleans.Reminders.AzureStorage;
 using Itok.Extension.Configuration.AzureBlob;
 using JobTrackerX.WebApi.Entities;
+using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 
 namespace JobTrackerX.WebApi
 {
     public static class Program
     {
-
         private static IConfiguration Configuration { get; } = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddAzureBlobJson(ConfigExtensions.GetJobTrackerConfig())
@@ -56,7 +56,16 @@ namespace JobTrackerX.WebApi
         {
             return Host.CreateDefaultBuilder(args)
                 .ConfigureHostConfiguration(config => config.AddAzureBlobJson(ConfigExtensions.GetJobTrackerConfig()))
-                .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>())
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseStartup<Startup>();
+                    webBuilder.ConfigureAppConfiguration((ctx, cb) =>
+                    {
+                        StaticWebAssetsLoader.UseStaticWebAssets(
+                            ctx.HostingEnvironment,
+                            ctx.Configuration);
+                    });
+                })
                 .UseOrleans((context, siloBuilder) =>
                 {
                     var jobTrackerConfig =
