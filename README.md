@@ -3,7 +3,10 @@
 
 [![Server on DockerHub](https://img.shields.io/docker/pulls/itoktsnhc/jobtracker)](https://hub.docker.com/repository/docker/itoktsnhc/jobtracker)
 
-Demo: http://jobtracker.itok.xyz/
+Demo: http://jobtracker.itok.xyz/  
+Update:2022-1-1 使用mermaid绘图, 如 http://jobtracker.itok.xyz/show/395417/graph
+![image](https://user-images.githubusercontent.com/11204672/148157868-593688be-a005-49e4-8bda-8168e053f0db.png?s=100)
+
 ## 简介
 
 **基于[Orleans](https://github.com/dotnet/orleans)框架实现的任务状态跟踪系统。**
