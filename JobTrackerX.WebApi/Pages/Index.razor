@@ -21,14 +21,14 @@
         <div class="input-group-prepend">
             <span class="input-group-text">时间范围(@Constants.WebUiInputDateTimeFormat)</span>
         </div>
-        <input type="text" @bind-value="@setStartTimeStr" placeholder="开始" class="form-control"/>
-        <input type="text" @bind-value="@setEndTimeStr" placeholder="结束" class="form-control"/>
+        <input type="text" @bind-value="@setStartTimeStr" placeholder="开始" class="form-control" />
+        <input type="text" @bind-value="@setEndTimeStr" placeholder="结束" class="form-control" />
     </div>
 </div>
-<br/>
-<br/>
+<br />
+<br />
 <div class="input-group mb-3">
-    <input type="text" class="form-control" @bind-value="@setPredicate" placeholder="lambda expression with 'index' as parameter"/>
+    <input type="text" class="form-control" @bind-value="@setPredicate" placeholder="lambda expression with 'index' as parameter" />
     <div class="input-group-append">
         <button type="button" class="btn btn-outline-secondary" @onclick="@(e => ApplyPredicateAsync())">Query Now</button>
     </div>
@@ -38,67 +38,67 @@
     <div class="table-responsive-md text-center">
         <table class="table table-striped table-sm table-hover">
             <thead>
-            <tr>
-                <th class="text-info">JobId</th>
-                <th class="text-info">JobName</th>
-                <th class="text-muted">State</th>
-                <th class="text-info">IndexTime</th>
-                <th class="text-info">CreatedBy</th>
-                <th class="text-info">Tags</th>
-                <th class="text-muted">Progress</th>
-                <th class="text-info">Graph</th>
-            </tr>
+                <tr>
+                    <th class="text-info">JobId</th>
+                    <th class="text-info">JobName</th>
+                    <th class="text-muted">State</th>
+                    <th class="text-info">IndexTime</th>
+                    <th class="text-info">CreatedBy</th>
+                    <th class="text-info">Tags</th>
+                    <th class="text-muted">Progress</th>
+                    <th class="text-info">Graph</th>
+                </tr>
             </thead>
             <tbody>
-            @foreach (var jobIndex in jobIndices)
-            {
-                <tr>
-                    <td>
-                        <a target="_blank" href="@jobIndex.DetailPath">@jobIndex.JobId</a>
-                    </td>
-                    <td>@jobIndex.JobName</td>
-                    <td>
-                        <span class="@Helper.GetStateBadgeColor(jobIndex.JobEntity.CurrentJobState)">@jobIndex.JobEntity.CurrentJobState</span>
-                    </td>
-                    <td>@jobIndex.IndexTime.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUiShowDateTimeFormat)</td>
-                    <td>@jobIndex.CreatedBy</td>
-                    <td>
-                        @if (jobIndex.Tags?.Any() == true)
-                        {
-                            foreach (var tag in jobIndex.Tags)
+                @foreach (var jobIndex in jobIndices.Where(x => x?.JobEntity != null))
+                {
+                    <tr>
+                        <td>
+                            <a target="_blank" href="@jobIndex.DetailPath">@jobIndex.JobId</a>
+                        </td>
+                        <td>@jobIndex.JobName</td>
+                        <td>
+                            <span class="@Helper.GetStateBadgeColor(jobIndex.JobEntity.CurrentJobState)">@jobIndex.JobEntity.CurrentJobState</span>
+                        </td>
+                        <td>@jobIndex.IndexTime.ToOffset(TimeSpan.FromHours(8)).ToString(Constants.WebUiShowDateTimeFormat)</td>
+                        <td>@jobIndex.CreatedBy</td>
+                        <td>
+                            @if (jobIndex.Tags?.Any() == true)
                             {
-                                <span class="@Constants.TagClassStr">@tag</span>
+                                foreach (var tag in jobIndex.Tags)
+                                {
+                                    <span class="@Constants.TagClassStr">@tag</span>
+                                }
                             }
-                        }
-                    </td>
-                    <td>
-                        @if (jobIndex.JobEntity.TotalChildrenCount > 0)
-                        {
-                            <div class="progress" style="max-width:300px">
-                                <div class="progress-bar @(jobIndex.JobEntity.FailedChildrenCount > 0 ? " bg-danger" : "bg-success")"
-                                     role="progressbar"
-                                     style="width:@(((jobIndex.JobEntity.TotalChildrenCount - jobIndex.JobEntity.PendingChildrenCount) / (jobIndex.JobEntity.TotalChildrenCount * 1.0)).ToString(Constants.PercentageFormat))">
+                        </td>
+                        <td>
+                            @if (jobIndex.JobEntity.TotalChildrenCount > 0)
+                            {
+                                <div class="progress" style="max-width:300px">
+                                    <div class="progress-bar @(jobIndex.JobEntity.FailedChildrenCount > 0 ? " bg-danger" : "bg-success")"
+                             role="progressbar"
+                             style="width:@(((jobIndex.JobEntity.TotalChildrenCount - jobIndex.JobEntity.PendingChildrenCount) / (jobIndex.JobEntity.TotalChildrenCount * 1.0)).ToString(Constants.PercentageFormat))">
+                                    </div>
                                 </div>
-                            </div>
-                        }
-                        else
-                        {
-                            <div>N/A</div>
-                        }
+                            }
+                            else
+                            {
+                                <div>N/A</div>
+                            }
 
-                    </td>
-                    <td>
-                        <a target="_blank" href="@jobIndex.PreviewPath">Preview</a>
-                    </td>
-                </tr>
-            }
+                        </td>
+                        <td>
+                            <a target="_blank" href="@jobIndex.PreviewPath">Preview</a>
+                        </td>
+                    </tr>
+                }
             </tbody>
         </table>
     </div>
     <div>
         <div class="float-left">
             <span>Set page size:</span>
-            <input type="text" style="max-width:50px" @bind-value="@setPageSize" @onblur="@(e => RefreshByPageSizeAsync())"/>
+            <input type="text" style="max-width:50px" @bind-value="@setPageSize" @onblur="@(e => RefreshByPageSizeAsync())" />
         </div>
         <div class="float-right">
             <select class="custom-select" @onchange="@(e => GoToPageNumberAsync(e))">
@@ -133,7 +133,7 @@ else
     }
 }
 
-@code{
+@code {
     private string predicate = null;
     private string setPredicate = null;
     private int totalCount = 0;
@@ -147,7 +147,8 @@ else
     }
 
     private List<JobIndexViewModel>
-        jobIndices { get; set; } = new List<JobIndexViewModel>();
+        jobIndices
+    { get; set; } = new List<JobIndexViewModel>();
 
     private string startTimeStr;
     private string endTimeStr;
@@ -208,13 +209,13 @@ else
             CorrectPageSetting();
             var currentTime = DateTimeOffset.Now;
             var defaultResult = await _service.QueryJobsAsync(new QueryJobIndexDto
-            {
-                Start = new DateTimeOffset(StartTime, TimeSpan.FromHours(8)),
-                End = new DateTimeOffset(EndTime, TimeSpan.FromHours(8)),
-                Predicate = predicate,
-                PageNumber = pageNumber,
-                PageSize = pageSize
-            });
+                {
+                    Start = new DateTimeOffset(StartTime, TimeSpan.FromHours(8)),
+                    End = new DateTimeOffset(EndTime, TimeSpan.FromHours(8)),
+                    Predicate = predicate,
+                    PageNumber = pageNumber,
+                    PageSize = pageSize
+                });
             totalCount = defaultResult.TotalCount;
             jobIndices = _mapper.Map<List<JobIndexViewModel>>(defaultResult.Indices);
             foreach (var index in jobIndices)

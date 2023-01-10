@@ -1,4 +1,4 @@
-name: CI to Docker Hub
+name: Publish to Docker Hub
 on:
   push:
     tags: [s-*]
@@ -9,16 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '6.0.x' # SDK Version to use.
-          include-prerelease: true
-      - run: dotnet publish  ./JobTrackerX.WebApi/JobTrackerX.WebApi.csproj -c Release -o ./release
-      - name: Publish to DockerHub
+      - name: Build and Publish to DockerHub
         uses: elgohr/Publish-Docker-Github-Action@master
         with:
           name: itoktsnhc/jobtracker
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          workdir: ./release
+          dockerfile: ./JobTrackerX.WebApi/Dockerfile
           tag_names: true
