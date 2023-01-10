@@ -18,6 +18,12 @@ using Orleans.Reminders.AzureStorage;
 using Itok.Extension.Configuration.AzureBlob;
 using JobTrackerX.WebApi.Entities;
 using Microsoft.AspNetCore.Hosting.StaticWebAssets;
+using Orleans.Persistence.CosmosDB;
+using Orleans.Reminders.CosmosDB;
+using Orleans.Persistence.CosmosDB.Options;
+using Orleans.Runtime;
+using Orleans.Statistics;
+using System.Runtime.InteropServices;
 
 namespace JobTrackerX.WebApi
 {
@@ -71,40 +77,36 @@ namespace JobTrackerX.WebApi
                     var jobTrackerConfig =
                         context.Configuration.GetSection(nameof(JobTrackerConfig)).Get<JobTrackerConfig>();
                     var siloConfig = jobTrackerConfig.SiloConfig;
-                    var tableStorageOption = new Action<AzureTableStorageOptions>(tableStorageOptions =>
+                    var cosmosConfig = jobTrackerConfig.CosmosDbConfig;
+                    var cosmosStoreOption = new Action<CosmosDBStorageOptions>(opt =>
                     {
-                        tableStorageOptions.ConnectionString = siloConfig.JobEntityPersistConfig.ConnStr;
-                        if (string.IsNullOrEmpty(siloConfig.JobEntityPersistConfig.TableName)) return;
-                        tableStorageOptions.TableName = siloConfig.JobEntityPersistConfig.TableName;
-                        tableStorageOptions.UseJson = true;
+                        opt.DB = cosmosConfig.Database;
+                        opt.Collection = cosmosConfig.Container;
+                        opt.CanCreateResources = cosmosConfig.CanCreateResource;
+                        opt.AccountEndpoint = cosmosConfig.AccountEndpoint;
+                        opt.AccountKey = cosmosConfig.AccountKey;
                     });
-
-                    var blobStorageOption = new Action<AzureBlobStorageOptions>(blobStorageOptions =>
+                    var cosmosReminderOptions = new Action<CosmosDBReminderStorageOptions>(opt =>
                     {
-                        blobStorageOptions.ConnectionString = siloConfig.ReadOnlyJobIndexPersistConfig.ConnStr;
-                        if (string.IsNullOrEmpty(siloConfig.ReadOnlyJobIndexPersistConfig.ContainerName)) return;
-                        blobStorageOptions.ContainerName = siloConfig.ReadOnlyJobIndexPersistConfig.ContainerName;
-                        blobStorageOptions.UseJson = true;
+                        opt.DB = cosmosConfig.Database;
+                        opt.Collection = cosmosConfig.Container;
+                        opt.CanCreateResources = cosmosConfig.CanCreateResource;
+                        opt.AccountEndpoint = cosmosConfig.AccountEndpoint;
+                        opt.AccountKey = cosmosConfig.AccountKey;
                     });
-                    var reminderStorageOptions = new Action<AzureTableReminderStorageOptions>(storageOptions =>
-                    {
-                        storageOptions.ConnectionString = siloConfig.ReminderPersistConfig.ConnStr;
-                        storageOptions.TableName = siloConfig.ReminderPersistConfig.TableName;
-                    });
-
                     siloBuilder
                         .ConfigureApplicationParts(parts =>
                             parts.AddApplicationPart(typeof(JobGrain).Assembly).WithReferences().WithCodeGeneration())
                         .AddIncomingGrainCallFilter<BufferFilter>()
-                        .AddAzureTableGrainStorage(Constants.JobEntityStoreName, tableStorageOption)
-                        .AddAzureTableGrainStorage(Constants.CounterStoreName, tableStorageOption)
-                        .AddAzureTableGrainStorage(Constants.JobRefStoreName, tableStorageOption)
-                        .AddAzureTableGrainStorage(Constants.JobIdStoreName, tableStorageOption)
-                        .AddAzureTableGrainStorage(Constants.JobIdOffsetStoreName, tableStorageOption)
-                        .AddAzureBlobGrainStorage(Constants.ReadOnlyJobIndexStoreName, blobStorageOption)
-                        .AddAzureBlobGrainStorage(Constants.AttachmentStoreName, blobStorageOption)
-                        .AddAzureBlobGrainStorage(Constants.AppendStoreName, blobStorageOption)
-                        .UseAzureTableReminderService(reminderStorageOptions)
+                        .AddCosmosDBGrainStorage(Constants.JobEntityStoreName, cosmosStoreOption, typeof(JobTrackerPartitionKeyProvider))
+                        .AddCosmosDBGrainStorage(Constants.CounterStoreName, cosmosStoreOption, typeof(JobTrackerPartitionKeyProvider))
+                        .AddCosmosDBGrainStorage(Constants.JobRefStoreName, cosmosStoreOption, typeof(JobTrackerPartitionKeyProvider))
+                        .AddCosmosDBGrainStorage(Constants.JobIdStoreName, cosmosStoreOption, typeof(JobTrackerPartitionKeyProvider))
+                        .AddCosmosDBGrainStorage(Constants.JobIdOffsetStoreName, cosmosStoreOption, typeof(JobTrackerPartitionKeyProvider))
+                        .AddCosmosDBGrainStorage(Constants.ReadOnlyJobIndexStoreName, cosmosStoreOption, typeof(JobTrackerPartitionKeyProvider))
+                        .AddCosmosDBGrainStorage(Constants.AttachmentStoreName, cosmosStoreOption, typeof(JobTrackerPartitionKeyProvider))
+                        .AddCosmosDBGrainStorage(Constants.AppendStoreName, cosmosStoreOption, typeof(JobTrackerPartitionKeyProvider))
+                        .UseCosmosDBReminderService(cosmosReminderOptions)
                         .AddStartupTask(async (sp, token) =>
                         {
                             var factory = sp.GetRequiredService<IGrainFactory>();
@@ -124,6 +126,8 @@ namespace JobTrackerX.WebApi
                                 typeof(RollingJobIndexGrain).FullName ?? throw new
                                     InvalidOperationException()] = TimeSpan.FromMinutes(5);
                         });
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                        siloBuilder.UseLinuxEnvironmentStatistics();
 
                     if (Constants.IsDev)
                     {
@@ -139,11 +143,13 @@ namespace JobTrackerX.WebApi
                                 clusterOptions.ClusterId = siloConfig.ClusterId;
                                 clusterOptions.ServiceId = siloConfig.ServiceId;
                             })
-                            .UseAzureStorageClustering(azureStorageClusteringOptions =>
+                            .UseCosmosDBMembership(opt =>
                             {
-                                azureStorageClusteringOptions.ConnectionString =
-                                    jobTrackerConfig.AzureClusterConfig.ConnStr;
-                                azureStorageClusteringOptions.TableName = jobTrackerConfig.AzureClusterConfig.TableName;
+                                opt.DB = cosmosConfig.Database;
+                                opt.Collection = cosmosConfig.MembershipContainer;
+                                opt.CanCreateResources = cosmosConfig.CanCreateResource;
+                                opt.AccountEndpoint = cosmosConfig.AccountEndpoint;
+                                opt.AccountKey = cosmosConfig.AccountKey;
                             })
                             .ConfigureEndpoints(10001, 10000);
                     }
@@ -154,6 +160,14 @@ namespace JobTrackerX.WebApi
                     }
                 })
                 .UseSerilog();
+        }
+    }
+
+    public class JobTrackerPartitionKeyProvider : IPartitionKeyProvider
+    {
+        public ValueTask<string> GetPartitionKey(string grainType, GrainReference grainReference)
+        {
+            return ValueTask.FromResult($"{grainType}.{grainReference.GrainIdentity.IdentityString}");
         }
     }
 }

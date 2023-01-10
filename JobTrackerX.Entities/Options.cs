@@ -12,14 +12,17 @@ namespace JobTrackerX.Entities
         public WebUiConfig WebUiConfig { get; set; }
         public JobLogConfig JobLogConfig { get; set; }
         public ActionHandlerConfig ActionHandlerConfig { get; set; }
-        
-        public AzureClusterConfig AzureClusterConfig { get; set; }
+        public CosmosDbConfig CosmosDbConfig { get; set; }
     }
-    
-    public class AzureClusterConfig
+
+    public class CosmosDbConfig
     {
-        public string ConnStr { get; set; }
-        public string TableName { get; set; }
+        public string Database { get; set; } = "store";
+        public string Container { get; set; } = "job_tracker";
+        public string MembershipContainer { get; set; } = "job_tracker_membership";
+        public string AccountEndpoint { get; set; }
+        public string AccountKey { get; set; }
+        public bool CanCreateResource { get; set; } = false;
     }
 
     public class IdGeneratorConfig
@@ -55,19 +58,9 @@ namespace JobTrackerX.Entities
 
     public class SiloConfig
     {
-        public GrainPersistConfig JobEntityPersistConfig { get; set; }
-        public GrainPersistConfig ReadOnlyJobIndexPersistConfig { get; set; }
-        public GrainPersistConfig ReminderPersistConfig { get; set; }
         public TimeSpan? GrainCollectionAge { get; set; }
         public string ServiceId { get; set; }
         public string ClusterId { get; set; }
-    }
-
-    public class GrainPersistConfig
-    {
-        public string ConnStr { get; set; }
-        public string TableName { get; set; }
-        public string ContainerName { get; set; }
     }
 
     public class WebUiConfig

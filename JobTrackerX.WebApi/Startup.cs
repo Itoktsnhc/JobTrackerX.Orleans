@@ -17,6 +17,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Orleans;
+using Orleans.Persistence.CosmosDB.Options;
 using OrleansDashboard;
 using ProxyMediator.Core.Misc;
 using ProxyMediator.Extension;
