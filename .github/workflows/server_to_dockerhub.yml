@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build and Publish to DockerHub
-        uses: elgohr/Publish-Docker-Github-Action@master
+        uses: elgohr/Publish-Docker-Github-Action@v5
         with:
           name: itoktsnhc/jobtracker
           username: ${{ secrets.DOCKERHUB_USERNAME }}
