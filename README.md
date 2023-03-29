@@ -3,9 +3,9 @@
 
 [![Server on DockerHub](https://img.shields.io/docker/pulls/itoktsnhc/jobtracker)](https://hub.docker.com/repository/docker/itoktsnhc/jobtracker)
 
-Demo: http://jobtracker.itok.xyz/  
+Demo: https://tasks.itok.xyz/  
 Update:2022-05-31 完善了跳过/延后持久化的批量创建任务功能(使用Buffer相关Grain, 基于 IIncomingGrainCallFilter 功能实现)  
-Update:2022-01-01 使用mermaid绘图, 如 http://jobtracker.itok.xyz/show/395417/graph
+Update:2022-01-01 使用mermaid绘图, 如 https://tasks.itok.xyz/show/395417/graph
 ![image](https://user-images.githubusercontent.com/11204672/148157868-593688be-a005-49e4-8bda-8168e053f0db.png?s=100)
 
 ## 简介
