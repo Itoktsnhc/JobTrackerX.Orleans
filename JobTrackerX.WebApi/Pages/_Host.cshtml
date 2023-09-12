@@ -20,8 +20,9 @@
     <script>
         window.renderJobGraph = (input) => {
             var output = document.getElementById("output");
-            mermaid.mermaidAPI.render('theGraph', input, function (svgCode) {
-                output.innerHTML = svgCode;
+            mermaid.render('theGraph', input).then(({ svg, bindFunctions }) => {
+                element.innerHTML = svg;
+                bindFunctions?.(element);
             });
         }
     </script>
