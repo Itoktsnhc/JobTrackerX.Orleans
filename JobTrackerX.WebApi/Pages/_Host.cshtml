@@ -21,7 +21,7 @@
         window.renderJobGraph = (input) => {
             var output = document.getElementById("output");
             mermaid.render('theGraph', input).then(({ svg, bindFunctions }) => {
-                element.innerHTML = svg;
+                output.innerHTML = svg;
                 bindFunctions?.(element);
             });
         }
